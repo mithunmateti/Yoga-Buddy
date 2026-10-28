@@ -564,8 +564,10 @@ button:focus-visible {
   font-size: 1.2rem;
 }
 
-/* DEBUG box with the measured angles (Phase 3) */
+/* DEBUG box with the measured angles (Phase 3). Hidden unless the
+   web address has ?debug in it (practice.js) */
 .debug-card {
+  display: none;
   padding: 12px 16px;
   background: var(--card);
   border-radius: var(--radius);
@@ -581,6 +583,10 @@ button:focus-visible {
 .debug-card ul {
   margin: 0;
   padding-left: 1.1em;
+}
+
+.show-debug .debug-card {
+  display: block;
 }
 
 /* The box that holds the video, with the skeleton drawing on top */
@@ -665,6 +671,14 @@ button:focus-visible {
 /* Hide the status message when it is empty */
 .camera-status:empty {
   display: none;
+}
+
+/* When something goes wrong: the message and a Try again button */
+.camera-status.camera-problem {
+  flex-direction: column;
+  gap: 16px;
+  background: rgba(0, 0, 0, 0.75);
+  line-height: 1.4;
 }
 
 /* Message in the middle of the camera box, e.g. "Starting camera…" */

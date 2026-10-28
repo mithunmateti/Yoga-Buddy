@@ -19,7 +19,7 @@ import {
 } from "./pose-check.js";
 
 // The voice coach (coach.js), its voice (voice.js) and its sentences (phrases.js)
-import { startCoach, restartCoach, updateCoach, checksNow } from "./coach.js";
+import { startCoach, restartCoach, stopCoach, updateCoach, checksNow } from "./coach.js";
 import { unlockSound, chooseVoice } from "./voice.js";
 import { SAY } from "./phrases.js";
 
@@ -506,20 +506,66 @@ function drawAngleLabels(joints) {
 
 // ----- 7. Start everything, one step at a time -----
 async function start() {
+  let stage = "camera";
   try {
     statusText.textContent = "Starting camera…";
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      throw new Error("no camera here");
+    }
     await startCamera();
 
+    stage = "tracker";
     statusText.textContent = "Loading body tracker…";
     await loadPoseModel();
 
     statusText.textContent = "";   // an empty message is hidden
     loop();
   } catch (error) {
-    // Phase 8 will turn this into a friendly, helpful message
-    statusText.textContent = "Something went wrong: " + error.message;
     console.error(error);
+    stopCoach();   // no countdown or talking over the problem
+    showProblem(friendlyMessage(stage, error));
   }
+}
+
+// A simple message for what went wrong, and what to do about it
+function friendlyMessage(stage, error) {
+  if (stage === "tracker") {
+    return "The body tracker couldn't load. Check the internet connection, then try again.";
+  }
+  if (!navigator.mediaDevices) {
+    return "This browser can't use the camera here. Open the Yoga Buddy link in Chrome or Safari.";
+  }
+  if (error.name === "NotAllowedError" || error.name === "SecurityError") {
+    return "The camera is blocked. Allow the camera for this website " +
+           "(look for the camera icon next to the web address), then try again.";
+  }
+  if (error.name === "NotFoundError" || error.name === "OverconstrainedError") {
+    return "No camera was found. Check a camera is plugged in or switched on, then try again.";
+  }
+  if (error.name === "NotReadableError" || error.name === "AbortError") {
+    return "Another app is using the camera. Close it (for example Zoom or FaceTime), then try again.";
+  }
+  return "Something went wrong starting the camera. Please try again.";
+}
+
+// Show the message in the camera box, with a Try again button
+function showProblem(message) {
+  statusText.textContent = "";
+  const words = document.createElement("span");
+  words.textContent = message;
+  const again = document.createElement("button");
+  again.className = "button";
+  again.textContent = "Try again";
+  again.addEventListener("click", function () { location.reload(); });
+  statusText.append(words, again);
+  statusText.classList.add("camera-problem");
+  restartButton.hidden = true;   // only Try again helps now
+}
+
+// The angles box is only for checking the maths: add ?debug to the
+// web address to see it (e.g. practice.html?pose=tadasana&debug)
+if (new URLSearchParams(location.search).has("debug")) {
+  document.body.classList.add("show-debug");
 }
 
 // There is no voice list on the screen any more, so always use the

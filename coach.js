@@ -21,7 +21,7 @@
 
 import { worstJoint, tipFor, isWrong } from "./pose-check.js";
 import { buddyOn, askBuddy } from "./buddy.js";
-import { say, sayFresh, isTalking, quietFor } from "./voice.js";
+import { say, sayFresh, isTalking, quietFor, stopTalking } from "./voice.js";
 import { SAY, startIn, countFor, heldFor, roundNumber, roundsDone, finishedFlow } from "./phrases.js";
 
 // ----- Settings you can change -----
@@ -93,6 +93,15 @@ export function startCoach(thePose, takePhoto) {
 export function restartCoach() {
   reset();
   sayFresh(SAY.startAgain + " " + SAY.stepBack + " " + startIn(GET_READY_SECONDS));
+}
+
+// Stop the coach (when the camera or the body tracker can't start)
+export function stopCoach() {
+  clearInterval(countdownClock);
+  countdownText.textContent = "";
+  stage = "off";
+  stopTalking();
+  showStep("Voice coach 🔊", "Waiting for the camera…");
 }
 
 function reset() {
