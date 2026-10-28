@@ -527,6 +527,7 @@ function doHold(t, passed, check) {
 // ----- Stage 4: done! -----
 function finish() {
   stage = "done";
+  recordPose(pose.id);   // for the weekly streak (progress.js)
   held = HOLD_SECONDS;
   updateTimer("Done!");
   showStep("Well done!", "You held " + pose.sanskrit + " for " + HOLD_SECONDS + " seconds.");

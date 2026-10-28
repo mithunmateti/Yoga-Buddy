@@ -664,6 +664,150 @@ input:focus-visible {
   letter-spacing: -0.035em;
 }
 
+/* Your week: streak, today's minutes and Monday to Sunday */
+.streak-card {
+  padding: 18px 20px;
+  background: var(--glass, var(--card));
+  -webkit-backdrop-filter: var(--glass-blur, none);
+  backdrop-filter: var(--glass-blur, none);
+  border: 1px solid var(--glass-edge, var(--border));
+  border-radius: var(--radius);
+  box-shadow: var(--glass-shine, none), var(--shadow);
+}
+
+.streak-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.streak-count {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.streak-flame {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  background: var(--accent-soft);
+  border-radius: 18px;
+  font-size: 1.7rem;
+}
+
+.streak-number {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.streak-label {
+  margin: 2px 0 0;
+  color: var(--text-soft);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.streak-today {
+  min-width: 130px;
+  text-align: right;
+}
+
+.streak-minutes {
+  margin: 0;
+  color: var(--text-soft);
+  font-weight: 600;
+}
+
+.streak-minutes b {
+  color: var(--text);
+  font-size: 1.3rem;
+  font-weight: 800;
+}
+
+.streak-bar {
+  height: 8px;
+  margin-top: 6px;
+  background: var(--primary-soft);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.streak-bar span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #3E9A93, var(--primary));
+  border-radius: inherit;
+}
+
+/* Monday to Sunday: a circle for each day */
+.week {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.week-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-soft);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.week-dot {
+  display: grid;
+  place-items: center;
+  width: clamp(30px, 9vw, 40px);
+  height: clamp(30px, 9vw, 40px);
+  background: rgba(29, 43, 42, 0.06);
+  border-radius: 50%;
+  color: white;
+  font-size: 0.95rem;
+}
+
+.week-day.future .week-dot {
+  background: transparent;
+  border: 1.5px dashed rgba(29, 43, 42, 0.15);
+}
+
+/* Practised 10 minutes: teal with a tick */
+.week-day.done .week-dot {
+  background: var(--primary);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+/* All 5 poses that day: gold with a star */
+.week-day.all-five .week-dot {
+  background: linear-gradient(135deg, #F6D58E 0%, #E8B04E 100%);
+}
+
+.week-day.today {
+  color: var(--text);
+}
+
+.week-day.today .week-dot {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.streak-note {
+  margin: 14px 0 0;
+  color: var(--text-soft);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
 /* Today's pose: one big card in the pose's colour, photo on the right */
 .hero-card {
   position: relative;

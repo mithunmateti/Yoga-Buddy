@@ -18,6 +18,49 @@ function showHello() {
 showHello();
 document.addEventListener("profilechange", showHello);
 
+// ----- Your week: the streak, today's minutes, and Monday to Sunday -----
+// A day counts when you practised for 10 minutes (progress.js). A ⭐ day is
+// one where you held all 5 poses.
+function showStreak() {
+  const progress = loadProgress();
+  const streak = currentStreak(progress);
+  const minutesToday = Math.floor(((progress[dayKey()] || {}).seconds || 0) / 60);
+  const week = thisWeek(progress);
+  const allFiveDays = week.filter(function (day) { return day.allFive; }).length;
+
+  const days = week.map(function (day) {
+    const classes = ["week-day"];
+    if (day.practised) classes.push("done");
+    if (day.allFive) classes.push("all-five");
+    if (day.isToday) classes.push("today");
+    if (day.isFuture) classes.push("future");
+    const mark = day.allFive ? "⭐" : day.practised ? "✓" : "";
+    return `<li class="${classes.join(" ")}"><span class="week-dot">${mark}</span>${day.letter}</li>`;
+  }).join("");
+
+  document.getElementById("streak").innerHTML = `
+    <div class="streak-top">
+      <div class="streak-count">
+        <span class="streak-flame" aria-hidden="true">🔥</span>
+        <div>
+          <p class="streak-number">${streak}</p>
+          <p class="streak-label">day${streak === 1 ? "" : "s"} in a row</p>
+        </div>
+      </div>
+      <div class="streak-today">
+        <p class="streak-label">Today</p>
+        <p class="streak-minutes"><b>${Math.min(minutesToday, STREAK_MINUTES)}</b> / ${STREAK_MINUTES} min</p>
+        <div class="streak-bar"><span style="width: ${Math.min(100, minutesToday / STREAK_MINUTES * 100)}%"></span></div>
+      </div>
+    </div>
+    <ol class="week">${days}</ol>
+    <p class="streak-note">⭐ ${allFiveDays} day${allFiveDays === 1 ? "" : "s"} with all 5 asanas this week</p>
+  `;
+}
+showStreak();
+// Coming back to this page (e.g. with the Back button) shows the newest numbers
+window.addEventListener("pageshow", showStreak);
+
 // The little labels on a card, e.g. "Easy · Balance · Front view"
 function chipsFor(pose) {
   const chips = [pose.level, pose.focus, pose.view === "side" ? "Side view" : "Front view"];

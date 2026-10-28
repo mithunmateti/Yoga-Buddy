@@ -131,6 +131,38 @@ async function loadPoseModel() {
 }
 
 
+// ----- Practice time for the weekly streak (progress.js) -----
+// Counts only while the camera can see you, and is saved every few seconds.
+let practiceSeconds = 0;     // counted but not saved yet
+let lastFrameAt = null;
+
+function countPracticeTime(inView) {
+  const now = performance.now() / 1000;
+  if (inView && lastFrameAt !== null) {
+    practiceSeconds += Math.min(1, now - lastFrameAt);   // at most 1 s, e.g. after the tab was hidden
+  }
+  lastFrameAt = now;
+  if (practiceSeconds >= 5) {
+    savePracticeTime();
+  }
+}
+
+function savePracticeTime() {
+  if (practiceSeconds > 0) {
+    addPracticeTime(Math.round(practiceSeconds));
+    practiceSeconds = 0;
+  }
+}
+
+// Save what's left when leaving the page (Back, closing the tab, switching app)
+window.addEventListener("pagehide", savePracticeTime);
+document.addEventListener("visibilitychange", function () {
+  if (document.hidden) {
+    savePracticeTime();
+  }
+});
+
+
 // ----- 4. The main loop: runs again and again, many times a second -----
 function loop() {
   // Only check the video if it has moved on to a new picture
@@ -152,6 +184,7 @@ function loop() {
       showCheck(check);
       updateCoach(check);
     }
+    countPracticeTime(!!points);
 
     // Draw the skeleton, coloured green/red by the joint checks
     drawSkeleton(points, check.joints);

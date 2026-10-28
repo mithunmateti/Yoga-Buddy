@@ -23,7 +23,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="style.css?v=20261028b">
+  <link rel="stylesheet" href="style.css?v=20261028c">
 
   <!-- The opening animation only plays when the app is first opened, not
        when coming back from a pose (decided here, before anything is drawn) -->
@@ -87,6 +87,10 @@
     <p id="greet-time" class="greet-time"></p>
     <h1 id="hello" class="hello">Welcome</h1>
 
+    <!-- This week: the streak, today's minutes and Monday to Sunday (home.js, progress.js) -->
+    <h2 class="section-title">Your week</h2>
+    <section id="streak" class="streak-card"></section>
+
     <!-- Today's pose: one big card (home.js picks a different pose each day) -->
     <h2 class="section-title">Today's pose</h2>
     <a id="hero" class="hero-card"></a>
@@ -98,8 +102,9 @@
 
   <!-- profile.js asks for the name, age and gender first.
        poses.js must load before home.js, because home.js uses the POSES list from it. -->
-  <script src="profile.js?v=20261028b"></script>
-  <script src="poses.js?v=20261028b"></script>
-  <script src="home.js?v=20261028b"></script>
+  <script src="profile.js?v=20261028c"></script>
+  <script src="poses.js?v=20261028c"></script>
+  <script src="progress.js?v=20261028c"></script>
+  <script src="home.js?v=20261028c"></script>
 </body>
 </html>
