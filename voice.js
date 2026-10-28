@@ -150,10 +150,22 @@ function bestComputerVoice() {
 // click (the Start and Try buttons): it plays a tiny silent sound, which
 // lets the page play the voice later.
 export function unlockSound() {
+  // iPhones and iPads (Safari 17+): play sound even when the silent switch is on
+  if (navigator.audioSession) {
+    try {
+      navigator.audioSession.type = "playback";
+    } catch (error) {
+      // not allowed here: the silent switch decides
+    }
+  }
   player.src = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA=";
   player.play().catch(function () {});
   if (canSpeak) {
-    speechSynthesis.speak(new SpeechSynthesisUtterance(" "));
+    // Safari ignores an empty sentence, so say a real (silent) word
+    const hello = new SpeechSynthesisUtterance("Ready");
+    hello.volume = 0;
+    speechSynthesis.resume();
+    speechSynthesis.speak(hello);
   }
 }
 
@@ -244,7 +256,10 @@ async function playNext(myRound) {
   }
   busy = true;
   pieceStarted = now();
-  const sound = await piece.sound;   // a recording or live sound, or null = computer voice
+  // A recording or live sound, or null = computer voice. Only wait when we
+  // have to: Safari only lets the first sentence play if it starts straight
+  // away inside the tap, not after waiting.
+  const sound = piece.sound && piece.sound.then ? await piece.sound : piece.sound;
   if (myRound !== round) {
     return;   // stopped while we were waiting
   }
@@ -301,6 +316,7 @@ function speakWithComputer(text, next) {
   words.onend = next;
   words.onerror = next;
   currentWords = words;
+  speechSynthesis.resume();   // Safari sometimes gets stuck "paused"
   speechSynthesis.speak(words);
   setTimeout(next, 12000);   // safety net
 }
@@ -309,10 +325,14 @@ function speakWithComputer(text, next) {
 // ----- Getting the AI voice's sound for a piece -----
 // Gives back a sound address, or null to use the computer voice.
 
-async function findSound(text) {
+function findSound(text) {
   if (choice !== "ai") {
-    return null;
+    return null;   // straight away, not a promise (see playNext)
   }
+  return findAISound(text);
+}
+
+async function findAISound(text) {
   await recordingsReady;
   const file = recorded[sentenceKey(text)];
   if (file) {

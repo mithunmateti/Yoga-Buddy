@@ -542,6 +542,7 @@ startButton.addEventListener("click", function () {
 // The Restart button: forget the old angles and start the steps again
 restartButton.addEventListener("click", function () {
   startFresh();
+  unlockSound();
   if (scoringOn) {
     restartCoach();
   }
