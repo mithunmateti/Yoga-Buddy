@@ -14,19 +14,28 @@ const PROFILE_NAME = "yogaBuddyProfile";
 // The details of the person using the app, or null if not asked yet
 function getProfile() {
   try {
-    return JSON.parse(localStorage.getItem(PROFILE_NAME));
+    const profile = JSON.parse(localStorage.getItem(PROFILE_NAME));
+    return profile && profile.name ? profile : null;
   } catch (error) {
     return null;
   }
 }
 
+// Gives back true if the details were saved on the device
 function saveProfile(profile) {
+  let saved = false;
   try {
     localStorage.setItem(PROFILE_NAME, JSON.stringify(profile));
+    saved = JSON.parse(localStorage.getItem(PROFILE_NAME)).name === profile.name;
   } catch (error) {
-    // storage blocked: the details are only used on this page
+    // storage blocked (e.g. some private windows): only used on this page
+  }
+  // Ask the browser to keep this website's saved data, not clear it to save space
+  if (navigator.storage && navigator.storage.persist) {
+    navigator.storage.persist().catch(function () {});
   }
   window.yogaProfile = profile;
+  return saved;
 }
 
 // The three questions. Each one shows its own screen.
@@ -139,15 +148,20 @@ function askProfile(done) {
   // "Getting your buddy ready, Asha…" for a moment, then the home screen
   function finish() {
     const profile = { name: answers[0], age: answers[1], gender: answers[2] };
-    saveProfile(profile);
+    const saved = saveProfile(profile);
     box.innerHTML = `
       <div class="onboarding-ready">
         <div class="breathing-circle" aria-hidden="true"></div>
         <h2></h2>
         <p>Breathe in… and out.</p>
+        <p class="saved-note"></p>
       </div>
     `;
     box.querySelector("h2").textContent = "Getting your buddy ready, " + profile.name + "…";
+    // Say whether this browser will remember them next time
+    box.querySelector(".saved-note").textContent = saved
+      ? "✓ Saved on this device. You won't need to type it again."
+      : "This browser can't save your details (is it a private window?), so it will ask again next time.";
     setTimeout(function () {
       box.classList.add("leaving");
       setTimeout(function () {
@@ -155,7 +169,7 @@ function askProfile(done) {
         document.body.classList.remove("no-scroll");
         done(profile);
       }, 350);
-    }, 1600);
+    }, 2200);
   }
 
   show();
