@@ -6,18 +6,21 @@
    Change these values to change the colours and font of the
    whole app in one go. */
 :root {
-  --main: #2E7D5B;         /* main colour: calm green */
-  --main-dark: #23634A;    /* darker green, used when you hover a button */
-  --main-soft: #E8F3ED;    /* very light green, used behind pictures */
-  --accent: #E8955A;       /* accent colour: soft orange */
-  --accent-soft: #FCEFE4;  /* very light orange */
-  --text: #1F2D27;         /* main text colour */
-  --text-soft: #5E6E66;    /* lighter text for small notes */
-  --background: #F6F9F7;   /* page background */
+  --main: #2F7A57;         /* main colour: calm sage green */
+  --main-dark: #225E43;    /* darker green, used when you hover a button */
+  --main-soft: #E5F0E9;    /* very light green, used behind pictures */
+  --accent: #DE8A5A;       /* accent colour: warm terracotta */
+  --accent-soft: #FBEDE3;  /* very light terracotta */
+  --text: #1C2E25;         /* main text colour: deep forest */
+  --text-soft: #5F6F66;    /* lighter text for small notes */
+  --background: #FAF7F1;   /* page background: warm cream */
   --card: #FFFFFF;         /* card background */
-  --radius: 20px;          /* how round the corners are */
-  --shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  --border: rgba(28, 46, 37, 0.07);   /* thin line around cards */
+  --radius: 24px;          /* how round the corners are */
+  --shadow: 0 1px 2px rgba(28, 46, 37, 0.04), 0 8px 24px rgba(28, 46, 37, 0.06);
+  --shadow-big: 0 2px 4px rgba(28, 46, 37, 0.05), 0 18px 40px rgba(28, 46, 37, 0.12);
   --font: "Poppins", Arial, sans-serif;
+  --font-title: "Fraunces", Georgia, serif;   /* headings */
 }
 
 /* ----- 2. Basic page setup ----- */
@@ -32,10 +35,17 @@
 
 body {
   margin: 0;
+  min-height: 100vh;
   font-family: var(--font);
   color: var(--text);
-  background: var(--background);
+  /* Cream, with a soft green glow top-left and a warm one top-right */
+  background:
+    radial-gradient(60vmax 50vmax at 0% 0%, #E3EFE6 0%, transparent 60%),
+    radial-gradient(50vmax 40vmax at 100% 0%, #FBE9DC 0%, transparent 60%),
+    var(--background);
+  background-attachment: fixed;
   line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
 }
 
 /* Keeps the content in the middle of wide screens,
@@ -50,33 +60,55 @@ h1, h2, h3 {
   line-height: 1.2;
 }
 
+/* The big headings use the soft serif font */
+.site-header h1,
+.start-page h1,
+.guide-info h1,
+.practice-title,
+.start-panel h2,
+.profile-form h2,
+.pose-card h3 {
+  font-family: var(--font-title);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
 /* ----- 3. Buttons and links ----- */
 .button {
   display: inline-block;
   padding: 14px 32px;
   border: none;
   border-radius: 999px;     /* pill shape */
-  background: var(--main);
+  background: linear-gradient(180deg, #379065 0%, var(--main) 100%);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.25) inset, 0 6px 16px rgba(47, 122, 87, 0.28);
   color: white;
   font-family: inherit;
   font-size: 1.1rem;
   font-weight: 600;
   text-decoration: none;
   cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
 }
 
 .button:hover {
-  background: var(--main-dark);
+  background: linear-gradient(180deg, var(--main) 0%, var(--main-dark) 100%);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.25) inset, 0 10px 22px rgba(47, 122, 87, 0.34);
+  transform: translateY(-1px);
+}
+
+.button:active {
+  transform: translateY(1px);
 }
 
 /* White button with a green outline, e.g. "Restart" */
 .secondary-button {
   background: var(--card);
   color: var(--main);
-  box-shadow: inset 0 0 0 2px var(--main);
+  box-shadow: inset 0 0 0 1.5px var(--main);
 }
 
 .secondary-button:hover {
+  box-shadow: inset 0 0 0 1.5px var(--main);
   background: var(--main-soft);
 }
 
@@ -110,8 +142,8 @@ button:focus-visible {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--main-soft);
-  border-radius: calc(var(--radius) - 6px);
+  background: linear-gradient(180deg, #EEF5F0 0%, #FBF8F2 100%);
+  border-radius: calc(var(--radius) - 8px);
   overflow: hidden;
 }
 
@@ -121,7 +153,15 @@ button:focus-visible {
   width: 100%;
   height: 100%;
   object-fit: contain;      /* show the whole picture, no cropping */
-  background: var(--card);
+  padding: 6%;
+  mix-blend-mode: multiply; /* the white behind the person disappears */
+  filter: brightness(1.08) contrast(1.05);
+}
+
+/* The photo is see-through where it is white, so hide the text behind it
+   (a photo that can't load removes itself, and then the text shows) */
+.pose-picture:has(img) .picture-missing {
+  visibility: hidden;
 }
 
 .picture-missing {
@@ -144,8 +184,8 @@ button:focus-visible {
 
 .site-header h1 {
   margin: 0;
-  color: var(--main);
-  font-size: clamp(2.2rem, 7vw, 3.2rem);
+  color: var(--main-dark);
+  font-size: clamp(2.4rem, 7vw, 3.6rem);
 }
 
 .tagline {
@@ -154,9 +194,14 @@ button:focus-visible {
   font-size: 1.1rem;
 }
 
+/* Small capital-letter label above the poses */
 .section-title {
-  margin: 40px 0 16px;
-  font-size: 1.2rem;
+  margin: 40px 0 20px;
+  color: var(--accent);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
   text-align: center;
 }
 
@@ -170,25 +215,26 @@ button:focus-visible {
 
 .pose-card {
   display: block;
-  padding: 12px 12px 16px;
+  padding: 10px 10px 18px;
   background: var(--card);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   color: var(--text);
   text-align: center;
   text-decoration: none;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: transform 0.25s, box-shadow 0.25s;
 }
 
 /* Card lifts up a little when the mouse is over it */
 .pose-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-big);
 }
 
 .pose-card h3 {
-  margin: 12px 0 2px;
-  font-size: 1rem;
+  margin: 14px 0 2px;
+  font-size: 1.15rem;
 }
 
 .pose-card p {
@@ -198,9 +244,10 @@ button:focus-visible {
 }
 
 .privacy-note {
-  margin-top: 40px;
+  max-width: 640px;
+  margin: 48px auto 0;
   color: var(--text-soft);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   text-align: center;
 }
 
@@ -212,6 +259,9 @@ button:focus-visible {
 
 .pose-picture.big {
   aspect-ratio: 4 / 3;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
 }
 
 /* On wider screens: picture on the left, steps on the right */
@@ -223,13 +273,15 @@ button:focus-visible {
 
   .pose-picture.big {
     aspect-ratio: 1 / 1;
+    position: sticky;   /* stays in view while you scroll the steps */
+    top: 24px;
   }
 }
 
 .guide-info h1 {
   margin: 0;
-  color: var(--main);
-  font-size: clamp(1.8rem, 5vw, 2.4rem);
+  color: var(--main-dark);
+  font-size: clamp(2.2rem, 6vw, 3rem);
 }
 
 .english-name {
@@ -240,29 +292,66 @@ button:focus-visible {
 
 .info-card {
   margin-bottom: 16px;
-  padding: 16px 20px;
+  padding: 20px 22px;
   background: var(--card);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
 }
 
 .info-card h2 {
-  margin: 0 0 8px;
-  color: var(--main);
-  font-size: 1.05rem;
+  margin: 0 0 12px;
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
 .info-card p {
   margin: 0;
 }
 
+/* Steps with the number in a green circle */
 .info-card ol {
   margin: 0;
-  padding-left: 1.4em;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
 }
 
 .info-card li {
-  margin-bottom: 6px;
+  position: relative;
+  margin-bottom: 10px;
+  padding-left: 40px;
+  counter-increment: step;
+}
+
+.info-card li::before {
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: 1px;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  background: var(--main-soft);
+  border-radius: 50%;
+  color: var(--main-dark);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+/* Surya Namaskar rows and the small lists inside them have no number circle */
+.info-card li.position,
+.info-card .views li {
+  padding-left: 0;
+}
+
+.info-card li.position::before,
+.info-card .views li::before {
+  content: none;
 }
 
 .info-card .hold-note {
@@ -282,9 +371,10 @@ button:focus-visible {
   font-weight: 600;
 }
 
-/* Orange line on the left so the safety note stands out */
+/* Warm background so the safety note stands out */
 .safety {
-  border-left: 6px solid var(--accent);
+  background: linear-gradient(180deg, var(--accent-soft) 0%, #FFF8F2 100%);
+  border-color: rgba(222, 138, 90, 0.2);
 }
 
 .safety-extra {
@@ -402,8 +492,8 @@ button:focus-visible {
 
 .practice-title {
   margin: 0;
-  color: var(--main);
-  font-size: 1.5rem;
+  color: var(--main-dark);
+  font-size: 1.6rem;
 }
 
 .small-button {
@@ -442,17 +532,20 @@ button:focus-visible {
 
 /* The voice coach box: which step we are on */
 .coach-card {
-  padding: 12px 20px;
+  padding: 14px 20px;
   background: var(--card);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
 }
 
 .coach-label {
   margin: 0;
-  color: var(--text-soft);
-  font-size: 0.9rem;
+  color: var(--accent);
+  font-size: 0.75rem;
   font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 .coach-text {
@@ -464,8 +557,9 @@ button:focus-visible {
 
 /* The 30-second hold timer */
 .timer-card {
-  padding: 12px 20px;
+  padding: 14px 20px;
   background: var(--card);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   text-align: center;
@@ -473,13 +567,17 @@ button:focus-visible {
 
 .timer-label {
   margin: 0;
-  color: var(--text-soft);
+  color: var(--accent);
+  font-size: 0.75rem;
   font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 .timer-number {
   margin: 0;
-  color: var(--main);
+  color: var(--main-dark);
+  font-family: var(--font-title);
   font-size: 3rem;
   font-weight: 700;
   line-height: 1.1;
@@ -502,7 +600,8 @@ button:focus-visible {
 .timer-fill {
   width: 0;
   height: 100%;
-  background: var(--main);
+  background: linear-gradient(90deg, #5FB68A, var(--main));
+  border-radius: 999px;
   transition: width 0.2s linear;
 }
 
@@ -516,9 +615,11 @@ button:focus-visible {
 .tip-card {
   margin: 0;
   padding: 16px 20px;
-  background: var(--accent-soft);
+  background: linear-gradient(180deg, var(--accent-soft) 0%, #FFF7F0 100%);
+  border: 1px solid rgba(222, 138, 90, 0.25);
   border-left: 6px solid var(--accent);
   border-radius: var(--radius);
+  box-shadow: var(--shadow);
   font-size: 1.8rem;
   font-weight: 700;
   line-height: 1.25;
@@ -526,7 +627,8 @@ button:focus-visible {
 
 /* Green tip box when every joint is right */
 .tip-card.good {
-  background: var(--main-soft);
+  background: linear-gradient(180deg, var(--main-soft) 0%, #F3F9F5 100%);
+  border-color: rgba(47, 122, 87, 0.2);
   border-left-color: var(--main);
   color: var(--main-dark);
 }
@@ -537,8 +639,9 @@ button:focus-visible {
 }
 
 .score-card {
-  padding: 12px 20px;
+  padding: 14px 20px;
   background: var(--card);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   text-align: center;
@@ -546,14 +649,18 @@ button:focus-visible {
 
 .score-label {
   margin: 0;
-  color: var(--text-soft);
+  color: var(--accent);
+  font-size: 0.75rem;
   font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 /* Big score number, easy to read from 2 metres away */
 .score-number {
   margin: 0;
-  color: var(--main);
+  color: var(--main-dark);
+  font-family: var(--font-title);
   font-size: 3.5rem;
   font-weight: 700;
   line-height: 1.1;
@@ -594,8 +701,9 @@ button:focus-visible {
   position: relative;
   flex: 1;              /* take up all the space that is left */
   min-height: 0;
-  background: var(--text);
+  background: radial-gradient(circle at 50% 30%, #2A4337 0%, #14231B 75%);
   border-radius: var(--radius);
+  box-shadow: var(--shadow-big);
   overflow: hidden;
 }
 
@@ -633,7 +741,7 @@ button:focus-visible {
 
 .start-panel h2 {
   margin: 0;
-  font-size: 2rem;
+  font-size: 2.6rem;
 }
 
 .start-panel p {
@@ -836,7 +944,9 @@ button:focus-visible {
   align-items: center;
   justify-content: center;
   padding: 16px;
-  background: rgba(31, 45, 39, 0.55);
+  background: rgba(28, 46, 37, 0.45);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
   overflow-y: auto;
 }
 
@@ -853,7 +963,7 @@ button:focus-visible {
 
 .profile-form h2 {
   margin: 0 0 4px;
-  color: var(--main);
+  color: var(--main-dark);
 }
 
 .profile-form > p {
@@ -908,9 +1018,15 @@ button:focus-visible {
   margin-top: 24px;
 }
 
-/* "Hi, Asha! Not you?" on the home screen */
+/* "Hi, Asha! Not you?" on the home screen, in a small pill */
 .hello {
-  margin: 8px 0 0;
+  display: inline-block;
+  margin: 16px 0 0;
+  padding: 6px 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  box-shadow: var(--shadow);
   font-weight: 600;
 }
 
@@ -970,7 +1086,7 @@ button:focus-visible {
 
 .start-page h1 {
   margin: 0;
-  color: var(--main);
+  color: var(--main-dark);
   font-size: clamp(2.6rem, 9vw, 4.2rem);
 }
 
