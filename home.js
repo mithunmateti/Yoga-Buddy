@@ -97,8 +97,8 @@ setTimeout(function () {
 
 
 // ----- The intro screen -----
-// Shown once each time the app is opened (coming back from a pose
-// doesn't show it again). Get started → the questions → the home screen.
+// Only for someone new: Get started → the questions → the home screen.
+// Someone who has answered before goes straight to the home screen.
 const START_NAME = "yogaBuddyStarted";
 const startPage = document.getElementById("start-page");
 
@@ -116,7 +116,7 @@ function askIfNeeded() {
   }
 }
 
-if (seenStart()) {
+if (seenStart() || window.yogaProfile) {
   askIfNeeded();
 } else {
   startPage.hidden = false;

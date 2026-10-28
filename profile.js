@@ -4,11 +4,9 @@
 // Like an app's sign-up: one question per screen, with a progress
 // bar at the top, then a short "Getting your buddy ready…" moment.
 //
-// It is asked once each time someone opens the app (it is kept in
-// sessionStorage, which the browser forgets when the tab is closed),
-// so at the fair every new visitor is asked (close the tab and open the
-// app again for the next person).
-// Nothing leaves this device.
+// It is only asked the first time. The answers are saved in this
+// browser (localStorage), so they are still there after closing the
+// app or turning the device off. Nothing leaves this device.
 // =============================================================
 
 const PROFILE_NAME = "yogaBuddyProfile";
@@ -16,7 +14,7 @@ const PROFILE_NAME = "yogaBuddyProfile";
 // The details of the person using the app, or null if not asked yet
 function getProfile() {
   try {
-    return JSON.parse(sessionStorage.getItem(PROFILE_NAME));
+    return JSON.parse(localStorage.getItem(PROFILE_NAME));
   } catch (error) {
     return null;
   }
@@ -24,7 +22,7 @@ function getProfile() {
 
 function saveProfile(profile) {
   try {
-    sessionStorage.setItem(PROFILE_NAME, JSON.stringify(profile));
+    localStorage.setItem(PROFILE_NAME, JSON.stringify(profile));
   } catch (error) {
     // storage blocked: the details are only used on this page
   }
