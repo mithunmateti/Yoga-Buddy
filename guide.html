@@ -2,26 +2,41 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- viewport-fit=cover lets the app use the whole iPhone screen (around the notch) -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Pose guide – Yoga Buddy</title>
 
-  <!-- Fonts from Google Fonts: Fraunces for headings, Poppins for everything else -->
+  <!-- So it looks and opens like an app when added to a phone's home screen -->
+  <meta name="theme-color" content="#FBF8F3">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Yoga Buddy">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+  <link rel="icon" href="images/favicon.png">
+
+  <!-- Plus Jakarta Sans font from Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="guide-body">
   <!-- SCREEN 2: POSE GUIDE -->
+  <!-- App bar: round Back button, and the screen's name -->
+  <header class="app-bar">
+    <a class="icon-button" href="index.html" aria-label="All poses">‹</a>
+    <span class="app-bar-title">Pose guide</span>
+    <span class="icon-button-space"></span>
+  </header>
+
   <!-- The empty parts below are filled in by guide.js, using poses.js -->
   <main class="page" id="guide">
-    <a class="back-link" href="index.html">← All poses</a>
-
     <div class="guide-layout">
 
-      <!-- Left side (or top on a phone): big picture of the pose -->
-      <div class="pose-picture big">
+      <!-- Left side (or top on a phone): big picture of the pose, on the pose's own colour -->
+      <div id="guide-picture" class="pose-picture big">
         <span class="picture-missing">Picture coming soon</span>
         <img id="pose-image" alt="" onerror="this.remove()">
       </div>
@@ -30,6 +45,7 @@
       <div class="guide-info">
         <h1 id="pose-name"></h1>
         <p id="pose-english" class="english-name"></p>
+        <div id="pose-chips" class="chips"></div>
 
         <section class="info-card">
           <h2 id="steps-title">Steps</h2>
@@ -37,30 +53,39 @@
           <p id="hold-note" class="hold-note">Then hold the pose for 30 seconds. Yoga Buddy's voice will guide you. 🔊</p>
         </section>
 
+        <!-- Before the camera: what to do so it can see you (and that nothing is recorded) -->
         <section class="info-card">
-          <h2>Camera</h2>
-          <span id="view-badge" class="view-badge"></span>
-          <p id="view-text"></p>
+          <h2>Before you start</h2>
+          <ul class="ready-list">
+            <li><span>📏</span><span id="view-text"></span></li>
+            <li><span>💡</span>Stand where it's bright, with no window right behind you.</li>
+            <li><span>🧍</span>Only one person in the picture.</li>
+            <li><span>🔒</span>The camera stays on this device. Nothing is recorded.</li>
+          </ul>
+          <span id="view-badge" class="view-badge" hidden></span>
         </section>
 
         <!-- Safety text from PRD section 11. It is the same for every pose. -->
         <section class="info-card safety">
-          <h2>Safety</h2>
+          <h2>⚠️ Safety</h2>
           <p>Only go as far as feels comfortable. Stop if anything hurts.
              Yoga Buddy does not replace a real yoga teacher or doctor.</p>
           <!-- Extra safety advice for this pose (from poses.js). Hidden when empty. -->
           <p id="safety-extra" class="safety-extra"></p>
         </section>
-
-        <a id="start-button" class="button start-button" href="index.html">Start with camera</a>
       </div>
 
     </div>
   </main>
 
-  <!-- poses.js must load first, because guide.js uses the POSES list from it.
+  <!-- The Start button stays at the bottom of the screen, like in an app -->
+  <div class="bottom-bar">
+    <a id="start-button" class="button wide" href="index.html">I'm ready · Open camera</a>
+  </div>
+
+  <!-- profile.js asks for the name, age and gender first.
+       poses.js must load before guide.js, because guide.js uses the POSES list from it.
        figure.js draws the stick figures of the Surya Namaskar poses. -->
-  <!-- profile.js asks for the name, age and gender first -->
   <script src="profile.js"></script>
   <script src="poses.js"></script>
   <script src="figure.js"></script>

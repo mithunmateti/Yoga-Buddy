@@ -56,6 +56,9 @@ const POSES = [
     id: "tadasana",                 // short name used in web addresses
     sanskrit: "Tadasana",
     english: "Palm Tree",
+    level: "Easy",                 // shown on the pose card: "Easy" or "Medium"
+    focus: "Posture",
+    tint: "#F3ECE0",               // the pose's own soft colour (cards, guide)
     image: "images/tadasana.png",
     view: "front",                  // "front" = face the camera, "side" = turn sideways
     // Steps follow the Common Yoga Protocol (Ministry of AYUSH) version of Tadasana.
@@ -91,6 +94,9 @@ const POSES = [
     id: "vrikshasana",
     sanskrit: "Vrikshasana",
     english: "Tree",
+    level: "Medium",
+    focus: "Balance",
+    tint: "#E1F0E8",
     image: "images/vrikshasana.png",
     view: "front",
     // Steps follow the Common Yoga Protocol (Ministry of AYUSH) version.
@@ -126,6 +132,9 @@ const POSES = [
     id: "virabhadrasana2",
     sanskrit: "Virabhadrasana II",
     english: "Warrior II",
+    level: "Medium",
+    focus: "Strength",
+    tint: "#F8E4DC",
     image: "images/virabhadrasana2.png",
     view: "front",
     // DRAFT steps written by Claude. Advaith Sai, please check and edit.
@@ -160,6 +169,9 @@ const POSES = [
     id: "utkatasana",
     sanskrit: "Utkatasana",
     english: "Chair",
+    level: "Medium",
+    focus: "Legs",
+    tint: "#ECE6F5",
     image: "images/utkatasana.png",
     view: "side",
     // DRAFT steps written by Claude. Advaith Sai, please check and edit.
@@ -191,6 +203,9 @@ const POSES = [
     id: "bhujangasana",
     sanskrit: "Bhujangasana",
     english: "Cobra",
+    level: "Easy",
+    focus: "Back stretch",
+    tint: "#E2EDF6",
     image: "images/bhujangasana.png",
     view: "side",
     // DRAFT steps written by Claude. Advaith Sai, please check and edit.

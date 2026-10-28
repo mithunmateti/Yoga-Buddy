@@ -45,7 +45,6 @@ const coachFigure = document.getElementById("coach-figure");
 const countdownText = document.getElementById("countdown");
 const timerCard = document.getElementById("timer-card");
 const timerNumber = document.getElementById("timer-seconds");
-const timerFill = document.getElementById("timer-fill");
 const timerNote = document.getElementById("timer-note");
 
 // The time now, in seconds
@@ -549,6 +548,6 @@ function showTimer(visible) {
 
 function updateTimer(note) {
   timerNumber.textContent = Math.min(HOLD_SECONDS, Math.floor(held));
-  timerFill.style.width = (held / HOLD_SECONDS * 100) + "%";
+  timerCard.style.setProperty("--progress", Math.min(1, held / HOLD_SECONDS));   // fills the ring
   timerNote.textContent = note;
 }

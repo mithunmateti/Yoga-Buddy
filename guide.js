@@ -27,9 +27,16 @@ if (!pose) {
 
   // Names
   document.getElementById("pose-name").textContent = pose.sanskrit;
-  document.getElementById("pose-english").textContent = "(" + pose.english + ")";
+  document.getElementById("pose-english").textContent = pose.english + " pose";
 
-  // Picture
+  // The little labels, e.g. "Easy · Balance · 30 s hold"
+  const chips = [pose.level, pose.focus, "30 s hold"].filter(Boolean);
+  document.getElementById("pose-chips").innerHTML = chips.map(function (chip) {
+    return '<span class="chip">' + chip + "</span>";
+  }).join("");
+
+  // Picture, on the pose's own soft colour
+  document.getElementById("guide-picture").style.setProperty("--tint", pose.tint || "var(--primary-soft)");
   const image = document.getElementById("pose-image");
   image.src = pose.image;
   image.alt = pose.sanskrit + " pose";
@@ -61,6 +68,9 @@ if (!pose) {
   } else {
     badge.textContent = "Front view";
     viewText.textContent = "Face the camera.";
+  }
+  if (pose.view === "side") {
+    document.getElementById("pose-chips").innerHTML += '<span class="chip">Side view</span>';
   }
   // Where to put the camera (a pose can have its own advice in poses.js)
   viewText.textContent += " " + (pose.camera || "Place it about 2 metres away so your whole body fits on screen.");

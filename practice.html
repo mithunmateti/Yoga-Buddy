@@ -2,26 +2,38 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- viewport-fit=cover lets the app use the whole iPhone screen (around the notch) -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Practice – Yoga Buddy</title>
 
-  <!-- Fonts from Google Fonts: Fraunces for headings, Poppins for everything else -->
+  <!-- So it looks and opens like an app when added to a phone's home screen.
+       The practice screen is dark, so the camera picture stands out. -->
+  <meta name="theme-color" content="#0F1A1A">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Yoga Buddy">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+  <link rel="icon" href="images/favicon.png">
+
+  <!-- Plus Jakarta Sans font from Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
-  <!-- SCREEN 3: PRACTICE -->
+<body class="practice-body">
+  <!-- SCREEN 3: PRACTICE (dark) -->
   <main class="practice-page">
 
     <!-- Top bar: Back and Restart buttons, and the pose name -->
     <div class="practice-top">
-      <a id="back-button" class="button small-button" href="index.html">Back</a>
-      <!-- Restart only appears after Start is pressed -->
-      <button id="restart-button" class="button small-button secondary-button" hidden>Restart</button>
+      <a id="back-button" class="icon-button" href="index.html" aria-label="Back">‹</a>
       <h1 id="pose-name" class="practice-title"></h1>
+      <!-- Restart only appears after Start is pressed -->
+      <button id="restart-button" class="button small-button secondary-button" hidden>↻ Restart</button>
     </div>
 
     <div class="practice-main">
@@ -63,14 +75,19 @@
         </div>
 
         <!-- The 30-second hold timer (appears after the last step) -->
+        <!-- The ring fills up as the seconds count (coach.js sets --progress) -->
         <div id="timer-card" class="timer-card" hidden>
-          <p class="timer-label">Hold</p>
-          <p class="timer-number"><span id="timer-seconds">0</span><span class="timer-out-of"> / 30 s</span></p>
-          <div class="timer-bar"><div id="timer-fill" class="timer-fill"></div></div>
-          <p id="timer-note" class="timer-note"></p>
+          <div class="timer-ring">
+            <p class="timer-number"><span id="timer-seconds">0</span><span class="timer-out-of">/30s</span></p>
+          </div>
+          <div class="timer-words">
+            <p class="timer-label">Hold</p>
+            <p id="timer-note" class="timer-note"></p>
+          </div>
         </div>
 
-        <div class="score-card">
+        <!-- The score card changes colour with the score (practice.js sets data-band) -->
+        <div id="score-card" class="score-card">
           <p class="score-label">Score</p>
           <p class="score-number"><span id="score">–</span><span class="score-out-of">/100</span></p>
         </div>

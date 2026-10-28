@@ -2,57 +2,74 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- viewport-fit=cover lets the app use the whole iPhone screen (around the notch) -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Yoga Buddy</title>
 
-  <!-- Fonts from Google Fonts: Fraunces for headings, Poppins for everything else -->
+  <!-- So it looks and opens like an app when added to a phone's home screen -->
+  <meta name="theme-color" content="#FAF7F2">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Yoga Buddy">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+  <link rel="icon" href="images/favicon.png">
+
+  <!-- Plus Jakarta Sans font from Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="style.css">
 </head>
 <body data-ask-later>
-  <!-- SCREEN 0: START PAGE. Shown first each time the app is opened
-       (home.js). Start → the name form → the poses below. -->
-  <section id="start-page" class="start-page" hidden>
-    <div class="start-photos" aria-hidden="true">
+  <!-- SCREEN 0: INTRO. Shown first each time the app is opened (home.js).
+       Get started → the questions (profile.js) → the home screen below. -->
+  <section id="start-page" class="intro" hidden>
+    <div class="intro-glow" aria-hidden="true"></div>
+
+    <!-- The pose photo inside an arch, like a yoga studio window -->
+    <div class="intro-arch" aria-hidden="true">
       <img src="images/vrikshasana.png" alt="">
-      <img src="images/virabhadrasana2.png" alt="">
-      <img src="images/utkatasana.png" alt="">
     </div>
-    <h1>Yoga Buddy</h1>
-    <p class="start-tagline">Your yoga teacher, right on your screen</p>
-    <ol class="start-steps">
-      <li><span>1</span>Pick a pose</li>
-      <li><span>2</span>Step back so the camera sees you</li>
-      <li><span>3</span>Follow the voice coach</li>
-    </ol>
-    <button id="begin-button" class="button big-button">Start</button>
-    <p class="start-note">Works on laptops, phones and iPads. Turn your sound on 🔊</p>
+
+    <div class="intro-text">
+      <p class="intro-kicker">Your AI yoga coach</p>
+      <h1>Yoga Buddy</h1>
+      <p class="intro-tagline">It watches your pose through the camera, tells you what to fix, and cheers you on.</p>
+    </div>
+
+    <ul class="intro-features">
+      <li><span>📷</span>Camera checks your pose</li>
+      <li><span>🔊</span>A voice coach guides you</li>
+      <li><span>⭐</span>Get a score out of 100</li>
+    </ul>
+
+    <button id="begin-button" class="button intro-button">Get started</button>
   </section>
 
   <!-- SCREEN 1: HOME -->
-  <main class="page">
+  <!-- App bar: the Yoga Buddy name on the left, the person's initial on the right -->
+  <header class="app-bar">
+    <a class="brand" href="index.html">
+      <img class="brand-mark" src="images/favicon.png" alt="">
+      <span class="brand-name">Yoga Buddy</span>
+    </a>
+    <span id="avatar" class="avatar" aria-hidden="true"></span>
+  </header>
 
-    <!-- Small Yoga Buddy name in the top-left corner -->
-    <header class="site-header">
-      <a class="brand" href="index.html">
-        <!-- Logo is optional. If images/logo.png does not exist, the 🧘 shows instead. -->
-        <span class="brand-mark">🧘<img class="logo" src="images/logo.png" alt="" onerror="this.remove()"></span>
-        <span class="brand-text">
-          <span class="brand-name">Yoga Buddy</span>
-          <span class="tagline">Your yoga teacher, right on your screen</span>
-        </span>
-      </a>
-    </header>
-
-    <!-- "Welcome, Asha" (home.js) -->
+  <main class="page home">
+    <!-- "Good evening" and "Welcome, Asha" (home.js) -->
+    <p id="greet-time" class="greet-time"></p>
     <h1 id="hello" class="hello">Welcome</h1>
 
-    <h2 class="section-title">Choose a pose to begin</h2>
+    <!-- Today's pose: one big card (home.js picks a different pose each day) -->
+    <h2 class="section-title">Today's pose</h2>
+    <a id="hero" class="hero-card"></a>
 
     <!-- The pose cards are added here by home.js -->
+    <h2 class="section-title">All poses</h2>
     <div id="pose-grid" class="pose-grid"></div>
 
     <p class="privacy-note">🔒 Body tracking runs on your device and nothing is saved.
@@ -60,8 +77,8 @@
       If the AI buddy is on, it sends a camera photo to Google Gemini every few seconds while you hold a pose.</p>
   </main>
 
-  <!-- poses.js must load first, because home.js uses the POSES list from it -->
-  <!-- profile.js asks for the name, age and gender first -->
+  <!-- profile.js asks for the name, age and gender first.
+       poses.js must load before home.js, because home.js uses the POSES list from it. -->
   <script src="profile.js"></script>
   <script src="poses.js"></script>
   <script src="home.js"></script>

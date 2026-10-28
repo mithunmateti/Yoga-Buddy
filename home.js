@@ -1,19 +1,86 @@
 // =============================================================
 // home.js — builds the Home screen.
-// It goes through the POSES list (from poses.js) and makes one
-// card for each pose. Clicking a card opens that pose's guide.
+// "Welcome, Asha", one big "Today's pose" card, then a card for
+// each pose in the POSES list (from poses.js). Clicking a card
+// opens that pose's guide.
 // =============================================================
 
-// "Welcome, Asha" at the top of the home screen
+// "Good evening" and "Welcome, Asha" at the top, and Asha's initial in the corner
 function showHello() {
-  const hello = document.getElementById("hello");
-  hello.textContent = window.yogaProfile ? "Welcome, " + window.yogaProfile.name : "Welcome";
+  const hour = new Date().getHours();
+  document.getElementById("greet-time").textContent =
+    hour < 12 ? "Good morning ☀️" : hour < 17 ? "Good afternoon 🌤️" : "Good evening 🌙";
+
+  const name = window.yogaProfile ? window.yogaProfile.name : "";
+  document.getElementById("hello").textContent = name ? "Welcome, " + name : "Welcome";
+  document.getElementById("avatar").textContent = name ? name[0].toUpperCase() : "🙂";
 }
 showHello();
 document.addEventListener("profilechange", showHello);
 
-// The start page: shown once each time the app is opened (coming back
-// from a pose doesn't show it again). Start → the name form → the poses.
+// The little labels on a card, e.g. "Easy · Balance · Front view"
+function chipsFor(pose) {
+  const chips = [pose.level, pose.focus, pose.view === "side" ? "Side view" : "Front view"];
+  return chips.filter(Boolean).map(function (chip) {
+    return `<span class="chip">${chip}</span>`;
+  }).join("");
+}
+
+// ----- Today's pose: a different pose each day -----
+const day = Math.floor(Date.now() / 86400000);   // days since 1970
+const today = POSES[day % POSES.length];
+const hero = document.getElementById("hero");
+hero.href = "guide.html?pose=" + today.id;
+hero.style.setProperty("--tint", today.tint || "var(--primary-soft)");
+hero.innerHTML = `
+  <div class="hero-text">
+    <span class="hero-kicker">Today · 30 second hold</span>
+    <h3>${today.sanskrit}</h3>
+    <p>${today.english} pose</p>
+    <div class="chips">${chipsFor(today)}</div>
+    <span class="button hero-button">Start ▸</span>
+  </div>
+  <img class="hero-photo" src="${today.image}" alt="${today.sanskrit} pose" onerror="this.remove()">
+`;
+
+// ----- All the poses -----
+const grid = document.getElementById("pose-grid");
+
+for (const pose of POSES) {
+  // Each card is a link, e.g. guide.html?pose=tadasana
+  const card = document.createElement("a");
+  card.className = "pose-card";
+  card.href = "guide.html?pose=" + pose.id;
+  card.style.setProperty("--tint", pose.tint || "var(--primary-soft)");
+
+  // What goes inside the card: picture, Sanskrit name, English name and labels.
+  // If the picture is missing, the image removes itself and
+  // "Picture coming soon" shows instead.
+  card.innerHTML = `
+    <div class="pose-picture">
+      <span class="picture-missing">Picture coming soon</span>
+      <img src="${pose.image}" alt="${pose.sanskrit} pose" onerror="this.remove()">
+    </div>
+    <div class="pose-card-text">
+      <h3>${pose.sanskrit}</h3>
+      <p>${pose.english}</p>
+      <div class="chips">${chipsFor(pose)}</div>
+    </div>
+  `;
+
+  // A flow (Surya Namaskar) gets a small label: how many poses it has
+  if (pose.positions) {
+    card.querySelector(".chips").innerHTML += `<span class="chip">☀️ ${pose.positions.length} poses</span>`;
+  }
+
+  // Put the finished card on the page
+  grid.appendChild(card);
+}
+
+
+// ----- The intro screen -----
+// Shown once each time the app is opened (coming back from a pose
+// doesn't show it again). Get started → the questions → the home screen.
 const START_NAME = "yogaBuddyStarted";
 const startPage = document.getElementById("start-page");
 
@@ -35,44 +102,21 @@ if (seenStart()) {
   askIfNeeded();
 } else {
   startPage.hidden = false;
+  document.body.classList.add("no-scroll");
   document.getElementById("begin-button").addEventListener("click", function () {
     try {
       sessionStorage.setItem(START_NAME, "yes");
     } catch (error) {
-      // storage blocked: the start page shows again next time
+      // storage blocked: the intro shows again next time
     }
-    startPage.hidden = true;
-    window.scrollTo(0, 0);
+    startPage.classList.add("leaving");   // fades away (style.css)
+    setTimeout(function () {
+      startPage.hidden = true;
+      if (!document.querySelector(".onboarding")) {   // the questions still need it
+        document.body.classList.remove("no-scroll");
+      }
+      window.scrollTo(0, 0);
+    }, 350);
     askIfNeeded();
   });
-}
-
-// The empty box in index.html where the cards will go
-const grid = document.getElementById("pose-grid");
-
-for (const pose of POSES) {
-  // Each card is a link, e.g. guide.html?pose=tadasana
-  const card = document.createElement("a");
-  card.className = "pose-card";
-  card.href = "guide.html?pose=" + pose.id;
-
-  // What goes inside the card: picture, Sanskrit name, English name in brackets.
-  // If the picture is missing, the image removes itself and
-  // "Picture coming soon" shows instead.
-  card.innerHTML = `
-    <div class="pose-picture">
-      <span class="picture-missing">Picture coming soon</span>
-      <img src="${pose.image}" alt="${pose.sanskrit} pose" onerror="this.remove()">
-    </div>
-    <h3>${pose.sanskrit}</h3>
-    <p>(${pose.english})</p>
-  `;
-
-  // A flow (Surya Namaskar) gets a small label: how many poses it has
-  if (pose.positions) {
-    card.innerHTML += `<p class="flow-badge">☀️ ${pose.positions.length} poses in a flow</p>`;
-  }
-
-  // Put the finished card on the page
-  grid.appendChild(card);
 }

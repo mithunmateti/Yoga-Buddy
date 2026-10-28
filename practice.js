@@ -50,6 +50,7 @@ const canvas = document.getElementById("skeleton");
 const pen = canvas.getContext("2d");   // the "pen" we draw on the canvas with
 const statusText = document.getElementById("status");
 const scoreText = document.getElementById("score");
+const scoreCard = document.getElementById("score-card");
 const tipText = document.getElementById("tip");
 const debugList = document.getElementById("debug-angles");
 const startPanel = document.getElementById("start-panel");
@@ -461,11 +462,14 @@ function describeMissing(part) {
 }
 
 // Big score number. "–" means there is no score right now.
+// The card's colour shows how good it is: green 80+, amber 50–79, orange below 50.
 function showScore(score) {
   if (score === null) {
     scoreText.textContent = "–";
+    scoreCard.dataset.band = "";
   } else {
     scoreText.textContent = score;
+    scoreCard.dataset.band = score >= 80 ? "great" : score >= 50 ? "ok" : "low";
   }
 }
 
@@ -487,7 +491,7 @@ function showAngles(joints, hidden) {
 
 // DEBUG: write each angle next to its joint on the canvas
 function drawAngleLabels(joints) {
-  pen.font = "bold 30px Poppins, Arial, sans-serif";
+  pen.font = "bold 30px "Plus Jakarta Sans", Arial, sans-serif";
   pen.lineWidth = 6;
   pen.strokeStyle = "rgba(0, 0, 0, 0.7)";   // dark outline so the text is easy to read
   pen.fillStyle = "yellow";
