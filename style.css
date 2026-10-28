@@ -748,7 +748,7 @@ input:focus-visible {
    there is space for: 2 on a phone, up to 5 on a laptop. */
 .pose-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 12px;
 }
 
@@ -1536,6 +1536,259 @@ input:focus-visible {
 
   .countdown {
     font-size: 5rem;
+  }
+}
+
+
+/* ----- 12. Liquid glass -----
+   Like Apple's "Liquid Glass" (iOS 26): bars, buttons and cards are
+   frosted see-through glass with a shiny top edge, floating over soft
+   blobs of colour. This section goes on top of everything above. */
+:root {
+  --glass: linear-gradient(135deg, rgba(255, 255, 255, 0.62) 0%, rgba(255, 255, 255, 0.34) 100%);
+  --glass-edge: rgba(255, 255, 255, 0.75);
+  --glass-blur: blur(22px) saturate(180%);
+  /* A bright line along the top inside edge, a soft one along the bottom,
+     and a shadow underneath: this is what makes it look like glass */
+  --glass-shine: inset 0 1px 0 rgba(255, 255, 255, 0.95), inset 0 -1px 0 rgba(255, 255, 255, 0.35);
+  --glass-shadow: 0 10px 34px rgba(29, 43, 42, 0.12);
+
+  --glass-dark: linear-gradient(135deg, rgba(255, 255, 255, 0.11) 0%, rgba(255, 255, 255, 0.04) 100%);
+  --glass-dark-edge: rgba(255, 255, 255, 0.16);
+  --glass-dark-shine: inset 0 1px 0 rgba(255, 255, 255, 0.22), inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* The soft blobs of colour behind the glass (teal, peach, lavender).
+   They stay still while the page scrolls over them. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: -10%;
+  z-index: -1;
+  background:
+    radial-gradient(38vmax 38vmax at 8% 12%, rgba(31, 111, 107, 0.22) 0%, transparent 70%),
+    radial-gradient(34vmax 34vmax at 92% 22%, rgba(232, 131, 58, 0.2) 0%, transparent 70%),
+    radial-gradient(40vmax 40vmax at 70% 92%, rgba(155, 135, 220, 0.18) 0%, transparent 70%),
+    radial-gradient(30vmax 30vmax at 15% 85%, rgba(95, 211, 148, 0.14) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* The dark practice screen gets darker, deeper blobs */
+.practice-body::before {
+  background:
+    radial-gradient(40vmax 40vmax at 10% 0%, rgba(31, 111, 107, 0.45) 0%, transparent 70%),
+    radial-gradient(36vmax 36vmax at 100% 100%, rgba(232, 131, 58, 0.16) 0%, transparent 70%),
+    radial-gradient(30vmax 30vmax at 95% 10%, rgba(155, 135, 220, 0.14) 0%, transparent 70%);
+}
+
+/* Light glass: the app bar, round buttons, chips, cards and the bottom bar */
+.app-bar,
+.icon-button,
+.chip,
+.info-card,
+.privacy-note,
+.bottom-bar,
+.big-input,
+.option span,
+.secondary-button {
+  background: var(--glass);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-edge);
+  box-shadow: var(--glass-shine), var(--glass-shadow);
+}
+
+/* The app bar floats as a glass capsule, like the new iPhone bars */
+.app-bar {
+  top: calc(8px + var(--safe-top));
+  width: min(100% - 24px, 1056px);
+  margin: calc(8px + var(--safe-top)) auto 0;
+  padding: 8px 8px 8px 12px;
+  border-radius: 999px;
+}
+
+/* The Start bar on the guide floats as a glass capsule too */
+.bottom-bar {
+  left: 50%;
+  right: auto;
+  bottom: calc(12px + var(--safe-bottom));
+  width: min(100% - 24px, 520px);
+  padding: 8px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+}
+
+.bottom-bar .button {
+  max-width: none;
+}
+
+.chip {
+  box-shadow: var(--glass-shine);
+}
+
+/* The safety note stays peach, as peach-tinted glass */
+.safety {
+  background: linear-gradient(135deg, rgba(253, 235, 220, 0.9) 0%, rgba(253, 235, 220, 0.55) 100%);
+  border-left: 5px solid var(--accent);
+}
+
+/* Cards in a pose's colour: the colour shows through frosted glass */
+.pose-card,
+.hero-card,
+.pose-picture.big {
+  background-color: transparent;
+  background-image:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.12) 60%),
+    linear-gradient(var(--tint-glass), var(--tint-glass));
+  --tint-glass: color-mix(in srgb, var(--tint, var(--primary-soft)) 70%, transparent);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-edge);
+  box-shadow: var(--glass-shine), var(--glass-shadow);
+}
+
+.pose-card .pose-picture {
+  background: rgba(255, 255, 255, 0.55);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+/* Behind a photo the glass is almost solid, so the white around the
+   person blends away instead of showing as a pale box */
+.hero-card,
+.pose-picture.big {
+  --tint-glass: color-mix(in srgb, var(--tint, var(--primary-soft)) 94%, transparent);
+}
+
+/* Buttons look like a drop of coloured glass: a shine on top */
+.button {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), inset 0 -2px 6px rgba(0, 0, 0, 0.12), 0 8px 22px rgba(31, 111, 107, 0.3);
+}
+
+.button::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 50%;
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.32) 0%, rgba(255, 255, 255, 0) 100%);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.secondary-button {
+  color: var(--primary-dark);
+}
+
+/* The intro's feature pills and the cream button are glass on teal */
+.intro-features li {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.06) 100%);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+.intro-button {
+  background: linear-gradient(180deg, #FFFFFF 0%, rgba(251, 248, 243, 0.86) 100%);
+  box-shadow: inset 0 1px 0 #FFFFFF, inset 0 -2px 6px rgba(29, 43, 42, 0.08), 0 14px 30px rgba(0, 0, 0, 0.25);
+}
+
+/* The questions screen: glass over the colour blobs */
+.onboarding {
+  background: transparent;
+  -webkit-backdrop-filter: blur(40px) saturate(160%);
+  backdrop-filter: blur(40px) saturate(160%);
+}
+
+.onboarding::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(40vmax 40vmax at 0% 0%, rgba(31, 111, 107, 0.2) 0%, transparent 70%),
+    radial-gradient(36vmax 36vmax at 100% 100%, rgba(232, 131, 58, 0.18) 0%, transparent 70%),
+    var(--background);
+}
+
+.option input:checked + span {
+  background: linear-gradient(135deg, rgba(220, 239, 236, 0.95) 0%, rgba(220, 239, 236, 0.6) 100%);
+  border-color: var(--primary);
+}
+
+/* Dark glass on the practice screen */
+.practice-body .icon-button,
+.practice-body .secondary-button,
+.coach-card,
+.timer-card,
+.score-card,
+.debug-card {
+  background: var(--glass-dark);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-dark-edge);
+  box-shadow: var(--glass-dark-shine), 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+
+.practice-body .secondary-button {
+  color: white;
+}
+
+/* The ring's middle has to match the glass card behind it */
+.timer-ring {
+  background:
+    radial-gradient(closest-side, rgba(15, 26, 26, 0.85) 79%, transparent 80%),
+    conic-gradient(var(--success-bright) calc(var(--progress) * 360deg), rgba(255, 255, 255, 0.1) 0);
+}
+
+.tip-card {
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-dark-shine);
+}
+
+.camera-box {
+  border-color: var(--glass-dark-edge);
+  box-shadow: var(--glass-dark-shine), 0 20px 50px rgba(0, 0, 0, 0.35);
+}
+
+/* The score card still glows in its score colour */
+.score-card[data-band="great"] {
+  border-color: rgba(95, 211, 148, 0.6);
+  box-shadow: var(--glass-dark-shine), 0 0 28px rgba(95, 211, 148, 0.22);
+}
+
+.score-card[data-band="ok"] {
+  border-color: rgba(242, 163, 58, 0.55);
+}
+
+/* Older browsers without see-through blur: use solid cards instead, so
+   the words stay easy to read */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .app-bar,
+  .icon-button,
+  .chip,
+  .info-card,
+  .privacy-note,
+  .bottom-bar,
+  .big-input,
+  .option span,
+  .secondary-button {
+    background: var(--card);
+  }
+
+  .onboarding {
+    background: var(--background);
+  }
+
+  .practice-body .icon-button,
+  .coach-card,
+  .timer-card,
+  .score-card,
+  .debug-card {
+    background: var(--night-card);
   }
 }
 
