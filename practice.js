@@ -491,7 +491,7 @@ function showAngles(joints, hidden) {
 
 // DEBUG: write each angle next to its joint on the canvas
 function drawAngleLabels(joints) {
-  pen.font = "bold 30px "Plus Jakarta Sans", Arial, sans-serif";
+  pen.font = "bold 30px 'Plus Jakarta Sans', Arial, sans-serif";
   pen.lineWidth = 6;
   pen.strokeStyle = "rgba(0, 0, 0, 0.7)";   // dark outline so the text is easy to read
   pen.fillStyle = "yellow";
