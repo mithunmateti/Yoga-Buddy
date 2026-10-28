@@ -928,3 +928,92 @@ button:focus-visible {
   text-decoration: underline;
   cursor: pointer;
 }
+
+
+/* ----- 10. Start page (the first screen) ----- */
+.start-page {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  overflow-y: auto;
+  background: linear-gradient(160deg, var(--main-soft) 0%, var(--background) 55%, var(--accent-soft) 100%);
+  text-align: center;
+}
+
+.start-photos {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 4px;
+  height: clamp(140px, 30vh, 260px);
+  margin-bottom: 16px;
+}
+
+.start-photos img {
+  height: 100%;
+  width: auto;
+  max-width: 32vw;            /* all three fit side by side on a phone */
+  object-fit: contain;
+  object-position: bottom;
+  mix-blend-mode: multiply;   /* the white behind each photo disappears */
+  filter: brightness(1.08) contrast(1.05);   /* turns the off-white behind them fully white */
+}
+
+.start-photos img:nth-child(2) {
+  height: 85%;
+}
+
+.start-page h1 {
+  margin: 0;
+  color: var(--main);
+  font-size: clamp(2.6rem, 9vw, 4.2rem);
+}
+
+.start-tagline {
+  margin: 4px 0 24px;
+  color: var(--text-soft);
+  font-size: clamp(1rem, 3vw, 1.3rem);
+}
+
+.start-steps {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin: 0 0 28px;
+  padding: 0;
+  list-style: none;
+}
+
+.start-steps li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px 8px 8px;
+  background: var(--card);
+  border-radius: 999px;
+  box-shadow: var(--shadow);
+  font-weight: 600;
+}
+
+.start-steps span {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  background: var(--accent);
+  border-radius: 50%;
+  color: white;
+  font-size: 0.9rem;
+}
+
+.start-note {
+  margin: 16px 0 0;
+  color: var(--text-soft);
+  font-size: 0.9rem;
+}

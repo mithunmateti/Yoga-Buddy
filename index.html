@@ -12,7 +12,26 @@
 
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body data-ask-later>
+  <!-- SCREEN 0: START PAGE. Shown first each time the app is opened
+       (home.js). Start → the name form → the poses below. -->
+  <section id="start-page" class="start-page" hidden>
+    <div class="start-photos" aria-hidden="true">
+      <img src="images/vrikshasana.png" alt="">
+      <img src="images/virabhadrasana2.png" alt="">
+      <img src="images/utkatasana.png" alt="">
+    </div>
+    <h1>Yoga Buddy</h1>
+    <p class="start-tagline">Your yoga teacher, right on your screen</p>
+    <ol class="start-steps">
+      <li><span>1</span>Pick a pose</li>
+      <li><span>2</span>Step back so the camera sees you</li>
+      <li><span>3</span>Follow the voice coach</li>
+    </ol>
+    <button id="begin-button" class="button big-button">Start</button>
+    <p class="start-note">Works on laptops, phones and iPads. Turn your sound on 🔊</p>
+  </section>
+
   <!-- SCREEN 1: HOME -->
   <main class="page">
 

@@ -23,6 +23,41 @@ function showHello() {
 showHello();
 document.addEventListener("profilechange", showHello);
 
+// The start page: shown once each time the app is opened (coming back
+// from a pose doesn't show it again). Start → the name form → the poses.
+const START_NAME = "yogaBuddyStarted";
+const startPage = document.getElementById("start-page");
+
+function seenStart() {
+  try {
+    return sessionStorage.getItem(START_NAME) === "yes";
+  } catch (error) {
+    return false;
+  }
+}
+
+function askIfNeeded() {
+  if (!window.yogaProfile) {
+    askProfile(showHello);
+  }
+}
+
+if (seenStart()) {
+  askIfNeeded();
+} else {
+  startPage.hidden = false;
+  document.getElementById("begin-button").addEventListener("click", function () {
+    try {
+      sessionStorage.setItem(START_NAME, "yes");
+    } catch (error) {
+      // storage blocked: the start page shows again next time
+    }
+    startPage.hidden = true;
+    window.scrollTo(0, 0);
+    askIfNeeded();
+  });
+}
+
 // The empty box in index.html where the cards will go
 const grid = document.getElementById("pose-grid");
 

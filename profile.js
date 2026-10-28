@@ -69,9 +69,10 @@ function askProfile(done) {
   });
 }
 
-// When the page opens: ask, unless this person has already told us
+// When the page opens: ask, unless this person has already told us.
+// (The home page asks after its start page instead: data-ask-later.)
 window.yogaProfile = getProfile();
-if (!window.yogaProfile) {
+if (!window.yogaProfile && !document.body.hasAttribute("data-ask-later")) {
   askProfile(function () {
     document.dispatchEvent(new Event("profilechange"));
   });
