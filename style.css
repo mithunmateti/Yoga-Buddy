@@ -411,8 +411,10 @@ button:focus-visible {
   font-size: 1rem;
 }
 
-/* Camera and side panel. On a phone the panel goes below the camera;
-   on a wider screen it goes on the right. */
+/* Camera and side panel. A screen held sideways (laptop, iPad or phone
+   turned sideways) has the panel on the right. A screen held upright
+   (phone, iPad) has a small panel BELOW a big camera (see the end of
+   this section). */
 .practice-main {
   display: flex;
   flex-direction: column;
@@ -421,13 +423,13 @@ button:focus-visible {
   min-height: 0;
 }
 
-@media (min-width: 800px) {
+@media (orientation: landscape) {
   .practice-main {
     flex-direction: row;
   }
 
   .practice-panel {
-    width: 280px;
+    width: clamp(200px, 28vw, 280px);
   }
 }
 
@@ -702,4 +704,110 @@ button:focus-visible {
   color: var(--text);
   font-size: 0.8rem;
   font-weight: 600;
+}
+
+
+/* ----- 8. Phones and iPads held upright -----
+   The camera gets most of the screen, so you can see yourself.
+   The panel below it is small: the tip across the top, then the
+   coach and the score side by side, then the timer. The debug box
+   is hidden. */
+@media (orientation: portrait) {
+  .practice-page {
+    gap: 8px;
+    padding: 8px 10px 10px;
+  }
+
+  .practice-top {
+    gap: 8px;
+  }
+
+  .practice-title {
+    font-size: 1.2rem;
+  }
+
+  .small-button {
+    padding: 6px 14px;
+    font-size: 0.9rem;
+  }
+
+  .practice-main {
+    gap: 8px;
+  }
+
+  /* The camera takes everything the panel doesn't use */
+  .camera-box {
+    flex: 1 1 auto;
+    min-height: 50%;
+  }
+
+  .practice-panel {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+    flex: 0 1 auto;
+    max-height: 45%;
+  }
+
+  .tip-card {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    padding: 8px 14px;
+    font-size: 1.15rem;
+  }
+
+  .coach-card {
+    grid-column: 1;
+    grid-row: 2;
+    padding: 8px 14px;
+  }
+
+  .coach-text {
+    font-size: 1rem;
+  }
+
+  .coach-figure {
+    max-width: 120px;
+  }
+
+  .score-card {
+    grid-column: 2;
+    grid-row: 2;
+    padding: 8px 14px;
+  }
+
+  .score-number {
+    font-size: 2.2rem;
+  }
+
+  .timer-card {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    padding: 8px 14px;
+  }
+
+  .timer-number {
+    font-size: 1.8rem;
+  }
+
+  .debug-card {
+    display: none;
+  }
+
+  .start-panel {
+    gap: 10px;
+    padding: 16px;
+  }
+
+  .start-panel h2 {
+    font-size: 1.5rem;
+  }
+
+  .start-panel p {
+    font-size: 0.95rem;
+  }
+
+  .countdown {
+    font-size: 5rem;
+  }
 }

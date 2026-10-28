@@ -90,8 +90,15 @@ const scoringOn = !!pose;
 async function startCamera() {
   // Ask the browser for the front ("user") camera. The browser asks
   // the user for permission the first time.
+  // A phone or iPad held upright gets a tall picture, so the person
+  // fills the camera box; a laptop gets a wide one.
+  const upright = window.innerHeight > window.innerWidth;
   const stream = await navigator.mediaDevices.getUserMedia({
-    video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } },
+    video: {
+      facingMode: "user",
+      width: { ideal: upright ? 720 : 1280 },
+      height: { ideal: upright ? 1280 : 720 }
+    },
     audio: false
   });
   video.srcObject = stream;   // show the camera in the <video> element
