@@ -78,6 +78,24 @@ for (const pose of POSES) {
 }
 
 
+// ----- The opening animation -----
+// When it has finished (or after 4 seconds, just in case), take it away.
+const splash = document.getElementById("splash");
+function removeSplash() {
+  splash.remove();
+}
+splash.addEventListener("animationend", function (event) {
+  if (event.target === splash) {
+    removeSplash();
+  }
+});
+setTimeout(function () {
+  if (splash.isConnected) {
+    removeSplash();
+  }
+}, 4000);
+
+
 // ----- The intro screen -----
 // Shown once each time the app is opened (coming back from a pose
 // doesn't show it again). Get started → the questions → the home screen.

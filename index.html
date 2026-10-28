@@ -15,6 +15,8 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
   <link rel="icon" href="images/favicon.png">
+  <!-- Load the logo first, so it is ready for the opening animation -->
+  <link rel="preload" as="image" href="images/icon-512.png">
 
   <!-- Plus Jakarta Sans font from Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -22,8 +24,29 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="style.css">
+
+  <!-- The opening animation only plays when the app is first opened, not
+       when coming back from a pose (decided here, before anything is drawn) -->
+  <script>
+    try {
+      if (sessionStorage.getItem("yogaBuddyStarted") === "yes") {
+        document.documentElement.classList.add("opened-before");
+      }
+    } catch (error) {
+      // storage blocked: play it
+    }
+  </script>
 </head>
 <body data-ask-later>
+  <!-- OPENING ANIMATION: the logo pops up, turns around and slides away,
+       then the app appears (style.css section 13, home.js removes it) -->
+  <div id="splash" class="splash" aria-hidden="true">
+    <div class="splash-stage">
+      <img class="splash-logo" src="images/icon-512.png" alt="">
+      <p class="splash-name">Yoga Buddy</p>
+    </div>
+  </div>
+
   <!-- SCREEN 0: INTRO. Shown first each time the app is opened (home.js).
        Get started → the questions (profile.js) → the home screen below. -->
   <section id="start-page" class="intro" hidden>

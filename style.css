@@ -1792,8 +1792,103 @@ body::before {
   }
 }
 
+/* ----- 13. Opening animation -----
+   When the app opens: the logo pops up, turns around once, then slides
+   up and away while the teal screen fades into the app. About 2.6 s. */
+.splash {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(170deg, #22807A 0%, var(--primary) 40%, #123F3C 100%);
+  perspective: 900px;       /* makes the turn look 3D */
+  animation: splash-fade 0.5s ease-in 2.15s forwards;
+}
+
+/* Coming back from a pose: no animation */
+.opened-before .splash {
+  display: none;
+}
+
+/* The same warm glow as the intro screen */
+.splash::before {
+  content: "";
+  position: absolute;
+  top: -20vmax;
+  left: 50%;
+  width: 70vmax;
+  height: 70vmax;
+  transform: translateX(-50%);
+  background: radial-gradient(circle, rgba(253, 235, 220, 0.35) 0%, transparent 60%);
+}
+
+.splash-stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  animation: splash-away 0.6s cubic-bezier(0.55, 0, 0.75, 0.2) 1.75s forwards;
+}
+
+.splash-logo {
+  width: clamp(128px, 32vmin, 180px);
+  height: auto;
+  border-radius: 28%;
+  /* A glass edge and a shadow, like the rest of the app */
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    0 24px 60px rgba(0, 0, 0, 0.35);
+  animation:
+    splash-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s both,
+    splash-turn 0.9s cubic-bezier(0.45, 0, 0.25, 1) 0.75s both;
+}
+
+.splash-name {
+  margin: 0;
+  color: white;
+  font-size: clamp(1.6rem, 6vw, 2.2rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  animation: splash-rise 0.5s ease-out 0.45s both;
+}
+
+/* 1. Pop up: grows from nothing, a little too big, then settles */
+@keyframes splash-pop {
+  from { opacity: 0; transform: scale(0.2); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* 2. Turn around once */
+@keyframes splash-turn {
+  from { transform: rotateY(0deg); }
+  to   { transform: rotateY(360deg); }
+}
+
+/* The name comes up under the logo */
+@keyframes splash-rise {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* 3. Slide away upwards */
+@keyframes splash-away {
+  to { opacity: 0; transform: translateY(-45vh) scale(0.7); }
+}
+
+/* 4. The teal screen fades and the app shows */
+@keyframes splash-fade {
+  to { opacity: 0; visibility: hidden; }
+}
+
 /* People who turn off motion in their settings get no animations */
 @media (prefers-reduced-motion: reduce) {
+  .splash {
+    display: none;
+  }
+
   *,
   *::before,
   *::after {
