@@ -1,5 +1,5 @@
 .DS_Store
 __pycache__/
 _ai-test.html
-# secret key: keep it off GitHub (see gemini-key.example.js)
-gemini-key.js
+# secret key: keep it off GitHub (see gemini-key.js)
+gemini-key.local.js

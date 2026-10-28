@@ -8,7 +8,7 @@
 //   • personVisible: can it really see a person?
 //   • say:           a short, friendly sentence for the voice to speak.
 //
-// PRIVACY: the AI buddy is always on, so while you hold a pose, photos
+// PRIVACY: when a key is set, the AI buddy is on, so while you hold a pose, photos
 // leave the device and go to Google. Yoga Buddy itself never saves them.
 // The API key is built in (gemini-key.js), so nobody has to type it.
 // =============================================================
