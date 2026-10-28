@@ -61,7 +61,8 @@ h1, h2, h3 {
 }
 
 /* The big headings use the soft serif font */
-.site-header h1,
+.brand-name,
+.hello,
 .start-page h1,
 .guide-info h1,
 .practice-title,
@@ -172,37 +173,64 @@ button:focus-visible {
 }
 
 /* ----- 5. Home screen ----- */
+/* Small Yoga Buddy name and logo in the top-left corner */
 .site-header {
-  padding: 40px 0 8px;
-  text-align: center;
+  padding: 4px 0 0;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: inherit;
+  text-decoration: none;
+}
+
+/* A green circle with the logo (or 🧘 if there is no logo) */
+.brand-mark {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  background: var(--main-soft);
+  border-radius: 50%;
+  font-size: 1.3rem;
+  overflow: hidden;
 }
 
 .logo {
-  height: 72px;
-  margin-bottom: 8px;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
-.site-header h1 {
-  margin: 0;
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.brand-name {
   color: var(--main-dark);
-  font-size: clamp(2.4rem, 7vw, 3.6rem);
+  font-size: 1.25rem;
 }
 
 .tagline {
-  margin: 8px 0 0;
   color: var(--text-soft);
-  font-size: 1.1rem;
+  font-size: 0.75rem;
 }
 
 /* Small capital-letter label above the poses */
 .section-title {
-  margin: 40px 0 20px;
+  margin: 12px 0 24px;
   color: var(--accent);
   font-size: 0.85rem;
   font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  text-align: center;
 }
 
 /* The grid of pose cards. It fits as many cards in a row as
@@ -1025,31 +1053,11 @@ button:focus-visible {
   margin-top: 24px;
 }
 
-/* "Hi, Asha! Not you?" on the home screen, in a small pill */
+/* "Welcome, Asha" on the home screen */
 .hello {
-  display: inline-block;
-  margin: 16px 0 0;
-  padding: 6px 16px;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  box-shadow: var(--shadow);
-  font-weight: 600;
-}
-
-.hello:empty {
-  display: none;
-}
-
-.link-button {
-  padding: 0;
-  border: none;
-  background: none;
-  color: var(--main);
-  font-family: inherit;
-  font-size: inherit;
-  text-decoration: underline;
-  cursor: pointer;
+  margin: 40px 0 0;
+  color: var(--main-dark);
+  font-size: clamp(2.2rem, 6vw, 3.2rem);
 }
 
 

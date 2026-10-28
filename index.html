@@ -35,14 +35,20 @@
   <!-- SCREEN 1: HOME -->
   <main class="page">
 
+    <!-- Small Yoga Buddy name in the top-left corner -->
     <header class="site-header">
-      <!-- Logo is optional. If images/logo.png does not exist, it is simply removed. -->
-      <img class="logo" src="images/logo.png" alt="" onerror="this.remove()">
-      <h1>Yoga Buddy</h1>
-      <p class="tagline">Your yoga teacher, right on your screen</p>
-      <!-- "Hi, Asha! Not you?" (home.js). Hidden when empty. -->
-      <p id="hello" class="hello"></p>
+      <a class="brand" href="index.html">
+        <!-- Logo is optional. If images/logo.png does not exist, the 🧘 shows instead. -->
+        <span class="brand-mark">🧘<img class="logo" src="images/logo.png" alt="" onerror="this.remove()"></span>
+        <span class="brand-text">
+          <span class="brand-name">Yoga Buddy</span>
+          <span class="tagline">Your yoga teacher, right on your screen</span>
+        </span>
+      </a>
     </header>
+
+    <!-- "Welcome, Asha" (home.js) -->
+    <h1 id="hello" class="hello">Welcome</h1>
 
     <h2 class="section-title">Choose a pose to begin</h2>
 

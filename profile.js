@@ -3,8 +3,8 @@
 //
 // It is asked once each time someone opens the app (it is kept in
 // sessionStorage, which the browser forgets when the tab is closed),
-// so at the fair every new visitor is asked. "Not you?" on the home
-// screen lets the next person enter their own details.
+// so at the fair every new visitor is asked (close the tab and open the
+// app again for the next person).
 // Nothing leaves this device.
 // =============================================================
 

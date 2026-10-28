@@ -4,21 +4,10 @@
 // card for each pose. Clicking a card opens that pose's guide.
 // =============================================================
 
-// "Hi, Asha! Not you?" at the top, so the next person can enter their own details
+// "Welcome, Asha" at the top of the home screen
 function showHello() {
   const hello = document.getElementById("hello");
-  hello.textContent = "";
-  if (!window.yogaProfile) {
-    return;
-  }
-  hello.append("Hi, " + window.yogaProfile.name + "! ");
-  const notYou = document.createElement("button");
-  notYou.className = "link-button";
-  notYou.textContent = "Not you?";
-  notYou.addEventListener("click", function () {
-    askProfile(showHello);
-  });
-  hello.append(notYou);
+  hello.textContent = window.yogaProfile ? "Welcome, " + window.yogaProfile.name : "Welcome";
 }
 showHello();
 document.addEventListener("profilechange", showHello);
