@@ -1,5 +1,5 @@
 // =============================================================
-// profile.js — asks who is using Yoga Buddy: name, age and gender.
+// profile.js — asks who is using Yoga Buddy: name, age, gender and address.
 //
 // It is asked once each time someone opens the app (it is kept in
 // sessionStorage, which the browser forgets when the tab is closed),
@@ -50,6 +50,10 @@ function askProfile(done) {
         <label><input type="radio" name="gender" value="Other"> Other</label>
       </div>
 
+      <label for="profile-address">Your address</label>
+      <textarea id="profile-address" rows="2" maxlength="200" autocomplete="off"
+                placeholder="Street, area, city" required></textarea>
+
       <button class="button" type="submit">Let's start</button>
     </form>
   `;
@@ -61,7 +65,8 @@ function askProfile(done) {
     const profile = {
       name: document.getElementById("profile-name").value.trim(),
       age: Number(document.getElementById("profile-age").value),
-      gender: box.querySelector("input[name=gender]:checked").value
+      gender: box.querySelector("input[name=gender]:checked").value,
+      address: document.getElementById("profile-address").value.trim()
     };
     saveProfile(profile);
     box.remove();

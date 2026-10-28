@@ -972,13 +972,15 @@ button:focus-visible {
 }
 
 .profile-form label,
-.profile-label {
+.profile-form > .profile-label {
+  color: var(--text);
   margin: 12px 0 6px;
   font-weight: 600;
 }
 
 .profile-form input[type=text],
-.profile-form input[type=number] {
+.profile-form input[type=number],
+.profile-form textarea {
   padding: 12px 14px;
   border: 2px solid var(--main-soft);
   border-radius: 12px;
@@ -986,7 +988,12 @@ button:focus-visible {
   font-size: 1rem;   /* 16px stops iPhones zooming in when you tap the box */
 }
 
-.profile-form input:focus {
+.profile-form textarea {
+  resize: vertical;
+}
+
+.profile-form input:focus,
+.profile-form textarea:focus {
   outline: none;
   border-color: var(--main);
 }
