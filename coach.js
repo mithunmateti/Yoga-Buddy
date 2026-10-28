@@ -86,7 +86,16 @@ export function startCoach(thePose, takePhoto) {
   getPhoto = takePhoto;
   steps = makeSteps(pose);
   reset();
-  say(SAY.stepBack + " " + startIn(GET_READY_SECONDS));
+  say(hello() + SAY.stepBack + " " + startIn(GET_READY_SECONDS));
+}
+
+// The person's name (from profile.js), to use when talking to them
+function hello() {
+  return window.yogaProfile ? "Hi " + window.yogaProfile.name + ". " : "";
+}
+
+function wellDoneName() {
+  return window.yogaProfile ? "Well done, " + window.yogaProfile.name + "!" : SAY.wellDone;
 }
 
 // Start again from the beginning (the "Restart" button)
@@ -522,7 +531,7 @@ function finish() {
   held = HOLD_SECONDS;
   updateTimer("Done!");
   showStep("Well done!", "You held " + pose.sanskrit + " for " + HOLD_SECONDS + " seconds.");
-  sayFresh(SAY.wellDone + " " + heldFor(pose, HOLD_SECONDS) + " " + SAY.relax);
+  sayFresh(wellDoneName() + " " + heldFor(pose, HOLD_SECONDS) + " " + SAY.relax);
 }
 
 // The end of a flow (Surya Namaskar)

@@ -825,3 +825,106 @@ button:focus-visible {
     font-size: 5rem;
   }
 }
+
+
+/* ----- 9. "Who are you?" form (profile.js) ----- */
+.profile-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(31, 45, 39, 0.55);
+  overflow-y: auto;
+}
+
+.profile-form {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 400px;
+  padding: 28px 24px;
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.profile-form h2 {
+  margin: 0 0 4px;
+  color: var(--main);
+}
+
+.profile-form > p {
+  margin: 0 0 16px;
+  color: var(--text-soft);
+}
+
+.profile-form label,
+.profile-label {
+  margin: 12px 0 6px;
+  font-weight: 600;
+}
+
+.profile-form input[type=text],
+.profile-form input[type=number] {
+  padding: 12px 14px;
+  border: 2px solid var(--main-soft);
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 1rem;   /* 16px stops iPhones zooming in when you tap the box */
+}
+
+.profile-form input:focus {
+  outline: none;
+  border-color: var(--main);
+}
+
+.profile-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.profile-choices label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 8px 14px;
+  background: var(--main-soft);
+  border-radius: 999px;
+  font-weight: 400;
+  cursor: pointer;
+}
+
+.profile-choices label:has(input:checked) {
+  background: var(--main);
+  color: white;
+}
+
+.profile-form .button {
+  margin-top: 24px;
+}
+
+/* "Hi, Asha! Not you?" on the home screen */
+.hello {
+  margin: 8px 0 0;
+  font-weight: 600;
+}
+
+.hello:empty {
+  display: none;
+}
+
+.link-button {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--main);
+  font-family: inherit;
+  font-size: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}

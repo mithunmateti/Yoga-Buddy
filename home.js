@@ -4,6 +4,25 @@
 // card for each pose. Clicking a card opens that pose's guide.
 // =============================================================
 
+// "Hi, Asha! Not you?" at the top, so the next person can enter their own details
+function showHello() {
+  const hello = document.getElementById("hello");
+  hello.textContent = "";
+  if (!window.yogaProfile) {
+    return;
+  }
+  hello.append("Hi, " + window.yogaProfile.name + "! ");
+  const notYou = document.createElement("button");
+  notYou.className = "link-button";
+  notYou.textContent = "Not you?";
+  notYou.addEventListener("click", function () {
+    askProfile(showHello);
+  });
+  hello.append(notYou);
+}
+showHello();
+document.addEventListener("profilechange", showHello);
+
 // The empty box in index.html where the cards will go
 const grid = document.getElementById("pose-grid");
 

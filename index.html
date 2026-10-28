@@ -21,6 +21,8 @@
       <img class="logo" src="images/logo.png" alt="" onerror="this.remove()">
       <h1>Yoga Buddy</h1>
       <p class="tagline">Your yoga teacher, right on your screen</p>
+      <!-- "Hi, Asha! Not you?" (home.js). Hidden when empty. -->
+      <p id="hello" class="hello"></p>
     </header>
 
     <h2 class="section-title">Choose a pose to begin</h2>
@@ -29,10 +31,13 @@
     <div id="pose-grid" class="pose-grid"></div>
 
     <p class="privacy-note">🔒 Body tracking runs on your device and nothing is saved.
+      Your name, age and gender stay on this device and are forgotten when you close the page.
       If the AI buddy is on, it sends a camera photo to Google Gemini every few seconds while you hold a pose.</p>
   </main>
 
   <!-- poses.js must load first, because home.js uses the POSES list from it -->
+  <!-- profile.js asks for the name, age and gender first -->
+  <script src="profile.js"></script>
   <script src="poses.js"></script>
   <script src="home.js"></script>
 </body>
