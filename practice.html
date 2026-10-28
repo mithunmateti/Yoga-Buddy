@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Practice – Yoga Buddy</title>
+
+  <!-- Poppins font from Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- SCREEN 3: PRACTICE -->
+  <main class="practice-page">
+
+    <!-- Top bar: Back and Restart buttons, and the pose name -->
+    <div class="practice-top">
+      <a id="back-button" class="button small-button" href="index.html">Back</a>
+      <!-- Restart only appears after Start is pressed -->
+      <button id="restart-button" class="button small-button secondary-button" hidden>Restart</button>
+      <h1 id="pose-name" class="practice-title"></h1>
+    </div>
+
+    <div class="practice-main">
+
+      <!-- Camera view, with the skeleton drawn on a canvas on top of it -->
+      <div class="camera-box">
+        <!-- playsinline stops iPhones opening the video full screen -->
+        <video id="camera" autoplay playsinline muted></video>
+        <canvas id="skeleton"></canvas>
+
+        <!-- Start screen: the camera and the voice only start when Start is pressed
+             (browsers only let a page talk after you tap something) -->
+        <div id="start-panel" class="start-panel">
+          <h2>Ready?</h2>
+          <p>Turn your sound on. Press Start, then you have 5 seconds to step back 2–3 metres, so the camera can see you from head to feet.</p>
+          <button id="start-button" class="button big-button">Start</button>
+        </div>
+
+        <!-- The 5-second countdown after Start (coach.js). Hidden when empty. -->
+        <p id="countdown" class="countdown"></p>
+
+        <!-- Simple status message, e.g. "Starting camera…". Hidden when empty.
+             Phase 8 will make it friendlier. -->
+        <p id="status" class="camera-status"></p>
+      </div>
+
+      <!-- Side panel (below the camera on a phone) -->
+      <aside class="practice-panel">
+        <!-- Big tip text: what to fix, "Great!" or "Step back…".
+             It is hidden when empty. -->
+        <p id="tip" class="tip-card"></p>
+
+        <!-- The voice coach: which step we are on (the same words it says aloud) -->
+        <div class="coach-card">
+          <p id="coach-label" class="coach-label">Voice coach 🔊</p>
+          <p id="coach-text" class="coach-text">Press Start to begin.</p>
+          <!-- Surya Namaskar: a stick figure of the pose to do now (figure.js). Hidden when empty. -->
+          <div id="coach-figure" class="coach-figure"></div>
+        </div>
+
+        <!-- The 30-second hold timer (appears after the last step) -->
+        <div id="timer-card" class="timer-card" hidden>
+          <p class="timer-label">Hold</p>
+          <p class="timer-number"><span id="timer-seconds">0</span><span class="timer-out-of"> / 30 s</span></p>
+          <div class="timer-bar"><div id="timer-fill" class="timer-fill"></div></div>
+          <p id="timer-note" class="timer-note"></p>
+        </div>
+
+        <div class="score-card">
+          <p class="score-label">Score</p>
+          <p class="score-number"><span id="score">–</span><span class="score-out-of">/100</span></p>
+        </div>
+
+        <!-- DEBUG (Phase 3): the measured angles, to help us check the targets.
+             We will hide this before the fair. -->
+        <div class="debug-card">
+          <h2>Angles (debug)</h2>
+          <ul id="debug-angles"></ul>
+        </div>
+      </aside>
+
+    </div>
+  </main>
+
+  <!-- poses.js must load first, because practice.js uses the POSES list from it.
+       figure.js draws the stick figures of the Surya Namaskar poses. -->
+  <script src="poses.js"></script>
+  <script src="figure.js"></script>
+  <!-- type="module" lets practice.js load MediaPipe from the internet (a CDN).
+       practice.js also loads pose-check.js (the maths) and coach.js (the voice coach). -->
+  <script type="module" src="practice.js"></script>
+</body>
+</html>

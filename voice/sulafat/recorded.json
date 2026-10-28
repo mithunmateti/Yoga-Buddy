@@ -1,0 +1,16 @@
+{
+ "voice": "Sulafat",
+ "model": "gemini-3.8-flash-tts",
+ "files": {
+  "okay-let-s-get-ready": "okay-let-s-get-ready.m4a",
+  "okay-let-s-start-again": "okay-let-s-start-again.m4a",
+  "i-can-see-you": "i-can-see-you.m4a",
+  "let-s-begin": "let-s-begin.m4a",
+  "i-can-t-see-you-yet": "i-can-t-see-you-yet.m4a",
+  "stand-in-front-of-the-camera-about-2-to-3-metres-away": "stand-in-front-of-the-camera-about-2-to-3-metres-away.m4a",
+  "you-re-too-close-to-the-camera": "you-re-too-close-to-the-camera.m4a",
+  "step-back-until-i-can-see-you-from-head-to-feet": "step-back-until-i-can-see-you-from-head-to-feet.m4a",
+  "step-back-a-little-so-your-feet-are-in-the-picture": "step-back-a-little-so-your-feet-are-in-the-picture.m4a",
+  "step-back-a-little-so-your-hands-are-in-the-picture": "step-back-a-little-so-your-hands-are-in-the-picture.m4a"
+ }
+}

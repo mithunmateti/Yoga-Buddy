@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pose guide – Yoga Buddy</title>
+
+  <!-- Poppins font from Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- SCREEN 2: POSE GUIDE -->
+  <!-- The empty parts below are filled in by guide.js, using poses.js -->
+  <main class="page" id="guide">
+    <a class="back-link" href="index.html">← All poses</a>
+
+    <div class="guide-layout">
+
+      <!-- Left side (or top on a phone): big picture of the pose -->
+      <div class="pose-picture big">
+        <span class="picture-missing">Picture coming soon</span>
+        <img id="pose-image" alt="" onerror="this.remove()">
+      </div>
+
+      <!-- Right side (or below on a phone): name, steps, camera, safety -->
+      <div class="guide-info">
+        <h1 id="pose-name"></h1>
+        <p id="pose-english" class="english-name"></p>
+
+        <section class="info-card">
+          <h2 id="steps-title">Steps</h2>
+          <ol id="pose-steps"></ol>
+          <p id="hold-note" class="hold-note">Then hold the pose for 30 seconds. Yoga Buddy's voice will guide you. 🔊</p>
+        </section>
+
+        <section class="info-card">
+          <h2>Camera</h2>
+          <span id="view-badge" class="view-badge"></span>
+          <p id="view-text"></p>
+        </section>
+
+        <!-- Safety text from PRD section 11. It is the same for every pose. -->
+        <section class="info-card safety">
+          <h2>Safety</h2>
+          <p>Only go as far as feels comfortable. Stop if anything hurts.
+             Yoga Buddy does not replace a real yoga teacher or doctor.</p>
+          <!-- Extra safety advice for this pose (from poses.js). Hidden when empty. -->
+          <p id="safety-extra" class="safety-extra"></p>
+        </section>
+
+        <a id="start-button" class="button start-button" href="index.html">Start with camera</a>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- poses.js must load first, because guide.js uses the POSES list from it.
+       figure.js draws the stick figures of the Surya Namaskar poses. -->
+  <script src="poses.js"></script>
+  <script src="figure.js"></script>
+  <script src="guide.js"></script>
+</body>
+</html>
