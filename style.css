@@ -1007,8 +1007,7 @@ button:focus-visible {
 }
 
 .profile-form input[type=text],
-.profile-form input[type=number],
-.profile-form textarea {
+.profile-form input[type=number] {
   padding: 12px 14px;
   border: 2px solid var(--main-soft);
   border-radius: 12px;
@@ -1016,12 +1015,7 @@ button:focus-visible {
   font-size: 1rem;   /* 16px stops iPhones zooming in when you tap the box */
 }
 
-.profile-form textarea {
-  resize: vertical;
-}
-
-.profile-form input:focus,
-.profile-form textarea:focus {
+.profile-form input:focus {
   outline: none;
   border-color: var(--main);
 }
