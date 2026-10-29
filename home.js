@@ -160,7 +160,7 @@ function askIfNeeded() {
 }
 
 // Remember the app is open, so coming back from Settings or a pose
-// doesn't play the opening animation again (index.html checks this)
+// shows the home screen, not the start page, again
 function markStarted() {
   try {
     sessionStorage.setItem(START_NAME, "yes");

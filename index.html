@@ -23,18 +23,45 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="style.css?v=20261029c">
+  <link rel="stylesheet" href="style.css?v=20261029d">
 
   <!-- The opening animation only plays when the app is first opened, not
-       when coming back from a pose (decided here, before anything is drawn) -->
+       when coming back from Settings or a pose (decided here, before anything
+       is drawn). Any one of these means "already open", so skip it:
+         1. it already played in this tab (sessionStorage)
+         2. we came here from another Yoga Buddy page (the referrer)
+         3. the browser's Back or Forward button brought us here -->
   <script>
-    try {
-      if (sessionStorage.getItem("yogaBuddyStarted") === "yes") {
+    (function () {
+      var SPLASH_NAME = "yogaBuddySplashShown";
+      var skip = false;
+      try {
+        skip = sessionStorage.getItem(SPLASH_NAME) === "yes";
+        sessionStorage.setItem(SPLASH_NAME, "yes");
+      } catch (error) {
+        // storage blocked: the other two checks still work
+      }
+      try {
+        var from = document.referrer ? new URL(document.referrer) : null;
+        var folder = function (path) { return path.replace(/[^\/]*$/, ""); };
+        if (from && from.origin === location.origin && folder(from.pathname) === folder(location.pathname)) {
+          skip = true;
+        }
+      } catch (error) {
+        // old browser: ignore
+      }
+      try {
+        var visit = performance.getEntriesByType("navigation")[0];
+        if (visit && visit.type === "back_forward") {
+          skip = true;
+        }
+      } catch (error) {
+        // old browser: ignore
+      }
+      if (skip) {
         document.documentElement.classList.add("opened-before");
       }
-    } catch (error) {
-      // storage blocked: play it
-    }
+    })();
   </script>
 </head>
 <body data-ask-later>
@@ -106,10 +133,10 @@
 
   <!-- profile.js asks for the name, age and gender first.
        poses.js must load before home.js, because home.js uses the POSES list from it. -->
-  <script src="settings.js?v=20261029c"></script>
-  <script src="profile.js?v=20261029c"></script>
-  <script src="poses.js?v=20261029c"></script>
-  <script src="progress.js?v=20261029c"></script>
-  <script src="home.js?v=20261029c"></script>
+  <script src="settings.js?v=20261029d"></script>
+  <script src="profile.js?v=20261029d"></script>
+  <script src="poses.js?v=20261029d"></script>
+  <script src="progress.js?v=20261029d"></script>
+  <script src="home.js?v=20261029d"></script>
 </body>
 </html>
