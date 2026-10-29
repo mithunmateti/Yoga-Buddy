@@ -159,17 +159,24 @@ function askIfNeeded() {
   }
 }
 
+// Remember the app is open, so coming back from Settings or a pose
+// doesn't play the opening animation again (index.html checks this)
+function markStarted() {
+  try {
+    sessionStorage.setItem(START_NAME, "yes");
+  } catch (error) {
+    // storage blocked: the animation plays again next time
+  }
+}
+
 if (seenStart() || window.yogaProfile) {
+  markStarted();
   askIfNeeded();
 } else {
   startPage.hidden = false;
   document.body.classList.add("no-scroll");
   document.getElementById("begin-button").addEventListener("click", function () {
-    try {
-      sessionStorage.setItem(START_NAME, "yes");
-    } catch (error) {
-      // storage blocked: the intro shows again next time
-    }
+    markStarted();
     startPage.classList.add("leaving");   // fades away (style.css)
     setTimeout(function () {
       startPage.hidden = true;
