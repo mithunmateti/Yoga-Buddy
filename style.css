@@ -2050,3 +2050,124 @@ body::before {
     transition: none !important;
   }
 }
+
+/* ----- Switch person: the sheet that slides up from the bottom ----- */
+button.avatar {
+  border: none;
+  font-family: inherit;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+
+button.avatar:active {
+  transform: scale(0.92);
+}
+
+.sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(15, 26, 26, 0.35);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  animation: sheet-fade 0.25s ease-out;
+}
+
+.sheet-backdrop[hidden] {
+  display: none;
+}
+
+.sheet {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: min(100%, 480px);
+  padding: 12px 20px calc(20px + var(--safe-bottom));
+  background: var(--glass, white), rgba(251, 248, 243, 0.9);
+  -webkit-backdrop-filter: var(--glass-blur, blur(20px));
+  backdrop-filter: var(--glass-blur, blur(20px));
+  border: 1px solid var(--glass-edge, white);
+  border-bottom: none;
+  border-radius: 28px 28px 0 0;
+  box-shadow: var(--glass-shine, none), var(--shadow-big);
+  text-align: center;
+  animation: sheet-up 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.1);
+}
+
+.sheet-handle {
+  width: 40px;
+  height: 5px;
+  margin-bottom: 8px;
+  background: rgba(29, 43, 42, 0.18);
+  border-radius: 999px;
+}
+
+.big-avatar {
+  width: 72px;
+  height: 72px;
+  font-size: 1.8rem;
+}
+
+.sheet h2 {
+  margin: 4px 0 0;
+  font-size: 1.5rem;
+  letter-spacing: -0.02em;
+}
+
+.sheet-details {
+  margin: 0 0 8px;
+  color: var(--text-soft);
+  font-weight: 600;
+}
+
+.sheet-warning {
+  margin: 0 0 4px;
+  padding: 12px 14px;
+  background: rgba(253, 235, 220, 0.9);
+  border-radius: var(--radius-small);
+  color: var(--accent-ink);
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.switch-button.danger {
+  background: #C2410C;
+  box-shadow: 0 8px 20px rgba(194, 65, 12, 0.28);
+}
+
+.switch-button.danger:hover {
+  background: #9A3412;
+}
+
+.sheet-close {
+  width: 100%;
+  min-height: 50px;
+}
+
+@keyframes sheet-up {
+  from { transform: translateY(100%); }
+}
+
+@keyframes sheet-fade {
+  from { opacity: 0; }
+}
+
+/* On a big screen the sheet floats in the middle as a card */
+@media (min-width: 700px) {
+  .sheet-backdrop {
+    align-items: center;
+  }
+  .sheet {
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--glass-edge, white);
+    border-radius: 28px;
+  }
+  .sheet-handle {
+    display: none;
+  }
+}

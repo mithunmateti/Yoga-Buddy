@@ -181,3 +181,65 @@ if (seenStart() || window.yogaProfile) {
     askIfNeeded();
   });
 }
+
+
+// ----- Switch person -----
+// Tap your initial: see who is using the app, and "Switch person".
+// Switching removes everything saved about this person (name, age,
+// gender and streak), then the app starts again with the questions.
+const sheet = document.getElementById("profile-sheet");
+const switchButton = document.getElementById("switch-button");
+const sheetWarning = document.getElementById("sheet-warning");
+
+function openSheet() {
+  const profile = window.yogaProfile;
+  if (!profile) {
+    return;
+  }
+  document.getElementById("sheet-avatar").textContent = profile.name[0].toUpperCase();
+  document.getElementById("sheet-name").textContent = profile.name;
+  document.getElementById("sheet-details").textContent =
+    [profile.age ? "Age " + profile.age : "", profile.gender].filter(Boolean).join(" · ");
+  sheetWarning.hidden = true;
+  switchButton.textContent = "Switch person";
+  switchButton.classList.remove("danger");
+  sheet.hidden = false;
+  document.body.classList.add("no-scroll");
+}
+
+function closeSheet() {
+  sheet.hidden = true;
+  document.body.classList.remove("no-scroll");
+}
+
+document.getElementById("avatar").addEventListener("click", openSheet);
+document.getElementById("sheet-close").addEventListener("click", closeSheet);
+sheet.addEventListener("click", function (event) {
+  if (event.target === sheet) {   // tapped outside the card
+    closeSheet();
+  }
+});
+document.addEventListener("keydown", function (event) {
+  if (event.key === "Escape" && !sheet.hidden) {
+    closeSheet();
+  }
+});
+
+// First tap: explain what will be removed. Second tap: remove it and start again.
+switchButton.addEventListener("click", function () {
+  if (sheetWarning.hidden) {
+    sheetWarning.hidden = false;
+    switchButton.textContent = "Yes, remove and start again";
+    switchButton.classList.add("danger");
+    return;
+  }
+  try {
+    localStorage.removeItem(PROFILE_NAME);
+    localStorage.removeItem(PROGRESS_NAME);
+    sessionStorage.removeItem(START_NAME);
+  } catch (error) {
+    // storage blocked: nothing was saved anyway
+  }
+  window.yogaProfile = null;
+  location.reload();   // the start page and the questions come back
+});

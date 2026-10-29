@@ -23,7 +23,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="style.css?v=20261028c">
+  <link rel="stylesheet" href="style.css?v=20261029a">
 
   <!-- The opening animation only plays when the app is first opened, not
        when coming back from a pose (decided here, before anything is drawn) -->
@@ -79,8 +79,23 @@
       <img class="brand-mark" src="images/favicon.png" alt="">
       <span class="brand-name">Yoga Buddy</span>
     </a>
-    <span id="avatar" class="avatar" aria-hidden="true"></span>
+    <button id="avatar" class="avatar" type="button" aria-label="Your profile"></button>
   </header>
+
+  <!-- Tapping the initial: who is using the app, and "Switch person" (home.js) -->
+  <div id="profile-sheet" class="sheet-backdrop" hidden>
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-name">
+      <span class="sheet-handle" aria-hidden="true"></span>
+      <span id="sheet-avatar" class="avatar big-avatar" aria-hidden="true"></span>
+      <h2 id="sheet-name"></h2>
+      <p id="sheet-details" class="sheet-details"></p>
+      <p id="sheet-warning" class="sheet-warning" hidden>
+        This removes the name, age, gender and streak saved on this device. The next person starts fresh.
+      </p>
+      <button id="switch-button" class="button wide switch-button" type="button">Switch person</button>
+      <button id="sheet-close" class="button wide secondary-button sheet-close" type="button">Cancel</button>
+    </div>
+  </div>
 
   <main class="page home">
     <!-- "Good evening" and "Welcome, Asha" (home.js) -->
@@ -102,9 +117,9 @@
 
   <!-- profile.js asks for the name, age and gender first.
        poses.js must load before home.js, because home.js uses the POSES list from it. -->
-  <script src="profile.js?v=20261028c"></script>
-  <script src="poses.js?v=20261028c"></script>
-  <script src="progress.js?v=20261028c"></script>
-  <script src="home.js?v=20261028c"></script>
+  <script src="profile.js?v=20261029a"></script>
+  <script src="poses.js?v=20261029a"></script>
+  <script src="progress.js?v=20261029a"></script>
+  <script src="home.js?v=20261029a"></script>
 </body>
 </html>
