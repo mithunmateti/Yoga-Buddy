@@ -3,7 +3,7 @@
 //
 //   voice: is the voice coach on? (the words are always shown too)
 //   speed: how fast the voice talks: "slow", "normal" or "fast"
-//   hold:  how many seconds to hold each pose: 20, 30, 45 or 60
+//   hold:  how many seconds to hold each pose: 5, 10, 20, 30, 45 or 60
 //
 // Saved in this browser (localStorage), like the profile.
 // The other pages read them with voiceIsOn(), voiceRate() and holdSeconds().
@@ -12,7 +12,7 @@
 const SETTINGS_NAME = "yogaBuddySettings";
 const DEFAULT_SETTINGS = { voice: true, speed: "normal", hold: 30 };
 const VOICE_SPEEDS = { slow: 0.8, normal: 0.95, fast: 1.1 };   // for speechSynthesis
-const HOLD_CHOICES = [20, 30, 45, 60];
+const HOLD_CHOICES = [5, 10, 20, 30, 45, 60];
 
 function loadSettings() {
   let saved = {};
