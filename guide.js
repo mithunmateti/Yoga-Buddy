@@ -29,8 +29,10 @@ if (!pose) {
   document.getElementById("pose-name").textContent = pose.sanskrit;
   document.getElementById("pose-english").textContent = pose.english + " pose";
 
-  // The little labels, e.g. "Easy · Balance · 30 s hold"
-  const chips = [pose.level, pose.focus, "30 s hold"].filter(Boolean);
+  // The little labels, e.g. "Easy · Balance · 30 s hold" (the hold time is in Settings)
+  const chips = [pose.level, pose.focus, holdSeconds() + " s hold"].filter(Boolean);
+  document.getElementById("hold-note").textContent =
+    "Then hold the pose for " + holdSeconds() + " seconds. Yoga Buddy's voice will guide you. 🔊";
   document.getElementById("pose-chips").innerHTML = chips.map(function (chip) {
     return '<span class="chip">' + chip + "</span>";
   }).join("");

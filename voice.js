@@ -254,6 +254,13 @@ async function playNext(myRound) {
     quietSince = now();
     return;
   }
+  // Voice turned off in Settings: say nothing (the words are still shown on screen)
+  if (!voiceIsOn()) {
+    queue = [];
+    busy = false;
+    quietSince = now();
+    return;
+  }
   busy = true;
   pieceStarted = now();
   // A recording or live sound, or null = computer voice. Only wait when we
@@ -312,7 +319,7 @@ function speakWithComputer(text, next) {
   } else {
     words.lang = "en-IN";
   }
-  words.rate = 0.95;   // a little slower than normal, so it's easy to follow
+  words.rate = voiceRate();   // Slow, Normal or Fast (Settings, settings.js)
   words.onend = next;
   words.onerror = next;
   currentWords = words;

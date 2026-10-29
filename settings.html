@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <!-- viewport-fit=cover lets the app use the whole iPhone screen (around the notch) -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Settings – Yoga Buddy</title>
+
+  <!-- So it looks and opens like an app when added to a phone's home screen -->
+  <meta name="theme-color" content="#FBF8F3">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Yoga Buddy">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+  <link rel="icon" href="images/favicon.png">
+
+  <!-- Plus Jakarta Sans font from Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css?v=20261029a">
+</head>
+<body class="settings-body">
+  <!-- SCREEN 4: SETTINGS -->
+  <!-- App bar: round Back button, and the screen's name -->
+  <header class="app-bar">
+    <a class="icon-button" href="index.html" aria-label="Back to home">‹</a>
+    <span class="app-bar-title">Settings</span>
+    <span class="icon-button-space"></span>
+  </header>
+
+  <!-- The parts below are filled in by settings-page.js -->
+  <main class="page settings-page">
+
+    <!-- Who is using the app -->
+    <section class="profile-card">
+      <span id="settings-avatar" class="avatar big-avatar" aria-hidden="true"></span>
+      <div>
+        <h1 id="settings-name"></h1>
+        <p id="settings-details" class="settings-sub"></p>
+      </div>
+    </section>
+
+    <!-- 1. Your details: change name, age, gender -->
+    <h2 class="section-title">Your details</h2>
+    <form id="details-form" class="info-card settings-card" novalidate>
+      <label class="field">
+        <span>Name</span>
+        <input id="edit-name" class="big-input" type="text" maxlength="30" autocomplete="off">
+      </label>
+      <label class="field">
+        <span>Age</span>
+        <input id="edit-age" class="big-input" type="number" inputmode="numeric" min="4" max="110">
+      </label>
+      <div class="field">
+        <span>Gender</span>
+        <div class="segmented" role="radiogroup" aria-label="Gender">
+          <label><input type="radio" name="edit-gender" value="Male"><span>👦 Male</span></label>
+          <label><input type="radio" name="edit-gender" value="Female"><span>👧 Female</span></label>
+          <label><input type="radio" name="edit-gender" value="Other"><span>🙂 Other</span></label>
+        </div>
+      </div>
+      <p id="details-message" class="settings-message" role="status"></p>
+      <button class="button wide" type="submit">Save changes</button>
+    </form>
+
+    <!-- 2. The voice coach -->
+    <h2 class="section-title">Voice coach</h2>
+    <div class="info-card settings-card">
+      <label class="setting-row">
+        <span class="setting-text">
+          <b>🔊 Voice</b>
+          <small>When it's off, the tips are only shown on screen.</small>
+        </span>
+        <input id="voice-switch" class="switch" type="checkbox" role="switch">
+      </label>
+      <div class="setting-row stacked">
+        <span class="setting-text"><b>Speed</b></span>
+        <div class="segmented" role="radiogroup" aria-label="Voice speed">
+          <label><input type="radio" name="speed" value="slow"><span>🐢 Slow</span></label>
+          <label><input type="radio" name="speed" value="normal"><span>Normal</span></label>
+          <label><input type="radio" name="speed" value="fast"><span>🐇 Fast</span></label>
+        </div>
+      </div>
+      <button id="test-voice" class="button wide secondary-button" type="button">▶ Test the voice</button>
+    </div>
+
+    <!-- 3. Practice -->
+    <h2 class="section-title">Practice</h2>
+    <div class="info-card settings-card">
+      <div class="setting-row stacked">
+        <span class="setting-text">
+          <b>⏱️ Hold each pose for</b>
+          <small>Start with 20 seconds if you're new.</small>
+        </span>
+        <div id="hold-choices" class="segmented" role="radiogroup" aria-label="Hold time"></div>
+      </div>
+    </div>
+
+    <!-- 4. Progress -->
+    <h2 class="section-title">Your progress</h2>
+    <div class="info-card settings-card">
+      <div class="setting-row">
+        <span class="setting-text">
+          <b>🔥 Streak</b>
+          <small id="streak-summary"></small>
+        </span>
+      </div>
+      <p id="streak-warning" class="sheet-warning" hidden>
+        This sets your streak and this week's days back to 0. Your name and settings stay.
+      </p>
+      <button id="reset-streak" class="button wide secondary-button" type="button">Reset streak</button>
+    </div>
+
+    <!-- 5. Switch person: removes everything saved about this person -->
+    <h2 class="section-title">Someone else's turn?</h2>
+    <div class="info-card settings-card">
+      <p class="settings-sub">Switch person removes the name, age, gender, streak and settings saved on this device. The next person starts fresh.</p>
+      <p id="switch-warning" class="sheet-warning" hidden>Are you sure? This can't be undone.</p>
+      <button id="switch-person" class="button wide switch-button" type="button">Switch person</button>
+    </div>
+
+    <p class="settings-about">Yoga Buddy · made for the science fair 🧘</p>
+  </main>
+
+  <script src="settings.js?v=20261029a"></script>
+  <script src="profile.js?v=20261029a"></script>
+  <script src="poses.js?v=20261029a"></script>
+  <script src="progress.js?v=20261029a"></script>
+  <script type="module" src="settings-page.js?v=20261029a"></script>
+</body>
+</html>

@@ -79,22 +79,11 @@
       <img class="brand-mark" src="images/favicon.png" alt="">
       <span class="brand-name">Yoga Buddy</span>
     </a>
-    <button id="avatar" class="avatar" type="button" aria-label="Your profile"></button>
-  </header>
-
-  <!-- Tapping the initial: who is using the app, and "Switch person" (home.js) -->
-  <div id="profile-sheet" class="sheet-backdrop" hidden>
-    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-name">
-      <span class="sheet-handle" aria-hidden="true"></span>
-      <span id="sheet-avatar" class="avatar big-avatar" aria-hidden="true"></span>
-      <h2 id="sheet-name"></h2>
-      <p id="sheet-details" class="sheet-details"></p>
-      <p id="sheet-warning" class="sheet-warning" hidden>
-        This removes the name, age, gender and streak saved on this device. The next person starts fresh.
-      </p>
-      <button id="switch-button" class="button wide switch-button" type="button">Switch person</button>
-      <button id="sheet-close" class="button wide secondary-button sheet-close" type="button">Cancel</button>
+    <div class="app-bar-actions">
+      <a class="icon-button settings-button" href="settings.html" aria-label="Settings">⚙︎</a>
+      <a id="avatar" class="avatar" href="settings.html" aria-label="Your profile and settings"></a>
     </div>
+  </header>
   </div>
 
   <main class="page home">
@@ -117,6 +106,7 @@
 
   <!-- profile.js asks for the name, age and gender first.
        poses.js must load before home.js, because home.js uses the POSES list from it. -->
+  <script src="settings.js?v=20261029a"></script>
   <script src="profile.js?v=20261029a"></script>
   <script src="poses.js?v=20261029a"></script>
   <script src="progress.js?v=20261029a"></script>

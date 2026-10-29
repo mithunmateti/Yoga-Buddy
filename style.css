@@ -2051,60 +2051,40 @@ body::before {
   }
 }
 
-/* ----- Switch person: the sheet that slides up from the bottom ----- */
-button.avatar {
-  border: none;
-  font-family: inherit;
-  font-size: 1rem;
-  cursor: pointer;
+/* ----- 14. Settings page ----- */
+
+/* Home: the ⚙︎ button next to the person's initial */
+.app-bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.settings-button {
+  padding: 0;
+  font-size: 1.6rem;
+  text-decoration: none;
+}
+
+a.avatar {
+  text-decoration: none;
   transition: transform 0.15s;
 }
 
-button.avatar:active {
+a.avatar:active {
   transform: scale(0.92);
 }
 
-.sheet-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 60;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  background: rgba(15, 26, 26, 0.35);
-  -webkit-backdrop-filter: blur(4px);
-  backdrop-filter: blur(4px);
-  animation: sheet-fade 0.25s ease-out;
+.settings-page {
+  max-width: 560px;
 }
 
-.sheet-backdrop[hidden] {
-  display: none;
-}
-
-.sheet {
+/* "A  Asha  Age 12 · Female" at the top */
+.profile-card {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 10px;
-  width: min(100%, 480px);
-  padding: 12px 20px calc(20px + var(--safe-bottom));
-  background: var(--glass, white), rgba(251, 248, 243, 0.9);
-  -webkit-backdrop-filter: var(--glass-blur, blur(20px));
-  backdrop-filter: var(--glass-blur, blur(20px));
-  border: 1px solid var(--glass-edge, white);
-  border-bottom: none;
-  border-radius: 28px 28px 0 0;
-  box-shadow: var(--glass-shine, none), var(--shadow-big);
-  text-align: center;
-  animation: sheet-up 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.1);
-}
-
-.sheet-handle {
-  width: 40px;
-  height: 5px;
-  margin-bottom: 8px;
-  background: rgba(29, 43, 42, 0.18);
-  border-radius: 999px;
+  gap: 16px;
+  margin: 8px 0 4px;
 }
 
 .big-avatar {
@@ -2113,20 +2093,165 @@ button.avatar:active {
   font-size: 1.8rem;
 }
 
-.sheet h2 {
-  margin: 4px 0 0;
-  font-size: 1.5rem;
+.profile-card h1 {
+  margin: 0;
+  font-size: 1.7rem;
   letter-spacing: -0.02em;
 }
 
-.sheet-details {
-  margin: 0 0 8px;
+.settings-sub {
+  margin: 2px 0 0;
   color: var(--text-soft);
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.settings-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Name / Age / Gender boxes */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field > span,
+.setting-text b {
+  font-weight: 700;
+}
+
+.settings-card .big-input {
+  min-height: 50px;
+  font-size: 1.05rem;
+}
+
+/* A setting with its words on the left and a switch on the right */
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.setting-row.stacked {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.setting-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.setting-text small {
+  color: var(--text-soft);
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+
+/* An on/off switch like on a phone */
+.switch {
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+  flex: 0 0 auto;
+  width: 52px;
+  height: 32px;
+  margin: 0;
+  background: rgba(29, 43, 42, 0.18);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.switch::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 26px;
+  height: 26px;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s;
+}
+
+.switch:checked {
+  background: var(--primary);
+}
+
+.switch:checked::after {
+  transform: translateX(20px);
+}
+
+.switch:focus-visible {
+  outline: 3px solid var(--primary-soft);
+  outline-offset: 2px;
+}
+
+/* A row of choices joined together, e.g. Slow | Normal | Fast */
+.segmented {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: rgba(29, 43, 42, 0.06);
+  border-radius: 999px;
+}
+
+.segmented label {
+  flex: 1;
+}
+
+.segmented input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.segmented span {
+  display: grid;
+  place-items: center;
+  min-height: 42px;
+  padding: 0 6px;
+  border-radius: 999px;
+  color: var(--text-soft);
+  font-size: 0.95rem;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.segmented input:checked + span {
+  background: white;
+  box-shadow: 0 2px 8px rgba(29, 43, 42, 0.12);
+  color: var(--primary-dark);
+}
+
+.segmented input:focus-visible + span {
+  outline: 3px solid var(--primary-soft);
+}
+
+.settings-message {
+  min-height: 1.2em;
+  margin: -4px 0;
+  color: var(--accent-ink);
   font-weight: 600;
 }
 
+.settings-message.good {
+  color: var(--primary);
+}
+
+/* "Are you sure?" notes before removing something */
 .sheet-warning {
-  margin: 0 0 4px;
+  margin: 0;
   padding: 12px 14px;
   background: rgba(253, 235, 220, 0.9);
   border-radius: var(--radius-small);
@@ -2135,39 +2260,29 @@ button.avatar:active {
   line-height: 1.45;
 }
 
-.switch-button.danger {
-  background: #C2410C;
-  box-shadow: 0 8px 20px rgba(194, 65, 12, 0.28);
+.switch-button {
+  background: var(--accent-ink);
+  box-shadow: 0 8px 20px rgba(164, 78, 38, 0.25);
 }
 
-.switch-button.danger:hover {
+.switch-button:hover {
+  background: #8A3F1E;
+}
+
+.button.danger,
+.secondary-button.danger {
+  background: #C2410C;
+  box-shadow: 0 8px 20px rgba(194, 65, 12, 0.28);
+  color: white;
+}
+
+.button.danger:hover {
   background: #9A3412;
 }
 
-.sheet-close {
-  width: 100%;
-  min-height: 50px;
-}
-
-@keyframes sheet-up {
-  from { transform: translateY(100%); }
-}
-
-@keyframes sheet-fade {
-  from { opacity: 0; }
-}
-
-/* On a big screen the sheet floats in the middle as a card */
-@media (min-width: 700px) {
-  .sheet-backdrop {
-    align-items: center;
-  }
-  .sheet {
-    padding-bottom: 20px;
-    border-bottom: 1px solid var(--glass-edge, white);
-    border-radius: 28px;
-  }
-  .sheet-handle {
-    display: none;
-  }
+.settings-about {
+  margin: 28px 0 8px;
+  color: var(--text-soft);
+  font-size: 0.9rem;
+  text-align: center;
 }

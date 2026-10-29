@@ -28,7 +28,7 @@ import { SAY, startIn, countFor, heldFor, roundNumber, roundsDone, finishedFlow 
 const GET_READY_SECONDS = 5;  // after Start: time to step back before the steps begin
 const STEP_GAP = 3.5;       // after the coach speaks, wait this long (quiet) before the next step
 const STEP_OK_TIME = 0.5;   // a measured step must look right for this long to count as done
-const HOLD_SECONDS = 30;    // how long to hold the pose
+const HOLD_SECONDS = holdSeconds();   // how long to hold the pose (Settings, settings.js)
 const GOOD_SCORE = 70;      // the hold timer only counts at this score or above
 const PROBLEM_TIME = 1.5;   // only tell you to move once a problem has lasted this long
 const SAME_WORDS_GAP = 15;  // don't say the same "move" sentence again within 15 seconds
@@ -46,6 +46,7 @@ const countdownText = document.getElementById("countdown");
 const timerCard = document.getElementById("timer-card");
 const timerNumber = document.getElementById("timer-seconds");
 const timerNote = document.getElementById("timer-note");
+document.querySelector(".timer-out-of").textContent = "/" + HOLD_SECONDS + "s";
 
 // The time now, in seconds
 function now() {
