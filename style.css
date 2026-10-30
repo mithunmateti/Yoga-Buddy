@@ -2286,3 +2286,161 @@ a.avatar:active {
   font-size: 0.9rem;
   text-align: center;
 }
+
+/* ----- 15. How long to hold (pose guide) ----- */
+.hold-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.hold-card[hidden] {
+  display: none;
+}
+
+.hold-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.hold-top h2 {
+  margin: 0;
+}
+
+.hold-value {
+  margin: 0;
+  color: var(--primary-dark);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.hold-value b {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+/* The bar: filled up to the thumb (guide.js sets --fill) */
+.hold-range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 32px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.hold-range::-webkit-slider-runnable-track {
+  height: 10px;
+  background: linear-gradient(to right, var(--primary) var(--fill, 0%), rgba(29, 43, 42, 0.12) var(--fill, 0%));
+  border-radius: 999px;
+}
+
+.hold-range::-moz-range-track {
+  height: 10px;
+  background: rgba(29, 43, 42, 0.12);
+  border-radius: 999px;
+}
+
+.hold-range::-moz-range-progress {
+  height: 10px;
+  background: var(--primary);
+  border-radius: 999px;
+}
+
+.hold-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 30px;
+  height: 30px;
+  margin-top: -10px;
+  background: white;
+  border: 3px solid var(--primary);
+  border-radius: 50%;
+  box-shadow: 0 3px 10px rgba(29, 43, 42, 0.25);
+}
+
+.hold-range::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  background: white;
+  border: 3px solid var(--primary);
+  border-radius: 50%;
+  box-shadow: 0 3px 10px rgba(29, 43, 42, 0.25);
+}
+
+.hold-range:focus-visible {
+  outline: 3px solid var(--primary-soft);
+  outline-offset: 2px;
+  border-radius: 999px;
+}
+
+.hold-ends {
+  display: flex;
+  justify-content: space-between;
+  margin-top: -6px;
+  color: var(--text-soft);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.hold-recommended {
+  min-height: 48px;
+  padding: 8px 16px;
+  background: rgba(232, 131, 58, 0.14);
+  border: 1.5px solid rgba(232, 131, 58, 0.55);
+  border-radius: 999px;
+  color: var(--accent-ink);
+  font-family: inherit;
+  font-size: 0.98rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s, background 0.15s;
+}
+
+.hold-recommended:active {
+  transform: scale(0.97);
+}
+
+/* Already on the recommended time */
+.hold-recommended.chosen {
+  background: var(--primary-soft);
+  border-color: transparent;
+  color: var(--primary-dark);
+}
+
+.hold-caution {
+  margin: 0;
+  padding: 10px 14px;
+  background: rgba(253, 235, 220, 0.9);
+  border-radius: var(--radius-small);
+  color: var(--accent-ink);
+  font-size: 0.92rem;
+  line-height: 1.4;
+}
+
+.hold-why {
+  color: var(--text-soft);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.hold-why summary {
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.hold-why p {
+  margin: 8px 0;
+}
+
+.hold-why ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.hold-why a {
+  color: var(--primary);
+}

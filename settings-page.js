@@ -1,8 +1,8 @@
 // =============================================================
 // settings-page.js — the Settings page (settings.html).
 //
-// Change your details, the voice, how long to hold each pose,
-// reset your streak, or switch to someone else.
+// Change your details or the voice, reset your streak, or switch
+// to someone else.
 // =============================================================
 
 import { sayFresh, unlockSound, chooseVoice } from "./voice.js";
@@ -86,20 +86,7 @@ function alertVoiceOff() {
   setTimeout(function () { button.textContent = "▶ Test the voice"; }, 2000);
 }
 
-// ----- 3. How long to hold each pose -----
-const holdBox = document.getElementById("hold-choices");
-holdBox.innerHTML = HOLD_CHOICES.map(function (seconds) {
-  return '<label><input type="radio" name="hold" value="' + seconds + '"><span>' + seconds + " s</span></label>";
-}).join("");
-for (const option of holdBox.querySelectorAll("input")) {
-  option.checked = Number(option.value) === holdSeconds();
-  option.addEventListener("change", function () {
-    settings.hold = Number(option.value);
-    saveSettings(settings);
-  });
-}
-
-// ----- 4. Your progress -----
+// ----- 3. Your progress -----
 function showStreakSummary() {
   const progress = loadProgress();
   const streak = currentStreak(progress);
@@ -136,13 +123,14 @@ twoTaps(document.getElementById("reset-streak"), document.getElementById("streak
     showStreakSummary();
   });
 
-// ----- 5. Switch person: remove everything, then start again -----
+// ----- 4. Switch person: remove everything, then start again -----
 twoTaps(document.getElementById("switch-person"), document.getElementById("switch-warning"),
   "Yes, remove and start again", function () {
     try {
       localStorage.removeItem(PROFILE_NAME);
       localStorage.removeItem(PROGRESS_NAME);
       localStorage.removeItem(SETTINGS_NAME);
+      localStorage.removeItem("yogaBuddyHoldTimes");
       sessionStorage.removeItem("yogaBuddyStarted");
     } catch (error) {
       // storage blocked: nothing was saved anyway

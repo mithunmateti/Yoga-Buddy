@@ -22,7 +22,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="style.css?v=20261029d">
+  <link rel="stylesheet" href="style.css?v=20261030a">
 </head>
 <body class="practice-body">
   <!-- SCREEN 3: PRACTICE (dark) -->
@@ -74,7 +74,7 @@
           <div id="coach-figure" class="coach-figure"></div>
         </div>
 
-        <!-- The 30-second hold timer (appears after the last step) -->
+        <!-- The hold timer (appears after the last step) -->
         <!-- The ring fills up as the seconds count (coach.js sets --progress) -->
         <div id="timer-card" class="timer-card" hidden>
           <div class="timer-ring">
@@ -106,14 +106,15 @@
   <!-- poses.js must load first, because practice.js uses the POSES list from it.
        figure.js draws the stick figures of the Surya Namaskar poses. -->
   <!-- profile.js asks for the name, age and gender first -->
-  <script src="settings.js?v=20261029d"></script>
-  <script src="profile.js?v=20261029d"></script>
-  <script src="poses.js?v=20261029d"></script>
-  <script src="figure.js?v=20261029d"></script>
+  <script src="settings.js?v=20261030a"></script>
+  <script src="profile.js?v=20261030a"></script>
+  <script src="poses.js?v=20261030a"></script>
+  <script src="hold-time.js?v=20261030a"></script>
+  <script src="figure.js?v=20261030a"></script>
   <!-- progress.js remembers today's practice time and poses (weekly streak) -->
-  <script src="progress.js?v=20261029d"></script>
+  <script src="progress.js?v=20261030a"></script>
   <!-- type="module" lets practice.js load MediaPipe from the internet (a CDN).
        practice.js also loads pose-check.js (the maths) and coach.js (the voice coach). -->
-  <script type="module" src="practice.js?v=20261029d"></script>
+  <script type="module" src="practice.js?v=20261030a"></script>
 </body>
 </html>

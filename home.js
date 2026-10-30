@@ -77,7 +77,7 @@ hero.href = "guide.html?pose=" + today.id;
 hero.style.setProperty("--tint", today.tint || "var(--primary-soft)");
 hero.innerHTML = `
   <div class="hero-text">
-    <span class="hero-kicker">Today · ${holdSeconds()} second hold</span>
+    <span id="hero-kicker" class="hero-kicker"></span>
     <h3>${today.sanskrit}</h3>
     <p>${today.english} pose</p>
     <div class="chips">${chipsFor(today)}</div>
@@ -85,6 +85,13 @@ hero.innerHTML = `
   </div>
   <img class="hero-photo" src="${today.image}" alt="${today.sanskrit} pose" onerror="this.remove()">
 `;
+
+// Today's hold time depends on the age, so it changes after the questions
+function showTodayHold() {
+  document.getElementById("hero-kicker").textContent = "Today · " + holdFor(today.id) + " second hold";
+}
+showTodayHold();
+window.addEventListener("pageshow", showTodayHold);   // it may have changed on the guide
 
 // ----- All the poses -----
 const grid = document.getElementById("pose-grid");
@@ -155,7 +162,10 @@ function seenStart() {
 
 function askIfNeeded() {
   if (!window.yogaProfile) {
-    askProfile(showHello);
+    askProfile(function () {
+      showHello();
+      showTodayHold();
+    });
   }
 }
 

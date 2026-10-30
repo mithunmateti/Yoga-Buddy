@@ -3,7 +3,7 @@
 //
 // For every day it saves (on this device only, in localStorage):
 //   seconds: how long you practised (only while the camera can see you)
-//   poses:   which poses you held for the full 30 seconds
+//   poses:   which poses you held for the full time you chose
 //
 // A day counts for your streak when you practised for 10 minutes.
 // The home screen (home.js) shows the streak and this week's days.
@@ -51,7 +51,7 @@ function addPracticeTime(seconds) {
   saveProgress(progress);
 }
 
-// Remember that a pose was held for the full 30 seconds today (coach.js)
+// Remember that a pose was held for the full time today (coach.js)
 function recordPose(poseId) {
   const progress = loadProgress();
   const day = todayIn(progress);

@@ -7,7 +7,7 @@
 // 3. Reads the steps (from poses.js) aloud, one at a time, with a short
 //    quiet gap (3.5 seconds) after each one. If a step the body tracker
 //    can measure isn't right yet, it gives ONE tip, then moves on.
-// 4. Times a 30-second hold. The timer only counts while your
+// 4. Times the hold (5 to 60 seconds, chosen on the guide). The timer only counts while your
 //    score is 70 or more. During the hold the AI buddy watches and
 //    chooses the words, like a real teacher. (Its answers take a few
 //    seconds, which is too slow for the quick steps.)
@@ -28,7 +28,7 @@ import { SAY, startIn, countFor, heldFor, roundNumber, roundsDone, finishedFlow 
 const GET_READY_SECONDS = 5;  // after Start: time to step back before the steps begin
 const STEP_GAP = 3.5;       // after the coach speaks, wait this long (quiet) before the next step
 const STEP_OK_TIME = 0.5;   // a measured step must look right for this long to count as done
-const HOLD_SECONDS = holdSeconds();   // how long to hold the pose (Settings, settings.js)
+const HOLD_SECONDS = holdForThisVisit();   // how long to hold the pose (chosen on the guide, hold-time.js)
 const GOOD_SCORE = 70;      // the hold timer only counts at this score or above
 const PROBLEM_TIME = 1.5;   // only tell you to move once a problem has lasted this long
 const SAME_WORDS_GAP = 15;  // don't say the same "move" sentence again within 15 seconds
@@ -453,7 +453,7 @@ function doStep(t, check) {
 }
 
 
-// ----- Stage 3: hold the pose for 30 seconds -----
+// ----- Stage 3: hold the pose for the chosen time -----
 function startHold(before) {
   stage = "hold";
   held = 0;

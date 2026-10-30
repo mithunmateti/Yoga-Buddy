@@ -29,10 +29,8 @@ if (!pose) {
   document.getElementById("pose-name").textContent = pose.sanskrit;
   document.getElementById("pose-english").textContent = pose.english + " pose";
 
-  // The little labels, e.g. "Easy · Balance · 30 s hold" (the hold time is in Settings)
-  const chips = [pose.level, pose.focus, holdSeconds() + " s hold"].filter(Boolean);
-  document.getElementById("hold-note").textContent =
-    "Then hold the pose for " + holdSeconds() + " seconds. Yoga Buddy's voice will guide you. 🔊";
+  // The little labels, e.g. "Easy · Balance"
+  const chips = [pose.level, pose.focus].filter(Boolean);
   document.getElementById("pose-chips").innerHTML = chips.map(function (chip) {
     return '<span class="chip">' + chip + "</span>";
   }).join("");
@@ -79,6 +77,61 @@ if (!pose) {
 
   // "Start with camera" button opens the practice screen for this pose
   document.getElementById("start-button").href = "practice.html?pose=" + pose.id;
+
+  // A single pose has a hold time to choose. A flow has rounds instead.
+  if (!pose.positions) {
+    showHoldChoice(pose);
+  }
+}
+
+
+// ----- How long to hold: the bar and the Recommended button -----
+function showHoldChoice(pose) {
+  const range = document.getElementById("hold-range");
+  const recommendedButton = document.getElementById("hold-recommended");
+  const caution = document.getElementById("hold-caution");
+
+  document.getElementById("hold-card").hidden = false;
+  range.min = HOLD_MIN;
+  range.max = HOLD_MAX;
+  range.step = HOLD_STEP;
+
+  // Show a time everywhere it appears on this page
+  function showTime(seconds) {
+    const recommended = recommendedHold(pose.id);
+    const age = holdAge();
+    range.value = seconds;
+    range.style.setProperty("--fill", (seconds - HOLD_MIN) / (HOLD_MAX - HOLD_MIN) * 100 + "%");
+    document.getElementById("hold-seconds").textContent = seconds;
+    document.getElementById("hold-note").textContent =
+      "Then hold the pose for " + seconds + " seconds. Yoga Buddy's voice will guide you. 🔊";
+    document.getElementById("start-button").href = "practice.html?pose=" + pose.id + "&hold=" + seconds;
+
+    const isRecommended = seconds === recommended;
+    const forWhom = window.yogaProfile && window.yogaProfile.age ? " for age " + age : "";
+    recommendedButton.classList.toggle("chosen", isRecommended);
+    recommendedButton.textContent = (isRecommended ? "✓ Recommended" : "⭐ Use recommended") +
+      forWhom + ": " + recommended + " s";
+    // Children and older people get a gentle note above the recommended time
+    caution.hidden = !(seconds > recommended && (age < 18 || age >= 60));
+  }
+
+  range.addEventListener("input", function () {
+    const seconds = Number(range.value);
+    saveHold(pose.id, seconds);
+    showTime(seconds);
+  });
+
+  recommendedButton.addEventListener("click", function () {
+    clearHold(pose.id);
+    showTime(recommendedHold(pose.id));
+  });
+
+  showTime(holdFor(pose.id));
+  // The questions may still be showing: use the age once it is known
+  document.addEventListener("profilechange", function () {
+    showTime(holdFor(pose.id));
+  });
 }
 
 
