@@ -45,7 +45,7 @@ We decided to keep the first version simple. It's better to have a few things th
 | 5 beginner poses | Tadasana (Mountain), Vrikshasana (Tree), Virabhadrasana II (Warrior II), Utkatasana (Chair) and Bhujangasana (Cobra), each with a picture and easy steps |
 | Live tips | The camera watches you and shows tips like "Raise your arms higher" |
 | Pose score | Gives you a score out of 100 for each pose |
-| Timer | Counts 30 seconds while you hold the pose, with breathing reminders |
+| Timer | Counts the time you chose (5 to 60 seconds) while you hold the pose, with breathing reminders |
 
 Later we want to add: saving your progress, short daily routines, and Hindi and other Indian languages.
 

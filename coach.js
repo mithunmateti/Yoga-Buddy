@@ -19,16 +19,16 @@
 // The voice itself is in voice.js; the fixed sentences are in phrases.js.
 // =============================================================
 
-import { worstJoint, tipFor, isWrong } from "./pose-check.js";
-import { buddyOn, askBuddy } from "./buddy.js";
-import { say, sayFresh, isTalking, quietFor, stopTalking } from "./voice.js";
-import { SAY, startIn, countFor, heldFor, roundNumber, roundsDone, finishedFlow } from "./phrases.js";
+import { worstJoint, tipFor, isWrong } from "./pose-check.js?v=20261030b";
+import { buddyOn, askBuddy } from "./buddy.js?v=20261030b";
+import { say, sayFresh, isTalking, quietFor, stopTalking } from "./voice.js?v=20261030b";
+import { SAY, startIn, countFor, heldFor, roundNumber, roundsDone, finishedFlow } from "./phrases.js?v=20261030b";
 
 // ----- Settings you can change -----
 const GET_READY_SECONDS = 5;  // after Start: time to step back before the steps begin
 const STEP_GAP = 3.5;       // after the coach speaks, wait this long (quiet) before the next step
 const STEP_OK_TIME = 0.5;   // a measured step must look right for this long to count as done
-const HOLD_SECONDS = holdForThisVisit();   // how long to hold the pose (chosen on the guide, hold-time.js)
+let holdTime = holdForThisVisit();   // how long to hold the pose (chosen on the guide, hold-time.js)
 const GOOD_SCORE = 70;      // the hold timer only counts at this score or above
 const PROBLEM_TIME = 1.5;   // only tell you to move once a problem has lasted this long
 const SAME_WORDS_GAP = 15;  // don't say the same "move" sentence again within 15 seconds
@@ -46,7 +46,8 @@ const countdownText = document.getElementById("countdown");
 const timerCard = document.getElementById("timer-card");
 const timerNumber = document.getElementById("timer-seconds");
 const timerNote = document.getElementById("timer-note");
-document.querySelector(".timer-out-of").textContent = "/" + HOLD_SECONDS + "s";
+const timerOutOf = document.querySelector(".timer-out-of");
+timerOutOf.textContent = "/" + holdTime + "s";
 
 // The time now, in seconds
 function now() {
@@ -84,6 +85,9 @@ let lastGuideAt = -99;        // …and when
 export function startCoach(thePose, takePhoto) {
   pose = thePose;
   getPhoto = takePhoto;
+  // Read it again: the questions may have been showing when the page opened
+  holdTime = holdForThisVisit();
+  timerOutOf.textContent = "/" + holdTime + "s";
   steps = makeSteps(pose);
   reset();
   say(hello() + SAY.stepBack + " " + startIn(GET_READY_SECONDS));
@@ -462,7 +466,7 @@ function startHold(before) {
   showStep("Hold the pose", "Breathe slowly. The timer counts while your score is " + GOOD_SCORE + " or more.");
   showTimer(true);
   updateTimer("Counting…");
-  speak(before + SAY.hold + " " + countFor(HOLD_SECONDS));
+  speak(before + SAY.hold + " " + countFor(holdTime));
 }
 
 function doHold(t, passed, check) {
@@ -480,7 +484,7 @@ function doHold(t, passed, check) {
     updateTimer("Counting… keep breathing");
   }
 
-  if (held >= HOLD_SECONDS) {
+  if (held >= holdTime) {
     finish();
     return;
   }
@@ -497,7 +501,7 @@ function doHold(t, passed, check) {
   if (buddyOn()) {
     // The AI looks every few seconds and decides: a correction, some
     // encouragement, or nothing
-    askAI(t, "The person is holding the pose (" + Math.floor(held) + " of " + HOLD_SECONDS + " seconds, score " + score + "). " +
+    askAI(t, "The person is holding the pose (" + Math.floor(held) + " of " + holdTime + " seconds, score " + score + "). " +
              "If something is wrong, give ONE short correction. Otherwise, now and then, a short encouragement. " +
              "Leave 'say' empty if you spoke recently and they look fine.");
     const answer = takeAIAnswer();
@@ -529,10 +533,10 @@ function doHold(t, passed, check) {
 function finish() {
   stage = "done";
   recordPose(pose.id);   // for the weekly streak (progress.js)
-  held = HOLD_SECONDS;
+  held = holdTime;
   updateTimer("Done!");
-  showStep("Well done!", "You held " + pose.sanskrit + " for " + HOLD_SECONDS + " seconds.");
-  sayFresh(wellDoneName() + " " + heldFor(pose, HOLD_SECONDS) + " " + SAY.relax);
+  showStep("Well done!", "You held " + pose.sanskrit + " for " + holdTime + " seconds.");
+  sayFresh(wellDoneName() + " " + heldFor(pose, holdTime) + " " + SAY.relax);
 }
 
 // The end of a flow (Surya Namaskar)
@@ -549,7 +553,7 @@ function showTimer(visible) {
 }
 
 function updateTimer(note) {
-  timerNumber.textContent = Math.min(HOLD_SECONDS, Math.floor(held));
-  timerCard.style.setProperty("--progress", Math.min(1, held / HOLD_SECONDS));   // fills the ring
+  timerNumber.textContent = Math.min(holdTime, Math.floor(held));
+  timerCard.style.setProperty("--progress", Math.min(1, held / holdTime));   // fills the ring
   timerNote.textContent = note;
 }

@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="style.css?v=20261030a">
+  <link rel="stylesheet" href="style.css?v=20261030b">
 </head>
 <body class="guide-body">
   <!-- SCREEN 2: POSE GUIDE -->
@@ -63,17 +63,19 @@
           <input id="hold-range" class="hold-range" type="range" aria-label="Seconds to hold the pose">
           <div class="hold-ends"><span>5 s</span><span>60 s</span></div>
           <button id="hold-recommended" class="hold-recommended" type="button"></button>
+          <p class="hold-estimate">A suggested starting point, mostly our own estimate.</p>
           <p id="hold-caution" class="hold-caution" hidden>That's longer than recommended for your age. Go gently and stop if it feels hard.</p>
           <details class="hold-why">
             <summary>Where does this come from?</summary>
-            <p>This suggested starting time is our own estimate, based on Indian government yoga
-               guidance and published balance data by age, because no study has tested the best
-               hold time. Your gender does not change it. Keep breathing normally, and stop if you
-               feel pain or dizziness.</p>
+            <p>We found no study that tested the best hold time, so this is mostly our own estimate.
+               We used these as rough guides: the 10–30 seconds in the Common Yoga Protocol (it has
+               no age groups and doesn't cover every pose here), child yoga guidelines, and one-leg
+               balance averages by age, which aren't yoga recommendations. We found no reason for
+               gender to change it. Keep breathing normally, and stop if you feel pain or dizziness.</p>
             <ul>
               <li><a href="https://www.mea.gov.in/images/pdf/common-yoga-protocol-english.pdf" target="_blank" rel="noopener">Common Yoga Protocol (Ministry of AYUSH)</a></li>
               <li><a href="https://geriatrictoolkit.missouri.edu/balance/Normative_Values_for_the_Unipedal_Stance_Test_Springer-JGPT.pdf" target="_blank" rel="noopener">One-leg balance by age (Springer et al., 2007)</a></li>
-              <li><a href="https://en.vikaspedia.in/health/ayush/yoga-1/guidelines-for-child-yoga" target="_blank" rel="noopener">Guidelines for Child Yoga (Vikaspedia)</a></li>
+              <li><a href="https://en.vikaspedia.in/health/ayush/yoga-1/guidelines-for-child-yoga" target="_blank" rel="noopener">Guidelines for Child Yoga (Vikaspedia; we only saw excerpts)</a></li>
             </ul>
           </details>
         </section>
@@ -111,11 +113,11 @@
   <!-- profile.js asks for the name, age and gender first.
        poses.js must load before guide.js, because guide.js uses the POSES list from it.
        figure.js draws the stick figures of the Surya Namaskar poses. -->
-  <script src="settings.js?v=20261030a"></script>
-  <script src="profile.js?v=20261030a"></script>
-  <script src="poses.js?v=20261030a"></script>
-  <script src="hold-time.js?v=20261030a"></script>
-  <script src="figure.js?v=20261030a"></script>
-  <script src="guide.js?v=20261030a"></script>
+  <script src="settings.js?v=20261030b"></script>
+  <script src="profile.js?v=20261030b"></script>
+  <script src="poses.js?v=20261030b"></script>
+  <script src="hold-time.js?v=20261030b"></script>
+  <script src="figure.js?v=20261030b"></script>
+  <script src="guide.js?v=20261030b"></script>
 </body>
 </html>

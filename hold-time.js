@@ -4,15 +4,17 @@
 // The pose guide has a bar from 5 to 60 seconds and a "Recommended"
 // button. The choice is remembered for each pose, on this device.
 //
-// The recommended times are a starting point, not a medical rule.
-// No study has tested the best hold time for any age, so:
-//   • Under 10: "up to 10 seconds" (Indian child yoga guidelines, NCPCR).
-//   • Adults: inside the 10–30 seconds of the Common Yoga Protocol
-//     (Ministry of AYUSH), which has no age groups.
-//   • 60 and over: our own estimate, kept below the average time people
-//     of that age can stand on one leg (Springer et al., 2007).
-//   • Everything else in the table is our own estimate too.
-// Gender is not used: no study or guideline sets a different time for it.
+// The recommended times are a starting point, not a medical rule, and most
+// of them are our own estimate. We found no study that tested the best hold
+// time for any age, so we used these as rough guides:
+//   • Under 10: "up to 10 seconds" (Indian child yoga guidelines, NCPCR). We
+//     only saw this quoted second-hand, and it is a limit, not a target.
+//   • Adults: inside the 10–30 seconds of the Common Yoga Protocol (Ministry of
+//     AYUSH). It has no age groups and doesn't cover Utkatasana or Virabhadrasana.
+//   • 60 and over: the balance column stays below the average time people of
+//     that age can stand on one leg (Springer et al., 2007). That is a balance
+//     test, not a yoga recommendation.
+// Gender is not used: we found no study or guideline with a different time for it.
 // =============================================================
 
 const HOLD_MIN = 5;
@@ -32,6 +34,8 @@ const HOLD_TABLE = [
 ];
 
 // Which column each pose uses. Tadasana lifts the heels, so it is a balance pose here.
+// Virabhadrasana stays "steady" because a study of older adults (Lu & Fishman, 2016)
+// held it for 30 seconds. Utkatasana is "legs": it loaded the knees most in a lab study.
 const HOLD_KIND = {
   tadasana: "balance",
   vrikshasana: "balance",

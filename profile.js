@@ -175,6 +175,22 @@ function askProfile(done) {
   show();
 }
 
+// The browser's Back button can bring back an old copy of a page. If the
+// details changed since then (Settings), load the page fresh.
+function savedProfileText() {
+  try {
+    return localStorage.getItem(PROFILE_NAME);
+  } catch (error) {
+    return null;
+  }
+}
+const profileTextAtLoad = savedProfileText();
+window.addEventListener("pageshow", function (event) {
+  if (event.persisted && savedProfileText() !== profileTextAtLoad) {
+    location.reload();
+  }
+});
+
 // When the page opens: ask, unless this person has already told us.
 // (The home page asks after its intro screen instead: data-ask-later.)
 window.yogaProfile = getProfile();

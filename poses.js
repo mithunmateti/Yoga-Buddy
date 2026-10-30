@@ -14,7 +14,7 @@
 //            coach moves on to the next step, e.g. ["Arms"].
 //            Use [] for a step the camera can't check (like "Interlock
 //            your fingers"): the coach just waits a few seconds.
-// After the last step, the coach times a 30-second hold.
+// After the last step, the coach times the hold (chosen on the guide, hold-time.js).
 
 // HOW THE "checks" WORK
 // ---------------------
