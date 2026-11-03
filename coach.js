@@ -19,10 +19,10 @@
 // The voice itself is in voice.js; the fixed sentences are in phrases.js.
 // =============================================================
 
-import { worstJoint, tipFor, isWrong } from "./pose-check.js?v=20261030b";
-import { buddyOn, askBuddy } from "./buddy.js?v=20261030b";
-import { say, sayFresh, isTalking, quietFor, stopTalking } from "./voice.js?v=20261030b";
-import { SAY, startIn, countFor, heldFor, roundNumber, roundsDone, finishedFlow } from "./phrases.js?v=20261030b";
+import { worstJoint, tipFor, isWrong } from "./pose-check.js?v=20261103c";
+import { buddyOn, askBuddy } from "./buddy.js?v=20261103c";
+import { say, sayFresh, isTalking, quietFor, stopTalking } from "./voice.js?v=20261103c";
+import { SAY, startIn, countFor, heldFor, roundNumber, roundsDone, finishedFlow } from "./phrases.js?v=20261103c";
 
 // ----- Settings you can change -----
 const GET_READY_SECONDS = 5;  // after Start: time to step back before the steps begin
@@ -46,6 +46,7 @@ const countdownText = document.getElementById("countdown");
 const timerCard = document.getElementById("timer-card");
 const timerNumber = document.getElementById("timer-seconds");
 const timerNote = document.getElementById("timer-note");
+const resultBox = document.getElementById("result");
 const timerOutOf = document.querySelector(".timer-out-of");
 timerOutOf.textContent = "/" + holdTime + "s";
 
@@ -117,7 +118,11 @@ export function stopCoach() {
   showStep("Voice coach 🔊", "Waiting for the camera…");
 }
 
+let scoreTotal = 0;   // the score x time added up while holding, for the average
+let scoreTime = 0;    // the time (seconds) the score was counted for
+
 function reset() {
+  resultBox.hidden = true;
   stage = "countdown";
   stepIndex = 0;
   held = 0;
@@ -461,6 +466,8 @@ function doStep(t, check) {
 function startHold(before) {
   stage = "hold";
   held = 0;
+  scoreTotal = 0;
+  scoreTime = 0;
   wrongSince = null;
   aiAnswer = null;
   showStep("Hold the pose", "Breathe slowly. The timer counts while your score is " + GOOD_SCORE + " or more.");
@@ -471,6 +478,13 @@ function startHold(before) {
 
 function doHold(t, passed, check) {
   const score = check.score;
+
+  // Every moment we could see and score you counts towards the average,
+  // including the moments the timer was paused
+  if (check.inView && score !== null) {
+    scoreTotal += score * passed;
+    scoreTime += passed;
+  }
 
   // 1. The timer only counts while we can see the body and the score is good
   if (!check.inView) {
@@ -537,7 +551,35 @@ function finish() {
   updateTimer("Done!");
   showStep("Well done!", "You held " + pose.sanskrit + " for " + holdTime + " seconds.");
   sayFresh(wellDoneName() + " " + heldFor(pose, holdTime) + " " + SAY.relax);
+  showResult();
 }
+
+// The average score screen, a moment after "Done!"
+function showResult() {
+  const average = scoreTime > 0 ? Math.round(scoreTotal / scoreTime) : null;
+  const band = average === null ? "" : average >= 80 ? "great" : average >= 50 ? "ok" : "low";
+  const message = average === null ? "We couldn't measure your pose clearly this time." :
+    average >= 90 ? "Excellent! Your pose was very steady." :
+    average >= 80 ? "Great hold! Just a few small things to polish." :
+    average >= 70 ? "Good job! A little more practice and it will be even better." :
+    average >= 50 ? "Nice effort. Try again and follow the tips to improve." :
+    "Keep practising. Watch the tips and try again.";
+  document.getElementById("result-pose").textContent = pose.sanskrit + " · " + holdTime + " seconds";
+  document.getElementById("result-number").textContent = average === null ? "–" : average;
+  document.getElementById("result-score").dataset.band = band;
+  document.getElementById("result-message").textContent = message;
+  setTimeout(function () {
+    if (stage === "done") {   // (not if you pressed Restart in the meantime)
+      resultBox.hidden = false;
+    }
+  }, 1200);
+}
+
+// "Practice again" on the result screen does the same as the Restart button
+document.getElementById("result-again").addEventListener("click", function () {
+  resultBox.hidden = true;
+  document.getElementById("restart-button").click();
+});
 
 // The end of a flow (Surya Namaskar)
 function finishFlow(before) {

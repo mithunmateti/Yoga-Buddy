@@ -16,12 +16,12 @@ import { PoseLandmarker, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@m
 import {
   measureJoints, calculateScore, canSee, outsidePicture, bodyLooksReal,
   smoothJoints, addHiddenJoints, startFresh, isWrong, jointToFix, tipFor
-} from "./pose-check.js?v=20261030b";
+} from "./pose-check.js?v=20261103c";
 
 // The voice coach (coach.js), its voice (voice.js) and its sentences (phrases.js)
-import { startCoach, restartCoach, stopCoach, updateCoach, checksNow } from "./coach.js?v=20261030b";
-import { unlockSound, chooseVoice } from "./voice.js?v=20261030b";
-import { SAY } from "./phrases.js?v=20261030b";
+import { startCoach, restartCoach, stopCoach, updateCoach, checksNow } from "./coach.js?v=20261103c";
+import { unlockSound, chooseVoice } from "./voice.js?v=20261103c";
+import { SAY } from "./phrases.js?v=20261103c";
 
 // Where MediaPipe's helper files and the trained pose model are.
 // "lite" is the fastest model (good for phones). For more accuracy,
@@ -609,10 +609,31 @@ if (new URLSearchParams(location.search).has("debug")) {
 // nicest voice on this computer (and forget a voice chosen before)
 chooseVoice("");
 
+// Stop the phone's screen from going dark while you are holding a pose.
+// (Safari 16.4 and newer. Anywhere else it simply does nothing.)
+let wakeLock = null;
+async function keepScreenOn() {
+  try {
+    if ("wakeLock" in navigator && !wakeLock) {
+      wakeLock = await navigator.wakeLock.request("screen");
+      wakeLock.addEventListener("release", function () { wakeLock = null; });
+    }
+  } catch (error) {
+    // not allowed (e.g. low battery mode): the screen may dim, that's all
+  }
+}
+document.addEventListener("visibilitychange", function () {
+  if (!document.hidden && document.body.classList.contains("live")) {
+    keepScreenOn();   // the browser lets go of it when you switch app
+  }
+});
+
 // The Start button: hide the start screen and start the voice coach
 // straight away (talking inside the click is what lets the browser use
 // the voice). Its 5-second countdown runs while the camera starts.
 startButton.addEventListener("click", function () {
+  document.body.classList.add("live");   // a phone held upright fills the screen (style.css)
+  keepScreenOn();
   startPanel.hidden = true;
   restartButton.hidden = false;
   unlockSound();
