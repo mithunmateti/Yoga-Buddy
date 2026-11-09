@@ -94,10 +94,10 @@ function showTodayHold() {
 showTodayHold();
 window.addEventListener("pageshow", showTodayHold);   // it may have changed on the guide
 
-// ----- All the poses -----
-const grid = document.getElementById("pose-grid");
-
-for (const pose of POSES) {
+// ----- The pose cards -----
+// One card for every pose in poses.js. The single poses go in the "Basic
+// Asanas" tab, the flows (Surya Namaskar) in the "Surya Namaskar" tab.
+function makePoseCard(pose) {
   // Each card is a link, e.g. guide.html?pose=tadasana
   const card = document.createElement("a");
   card.className = "pose-card";
@@ -123,10 +123,96 @@ for (const pose of POSES) {
   if (pose.positions) {
     card.querySelector(".chips").innerHTML += `<span class="chip">☀️ ${pose.positions.length} poses</span>`;
   }
-
-  // Put the finished card on the page
-  grid.appendChild(card);
+  return card;
 }
+
+const grid = document.getElementById("pose-grid");
+const flowGrid = document.getElementById("flow-grid");
+const flows = POSES.filter(function (pose) { return pose.positions; });
+
+for (const pose of singlePoses) {
+  grid.appendChild(makePoseCard(pose));
+}
+for (const pose of flows) {
+  flowGrid.appendChild(makePoseCard(pose));
+}
+
+
+// ----- The tabs: Basic Asanas | Surya Namaskar -----
+// The chosen tab is kept in the web address (#basic or #surya). So when you
+// refresh, or come back from a pose with the Back button, you are still on
+// the same tab. (replaceState changes the address without adding a history
+// step or jumping the page.)
+const TABS = ["basic", "surya"];
+const tabButtons = {};
+const tabPanels = {};
+for (const name of TABS) {
+  tabButtons[name] = document.getElementById("tab-" + name);
+  tabPanels[name] = document.getElementById("panel-" + name);
+}
+
+document.getElementById("tab-basic-count").textContent = singlePoses.length + " poses";
+document.getElementById("tab-surya-count").textContent =
+  flows.length === 1 ? flows[0].positions.length + " positions" : flows.length + " flows";
+
+// A screen reader says "vertical" or "horizontal" to match the layout (style.css)
+const wideScreen = window.matchMedia("(min-width: 820px)");
+function setTabOrientation() {
+  document.querySelector(".side-tabs").setAttribute("aria-orientation", wideScreen.matches ? "vertical" : "horizontal");
+}
+setTabOrientation();
+if (wideScreen.addEventListener) {
+  wideScreen.addEventListener("change", setTabOrientation);
+}
+
+function tabFromAddress() {
+  const name = location.hash.replace("#", "");
+  return TABS.includes(name) ? name : "basic";
+}
+
+function showTab(name, focusIt) {
+  for (const other of TABS) {
+    const on = other === name;
+    tabPanels[other].hidden = !on;
+    tabButtons[other].setAttribute("aria-selected", on ? "true" : "false");
+    tabButtons[other].tabIndex = on ? 0 : -1;   // one tab stop; arrow keys move between them
+  }
+  if (focusIt) {
+    tabButtons[name].focus();
+  }
+}
+
+for (const name of TABS) {
+  tabButtons[name].addEventListener("click", function () {
+    showTab(name, false);
+    history.replaceState(null, "", location.pathname + location.search + "#" + name);
+  });
+}
+
+// Arrow keys move between the tabs (Home and End jump to the first and last)
+document.querySelector(".side-tabs").addEventListener("keydown", function (event) {
+  const now = TABS.indexOf(tabFromAddress());
+  let next = now;
+  if (event.key === "ArrowDown" || event.key === "ArrowRight") {
+    next = (now + 1) % TABS.length;
+  } else if (event.key === "ArrowUp" || event.key === "ArrowLeft") {
+    next = (now + TABS.length - 1) % TABS.length;
+  } else if (event.key === "Home") {
+    next = 0;
+  } else if (event.key === "End") {
+    next = TABS.length - 1;
+  } else {
+    return;
+  }
+  event.preventDefault();
+  history.replaceState(null, "", location.pathname + location.search + "#" + TABS[next]);
+  showTab(TABS[next], true);
+});
+
+window.addEventListener("hashchange", function () {
+  showTab(tabFromAddress(), false);
+});
+showTab(tabFromAddress(), false);
 
 
 // ----- The opening animation -----

@@ -23,7 +23,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="style.css?v=20261109b">
+  <link rel="stylesheet" href="style.css?v=20261109d">
 
   <!-- The opening animation only plays when the app is first opened, not
        when coming back from Settings or a pose (decided here, before anything
@@ -111,33 +111,60 @@
       <a id="avatar" class="avatar" href="settings.html" aria-label="Your profile and settings"></a>
     </div>
   </header>
-  </div>
 
   <main class="page home">
     <!-- "Good evening" and "Welcome, Asha" (home.js) -->
-    <p id="greet-time" class="greet-time"></p>
-    <h1 id="hello" class="hello">Welcome</h1>
+    <div class="home-hello">
+      <p id="greet-time" class="greet-time"></p>
+      <h1 id="hello" class="hello">Welcome</h1>
+    </div>
 
     <!-- This week: the streak, today's minutes and Monday to Sunday (home.js, progress.js) -->
-    <h2 class="section-title">Your week</h2>
-    <section id="streak" class="streak-card"></section>
+    <div class="home-week">
+      <h2 class="section-title">Your week</h2>
+      <section id="streak" class="streak-card"></section>
+    </div>
 
-    <!-- Today's pose: one big card (home.js picks a different pose each day) -->
-    <h2 class="section-title">Today's pose</h2>
-    <a id="hero" class="hero-card"></a>
+    <!-- The tabs: on the left of a laptop screen, a row on a phone (home.js).
+         The chosen tab is kept in the web address (#basic or #surya), so
+         refreshing the page stays on the same tab. -->
+    <div class="side-tabs" role="tablist" aria-label="Kinds of yoga" aria-orientation="horizontal">
+      <button id="tab-basic" class="side-tab" type="button" role="tab" aria-selected="true" aria-controls="panel-basic" data-tab="basic">
+        <span class="tab-icon" aria-hidden="true">🧘</span>
+        <span class="tab-text">Basic Asanas<small id="tab-basic-count"></small></span>
+      </button>
+      <button id="tab-surya" class="side-tab" type="button" role="tab" aria-selected="false" aria-controls="panel-surya" data-tab="surya" tabindex="-1">
+        <span class="tab-icon" aria-hidden="true">☀️</span>
+        <span class="tab-text">Surya Namaskar<small id="tab-surya-count"></small></span>
+      </button>
+    </div>
 
-    <!-- The pose cards are added here by home.js -->
-    <h2 class="section-title">All poses</h2>
-    <div id="pose-grid" class="pose-grid"></div>
+    <!-- TAB 1: Basic Asanas: today's pose and the five basic poses -->
+    <section id="panel-basic" class="tab-panel" role="tabpanel" aria-labelledby="tab-basic">
+      <!-- Today's pose: one big card (home.js picks a different pose each day) -->
+      <h2 class="section-title">Today's pose</h2>
+      <a id="hero" class="hero-card"></a>
+
+      <!-- The pose cards are added here by home.js -->
+      <h2 class="section-title">Basic Asanas</h2>
+      <div id="pose-grid" class="pose-grid"></div>
+    </section>
+
+    <!-- TAB 2: Surya Namaskar: the flows (home.js) -->
+    <section id="panel-surya" class="tab-panel" role="tabpanel" aria-labelledby="tab-surya" hidden>
+      <h2 class="section-title">Surya Namaskar</h2>
+      <p class="flow-intro">A flow of poses, one after another, like a moving yoga lesson. Yoga Buddy's voice tells you what to do next and checks each pose with the camera.</p>
+      <div id="flow-grid" class="pose-grid flows"></div>
+    </section>
   </main>
 
   <!-- profile.js asks for the name, age and gender first.
        poses.js must load before home.js, because home.js uses the POSES list from it. -->
-  <script src="settings.js?v=20261109b"></script>
-  <script src="profile.js?v=20261109b"></script>
-  <script src="poses.js?v=20261109b"></script>
-  <script src="hold-time.js?v=20261109b"></script>
-  <script src="progress.js?v=20261109b"></script>
-  <script src="home.js?v=20261109b"></script>
+  <script src="settings.js?v=20261109d"></script>
+  <script src="profile.js?v=20261109d"></script>
+  <script src="poses.js?v=20261109d"></script>
+  <script src="hold-time.js?v=20261109d"></script>
+  <script src="progress.js?v=20261109d"></script>
+  <script src="home.js?v=20261109d"></script>
 </body>
 </html>

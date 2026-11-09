@@ -2740,3 +2740,139 @@ a.avatar:active {
   box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.35);
   background: transparent;
 }
+
+/* ----- 18. The tabs on Home: Basic Asanas | Surya Namaskar -----
+   A row of two buttons on a phone. On a bigger screen the buttons stand
+   in a column on the LEFT, and everything else sits to their right. */
+.side-tabs {
+  display: flex;
+  gap: 4px;
+  margin: 26px 0 0;
+  padding: 4px;
+  background: rgba(29, 43, 42, 0.06);
+  border-radius: 999px;
+}
+
+.side-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 6px 10px;
+  background: transparent;
+  border: none;
+  border-radius: 999px;
+  color: var(--text-soft);
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.15;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+
+.side-tab:active {
+  transform: scale(0.97);
+}
+
+.side-tab[aria-selected="true"] {
+  background: var(--card);
+  box-shadow: 0 2px 10px rgba(29, 43, 42, 0.14);
+  color: var(--primary-dark);
+}
+
+.side-tab:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.tab-icon {
+  flex: 0 0 auto;
+  font-size: 1.25rem;
+}
+
+.tab-text {
+  display: flex;
+  flex-direction: column;
+}
+
+/* "5 poses" under the name. On a phone there is only room for the name. */
+.tab-text small {
+  display: none;
+  margin-top: 2px;
+  color: var(--text-soft);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.tab-panel[hidden] {
+  display: none;
+}
+
+.flow-intro {
+  margin: 0 0 14px;
+  color: var(--text-soft);
+  line-height: 1.5;
+}
+
+/* One flow card should be a normal card, not stretched across the row */
+.pose-grid.flows {
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+}
+
+/* A laptop or an iPad held sideways: tabs on the left, in a column */
+@media (min-width: 820px) {
+  .page.home {
+    display: grid;
+    grid-template-columns: 220px minmax(0, 1fr);
+    column-gap: 32px;
+    align-items: start;
+  }
+
+  .page.home > * {
+    grid-column: 2;
+  }
+
+  .page.home > .side-tabs {
+    grid-column: 1;
+    grid-row: 1 / span 4;
+    position: sticky;
+    top: calc(96px + var(--safe-top));
+    flex-direction: column;
+    gap: 8px;
+    margin: 32px 0 0;
+    padding: 10px;
+    background: var(--glass, rgba(255, 255, 255, 0.6));
+    -webkit-backdrop-filter: var(--glass-blur, none);
+    backdrop-filter: var(--glass-blur, none);
+    border: 1px solid var(--glass-edge, var(--border));
+    border-radius: var(--radius);
+    box-shadow: var(--glass-shine, none), var(--glass-shadow, var(--shadow));
+  }
+
+  .side-tab {
+    flex: none;
+    justify-content: flex-start;
+    gap: 12px;
+    min-height: 58px;
+    padding: 8px 14px;
+    border-radius: var(--radius-small);
+    font-size: 1rem;
+  }
+
+  .side-tab[aria-selected="true"] {
+    background: linear-gradient(135deg, rgba(220, 239, 236, 0.95) 0%, rgba(220, 239, 236, 0.6) 100%);
+    box-shadow: inset 0 0 0 1.5px var(--primary);
+  }
+
+  .tab-icon {
+    font-size: 1.5rem;
+  }
+
+  .tab-text small {
+    display: block;
+  }
+}

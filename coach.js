@@ -19,10 +19,10 @@
 // The voice itself is in voice.js; the fixed sentences are in phrases.js.
 // =============================================================
 
-import { worstJoint, tipFor, isWrong } from "./pose-check.js?v=20261109b";
-import { buddyOn, askBuddy } from "./buddy.js?v=20261109b";
-import { say, sayFresh, isTalking, quietFor, stopTalking } from "./voice.js?v=20261109b";
-import { SAY, startIn, countFor, heldFor, roundNumber, roundsDone, finishedFlow } from "./phrases.js?v=20261109b";
+import { worstJoint, tipFor, isWrong } from "./pose-check.js?v=20261109d";
+import { buddyOn, askBuddy } from "./buddy.js?v=20261109d";
+import { say, sayFresh, isTalking, quietFor, stopTalking } from "./voice.js?v=20261109d";
+import { SAY, startIn, countFor, heldFor, roundNumber, roundsDone, finishedFlow } from "./phrases.js?v=20261109d";
 
 // ----- Settings you can change -----
 const GET_READY_SECONDS = 5;  // after Start: time to step back before the steps begin

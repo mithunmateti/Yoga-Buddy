@@ -78,6 +78,11 @@ if (!pose) {
   // "Start with camera" button opens the practice screen for this pose
   document.getElementById("start-button").href = "practice.html?pose=" + pose.id;
 
+  // The back arrow goes to the tab this pose lives in
+  if (pose.positions) {
+    document.querySelector(".app-bar .icon-button").href = "index.html#surya";
+  }
+
   // A single pose has a hold time to choose. A flow has rounds instead.
   if (!pose.positions) {
     showHoldChoice(pose);
