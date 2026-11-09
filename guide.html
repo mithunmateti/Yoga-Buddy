@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="style.css?v=20261109d">
+  <link rel="stylesheet" href="style.css?v=20261109f">
 </head>
 <body class="guide-body">
   <!-- SCREEN 2: POSE GUIDE -->
@@ -80,6 +80,18 @@
           </details>
         </section>
 
+        <!-- How many rounds of a flow like Surya Namaskar (guide.js). Hidden for a single pose. -->
+        <section id="rounds-card" class="info-card hold-card" hidden>
+          <div class="hold-top">
+            <h2>🔁 How many rounds</h2>
+            <p class="hold-value"><b id="rounds-count"></b> <span id="rounds-unit">rounds</span></p>
+          </div>
+          <input id="rounds-range" class="hold-range" type="range" aria-label="Number of rounds">
+          <div class="hold-ends"><span>1</span><span>12</span></div>
+          <button id="rounds-recommended" class="hold-recommended" type="button"></button>
+          <p class="hold-estimate">One round is the 12 positions. The legs take turns, so an even number works both legs equally.</p>
+        </section>
+
         <!-- Before the camera: what to do so it can see you (and that nothing is recorded) -->
         <section class="info-card">
           <h2>Before you start</h2>
@@ -113,11 +125,11 @@
   <!-- profile.js asks for the name, age and gender first.
        poses.js must load before guide.js, because guide.js uses the POSES list from it.
        figure.js draws the stick figures of the Surya Namaskar poses. -->
-  <script src="settings.js?v=20261109d"></script>
-  <script src="profile.js?v=20261109d"></script>
-  <script src="poses.js?v=20261109d"></script>
-  <script src="hold-time.js?v=20261109d"></script>
-  <script src="figure.js?v=20261109d"></script>
-  <script src="guide.js?v=20261109d"></script>
+  <script src="settings.js?v=20261109f"></script>
+  <script src="profile.js?v=20261109f"></script>
+  <script src="poses.js?v=20261109f"></script>
+  <script src="hold-time.js?v=20261109f"></script>
+  <script src="figure.js?v=20261109f"></script>
+  <script src="guide.js?v=20261109f"></script>
 </body>
 </html>

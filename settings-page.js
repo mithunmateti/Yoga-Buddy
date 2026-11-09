@@ -5,7 +5,7 @@
 // to someone else.
 // =============================================================
 
-import { sayFresh, unlockSound, chooseVoice } from "./voice.js?v=20261109d";
+import { sayFresh, unlockSound, chooseVoice } from "./voice.js?v=20261109f";
 
 chooseVoice("");   // the same voice as the practice screen
 let settings = loadSettings();
@@ -131,6 +131,7 @@ twoTaps(document.getElementById("switch-person"), document.getElementById("switc
       localStorage.removeItem(PROGRESS_NAME);
       localStorage.removeItem(SETTINGS_NAME);
       localStorage.removeItem("yogaBuddyHoldTimes");
+      localStorage.removeItem("yogaBuddyRounds");
       sessionStorage.removeItem("yogaBuddyStarted");
     } catch (error) {
       // storage blocked: nothing was saved anyway

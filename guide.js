@@ -86,7 +86,51 @@ if (!pose) {
   // A single pose has a hold time to choose. A flow has rounds instead.
   if (!pose.positions) {
     showHoldChoice(pose);
+  } else {
+    showRoundsChoice(pose);
   }
+}
+
+
+// ----- How many rounds: the bar and the Recommended button (a flow) -----
+function showRoundsChoice(pose) {
+  const range = document.getElementById("rounds-range");
+  const recommendedButton = document.getElementById("rounds-recommended");
+
+  document.getElementById("rounds-card").hidden = false;
+  range.min = ROUNDS_MIN;
+  range.max = ROUNDS_MAX;
+  range.step = 1;
+
+  function showRounds(rounds) {
+    range.value = rounds;
+    range.style.setProperty("--fill", (rounds - ROUNDS_MIN) / (ROUNDS_MAX - ROUNDS_MIN) * 100 + "%");
+    document.getElementById("rounds-count").textContent = rounds;
+    document.getElementById("rounds-unit").textContent = rounds === 1 ? "round" : "rounds";
+    document.getElementById("hold-note").textContent =
+      "You will do " + rounds + (rounds === 1 ? " round" : " rounds") + " of the 12 positions. " +
+      "Round 1 steps back with your right leg, round 2 with your left, and so on. " +
+      "Yoga Buddy's voice will guide you. 🔊";
+    document.getElementById("start-button").href = "practice.html?pose=" + pose.id + "&rounds=" + rounds;
+
+    const isRecommended = rounds === ROUNDS_RECOMMENDED;
+    recommendedButton.classList.toggle("chosen", isRecommended);
+    recommendedButton.textContent = (isRecommended ? "✓ Recommended: " : "⭐ Use recommended: ") +
+      ROUNDS_RECOMMENDED + " rounds (each leg once)";
+  }
+
+  range.addEventListener("input", function () {
+    const rounds = Number(range.value);
+    saveRounds(pose.id, rounds);
+    showRounds(rounds);
+  });
+
+  recommendedButton.addEventListener("click", function () {
+    clearRounds(pose.id);
+    showRounds(ROUNDS_RECOMMENDED);
+  });
+
+  showRounds(roundsFor(pose.id));
 }
 
 
@@ -146,7 +190,7 @@ function showHoldChoice(pose) {
 function showPositions(pose, list) {
   document.getElementById("steps-title").textContent =
     "The " + pose.positions.length + " poses, in order";
-  document.getElementById("hold-note").textContent = pose.roundNote;
+  document.getElementById("hold-note").textContent = pose.roundNote;   // (the rounds choice replaces this)
 
   const BREATH = {
     in: "🌬️ Breathe in",

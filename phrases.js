@@ -39,7 +39,7 @@ export const SAY = {
   relax:       "Now slowly come out of the pose and relax.",
 
   // A flow (Surya Namaskar)
-  otherSide:   "Now the other side, stepping back with your left leg.",
+  roundComplete: "Round complete.",
   restNow:     "Now stand still and breathe normally for a moment."
 };
 
@@ -56,9 +56,10 @@ export function heldFor(pose, seconds) {
   return "You held " + pose.sanskrit + " for " + seconds + " seconds.";
 }
 
-// Flows (Surya Namaskar): "Round 2.", "1 round of Surya Namaskar"…
-export function roundNumber(round) {
-  return "Round " + round + ".";
+// Flows (Surya Namaskar): "Round 2 of 4. This round you step back with your left leg."
+// The legs take turns: round 1 steps back with the right leg, round 2 with the left, and so on.
+export function roundStart(round, total, leg) {
+  return "Round " + round + " of " + total + ". This round you step back with your " + leg + " leg.";
 }
 
 export function roundsDone(pose) {
@@ -105,10 +106,9 @@ export function allSentences(poses, holdSeconds, readySeconds) {
     // has positions, each with its own checks, said once for each leg.
     let checks = pose.checks || [];
     if (pose.positions) {
+      // (The "Round 2 of 4…" sentences depend on how many rounds you choose,
+      // so they are not recorded: they are spoken live.)
       texts.push(finishedFlow(pose));
-      for (let round = 2; round <= pose.rounds; round++) {
-        texts.push(roundNumber(round));
-      }
       for (const position of pose.positions) {
         for (const leg of ["right", "left"]) {
           const other = leg === "right" ? "left" : "right";

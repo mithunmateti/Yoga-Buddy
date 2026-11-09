@@ -19,10 +19,10 @@
 // The voice itself is in voice.js; the fixed sentences are in phrases.js.
 // =============================================================
 
-import { worstJoint, tipFor, isWrong } from "./pose-check.js?v=20261109d";
-import { buddyOn, askBuddy } from "./buddy.js?v=20261109d";
-import { say, sayFresh, isTalking, quietFor, stopTalking } from "./voice.js?v=20261109d";
-import { SAY, startIn, countFor, heldFor, roundNumber, roundsDone, finishedFlow } from "./phrases.js?v=20261109d";
+import { worstJoint, tipFor, isWrong } from "./pose-check.js?v=20261109f";
+import { buddyOn, askBuddy } from "./buddy.js?v=20261109f";
+import { say, sayFresh, isTalking, quietFor, stopTalking } from "./voice.js?v=20261109f";
+import { SAY, startIn, countFor, heldFor, roundStart, roundsDone, finishedFlow } from "./phrases.js?v=20261109f";
 
 // ----- Settings you can change -----
 const GET_READY_SECONDS = 5;  // after Start: time to step back before the steps begin
@@ -47,6 +47,8 @@ const timerCard = document.getElementById("timer-card");
 const timerNumber = document.getElementById("timer-seconds");
 const timerNote = document.getElementById("timer-note");
 const resultBox = document.getElementById("result");
+const flowProgress = document.getElementById("flow-progress");
+const roundBanner = document.getElementById("round-banner");
 const timerOutOf = document.querySelector(".timer-out-of");
 timerOutOf.textContent = "/" + holdTime + "s";
 
@@ -86,6 +88,10 @@ let lastGuideAt = -99;        // …and when
 export function startCoach(thePose, takePhoto) {
   pose = thePose;
   getPhoto = takePhoto;
+  // The number of rounds chosen on the guide (a flow like Surya Namaskar)
+  if (pose.positions) {
+    pose.rounds = roundsForThisVisit();
+  }
   // Read it again: the questions may have been showing when the page opened
   holdTime = holdForThisVisit();
   timerOutOf.textContent = "/" + holdTime + "s";
@@ -111,6 +117,7 @@ export function restartCoach() {
 
 // Stop the coach (when the camera or the body tracker can't start)
 export function stopCoach() {
+  hideFlowWords();
   clearInterval(countdownClock);
   countdownText.textContent = "";
   stage = "off";
@@ -121,7 +128,23 @@ export function stopCoach() {
 let scoreTotal = 0;   // the score x time added up while holding, for the average
 let scoreTime = 0;    // the time (seconds) the score was counted for
 
+// "✓ Round 1 complete" in big letters for a moment
+let bannerTimer = null;
+function showRoundBanner(text) {
+  roundBanner.textContent = text;
+  roundBanner.hidden = false;
+  clearTimeout(bannerTimer);
+  bannerTimer = setTimeout(function () { roundBanner.hidden = true; }, 3000);
+}
+
+function hideFlowWords() {
+  clearTimeout(bannerTimer);
+  roundBanner.hidden = true;
+  flowProgress.hidden = true;
+}
+
 function reset() {
+  hideFlowWords();
   resultBox.hidden = true;
   scoreTotal = 0;
   scoreTime = 0;
@@ -167,8 +190,9 @@ export function showStep(label, text, figure) {
 //  • a single pose: its steps from poses.js. A step's checks are the
 //    ones named in its waitFor.
 //  • a flow like Surya Namaskar: every position is a step, checked with
-//    the position's own checks. Each round goes through the positions
-//    twice: first leading with the right leg, then with the left leg.
+//    the position's own checks. A round is all the positions once. The
+//    legs take turns: round 1 steps back with the right leg, round 2 with
+//    the left leg, and so on.
 function makeSteps(thePose) {
   const list = [];
   if (!thePose.positions) {
@@ -185,25 +209,26 @@ function makeSteps(thePose) {
     return list;
   }
   const count = thePose.positions.length;
-  for (let round = 1; round <= thePose.rounds; round++) {
-    for (const leg of ["right", "left"]) {
-      thePose.positions.forEach(function (position, i) {
-        // Say something new at the start of each half round
-        let intro = "";
-        if (i === 0 && leg === "left") {
-          intro = SAY.otherSide + " ";
-        } else if (i === 0 && round > 1) {
-          intro = roundNumber(round) + " ";
-        }
-        list.push({
-          label: (i + 1) + " of " + count + " · " + position.sanskrit + " · " + leg + " leg",
-          intro: intro,
-          text: withLeg(position.say, leg),
-          checks: position.checks,
-          figure: position.figure
-        });
+  const total = thePose.rounds;
+  for (let round = 1; round <= total; round++) {
+    const leg = round % 2 === 1 ? "right" : "left";
+    thePose.positions.forEach(function (position, i) {
+      // At the start of a round: say the last one was complete, and which round this is
+      let intro = "";
+      if (i === 0) {
+        intro = (round > 1 ? SAY.roundComplete + " " : "") + roundStart(round, total, leg) + " ";
+      }
+      list.push({
+        label: "Round " + round + " of " + total + " · " + (i + 1) + " of " + count + " · " + position.sanskrit,
+        progress: "Round " + round + " of " + total + " · " + (i + 1) + "/" + count,
+        round: round,
+        firstOfRound: i === 0,
+        intro: intro,
+        text: withLeg(position.say, leg),
+        checks: position.checks,
+        figure: position.figure
       });
-    }
+    });
   }
   return list;
 }
@@ -401,6 +426,13 @@ function goToStep(index, before) {
   tipGiven = false;
   const step = steps[index];
   showStep(step.label, step.text, step.figure);
+  if (step.progress) {
+    flowProgress.textContent = step.progress;
+    flowProgress.hidden = false;
+  }
+  if (step.firstOfRound && step.round > 1) {
+    showRoundBanner("✓ Round " + (step.round - 1) + " complete");
+  }
   speak(before + step.intro + step.text);
 }
 
@@ -594,8 +626,10 @@ document.getElementById("result-again").addEventListener("click", function () {
 // The end of a flow (Surya Namaskar)
 function finishFlow(before) {
   stage = "done";
-  showStep("Well done!", "You finished " + roundsDone(pose) + ".");
-  speak(before + SAY.wellDone + " " + finishedFlow(pose) + " " + SAY.restNow);
+  showStep("Round complete!", "Well done! You finished " + roundsDone(pose) + ".");
+  flowProgress.hidden = true;
+  showRoundBanner("✓ Round " + pose.rounds + " complete");
+  speak(before + SAY.roundComplete + " " + SAY.wellDone + " " + finishedFlow(pose) + " " + SAY.restNow);
   showResult();
 }
 

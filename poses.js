@@ -241,9 +241,10 @@ const POSES = [
 
   // =============================================================
   // SURYA NAMASKAR (Sun Salutation): a FLOW of 12 positions, not one pose.
-  // The coach goes through the 12 positions with your right leg stepping
-  // back, then again with your left leg: that is 1 round. There is no
-  // hold timer. Each position has its own checks, a stick figure
+  // The coach goes through the 12 positions: that is 1 round, and it says
+  // "Round complete". Round 1 steps back with your right leg, round 2 with
+  // your left, and so on. You choose how many rounds on the guide screen.
+  // There is no hold timer. Each position has its own checks, a stick figure
   // (figure.js) and words for the voice. {leg} is "right" or "left".
   //
   // The positions follow the usual 12 steps (Common Yoga Protocol,
@@ -264,9 +265,9 @@ const POSES = [
     tint: "#FBE7D2",
     image: "images/suryanamaskar.svg",
     view: "side",
-    rounds: 1,
-    roundNote: "One round is 24 moves: 12 stepping back with your right leg, then the same 12 with your left leg. Yoga Buddy's voice will guide you. 🔊",
-    camera: "Stand sideways with room in front of you and behind you, about 2.5 metres from the camera, and put the camera low (about waist height) so it can see your hands and feet in every position.",
+    rounds: 2,   // the number chosen on the guide screen replaces this (hold-time.js)
+    roundNote: "One round is the 12 positions, one after another. Round 1 steps back with your right leg, round 2 with your left, and so on. Yoga Buddy's voice will guide you. 🔊",
+    camera: "Leave room in front of you and behind you, stand about 2.5 metres from the camera, and put the camera low (about waist height) so it can see your hands and feet in every position.",
     safety: "Move slowly and rest whenever you need to. Skip Cobra and Downward Dog if your wrists, back or shoulders hurt, or if you are pregnant or have high blood pressure. If you are not sure, ask a doctor first.",
     positions: [
       {

@@ -103,3 +103,61 @@ function holdForThisVisit() {
   const fromAddress = Number(address.get("hold"));
   return validHold(fromAddress) ? fromAddress : holdFor(address.get("pose"));
 }
+
+
+// =============================================================
+// Rounds of a flow (Surya Namaskar)
+//
+// One round = the 12 positions once. The legs take turns: round 1 steps
+// back with the right leg, round 2 with the left, and so on, so an even
+// number of rounds works both legs equally. 2 rounds is the suggestion.
+// =============================================================
+const ROUNDS_MIN = 1;
+const ROUNDS_MAX = 12;
+const ROUNDS_RECOMMENDED = 2;
+const ROUNDS_NAME = "yogaBuddyRounds";   // the numbers chosen: { suryanamaskar: 4 }
+
+function validRounds(rounds) {
+  return Number.isInteger(rounds) && rounds >= ROUNDS_MIN && rounds <= ROUNDS_MAX;
+}
+
+function loadRounds() {
+  try {
+    return JSON.parse(localStorage.getItem(ROUNDS_NAME)) || {};
+  } catch (error) {
+    return {};
+  }
+}
+
+// The rounds for this flow: the number chosen before, or else the suggestion
+function roundsFor(poseId) {
+  const chosen = Number(loadRounds()[poseId]);
+  return validRounds(chosen) ? chosen : ROUNDS_RECOMMENDED;
+}
+
+function saveRounds(poseId, rounds) {
+  const all = loadRounds();
+  all[poseId] = rounds;
+  try {
+    localStorage.setItem(ROUNDS_NAME, JSON.stringify(all));
+  } catch (error) {
+    // storage blocked: the web address still carries the number to the practice screen
+  }
+}
+
+function clearRounds(poseId) {
+  const all = loadRounds();
+  delete all[poseId];
+  try {
+    localStorage.setItem(ROUNDS_NAME, JSON.stringify(all));
+  } catch (error) {
+    // storage blocked: nothing was saved anyway
+  }
+}
+
+// For the practice screen: practice.html?pose=suryanamaskar&rounds=4
+function roundsForThisVisit() {
+  const address = new URLSearchParams(location.search);
+  const fromAddress = Number(address.get("rounds"));
+  return validRounds(fromAddress) ? fromAddress : roundsFor(address.get("pose"));
+}
