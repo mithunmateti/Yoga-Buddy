@@ -237,5 +237,382 @@ const POSES = [
         tipLow: "Keep your legs straight",
         tipHigh: "" }
     ]
+  },
+
+  // =============================================================
+  // SURYA NAMASKAR (Sun Salutation): a FLOW of 12 positions, not one pose.
+  // The coach goes through the 12 positions with your right leg stepping
+  // back, then again with your left leg: that is 1 round. There is no
+  // hold timer. Each position has its own checks, a stick figure
+  // (figure.js) and words for the voice. {leg} is "right" or "left".
+  //
+  // The positions follow the usual 12 steps (Common Yoga Protocol,
+  // Ministry of AYUSH). The target angles were worked out from the stick
+  // figures below, with wide tolerances, and checked with the maths in
+  // pose-check.js. NOT yet tested on real people: please test them
+  // yourselves and change the numbers if a position scores too low or high.
+  // No breath holding, to be safe for beginners and children.
+  //
+  // Figure points: [x, y] in a box 100 wide and 60 high (y goes DOWN).
+  // =============================================================
+  {
+    id: "suryanamaskar",
+    sanskrit: "Surya Namaskar",
+    english: "Sun Salutation",
+    level: "Medium",
+    focus: "Full body flow",
+    tint: "#FBE7D2",
+    image: "images/suryanamaskar.svg",
+    view: "side",
+    rounds: 1,
+    roundNote: "One round is 24 moves: 12 stepping back with your right leg, then the same 12 with your left leg. Yoga Buddy's voice will guide you. 🔊",
+    camera: "Stand sideways with room in front of you and behind you, about 2.5 metres from the camera, and put the camera low (about waist height) so it can see your hands and feet in every position.",
+    safety: "Move slowly and rest whenever you need to. Skip Cobra and Downward Dog if your wrists, back or shoulders hurt, or if you are pregnant or have high blood pressure. If you are not sure, ask a doctor first.",
+    positions: [
+      {
+        sanskrit: "Pranamasana",
+        english: "Prayer pose",
+        breath: "normal",
+        say: "Stand tall, sideways to the camera. Press your palms together at your chest and breathe normally.",
+        figure: {
+          head: [50, 8], shoulder: [50, 15], elbow: [52, 25], wrist: [58, 22], hip: [50, 33],
+          knee: [50, 46], ankle: [50, 57], toe: [55, 60]
+        },
+        views: {
+          front: "Feet together, palms pressed together at the chest.",
+          back: "Shoulders relaxed, the back long and straight.",
+          left: "The body is one tall line from head to heels.",
+          right: "The body is one tall line from head to heels.",
+          top: "Feet side by side, elbows out a little."
+        },
+        checks: [
+          { name: "Knees", joint: "knee", side: "camera", target: 178, tolerance: 12,
+            tipLow: "Straighten your legs",
+            tipHigh: "" },
+          { name: "Back", joint: "hip", side: "camera", target: 178, tolerance: 12,
+            tipLow: "Stand up tall",
+            tipHigh: "" },
+          { name: "Upright", joint: "body", side: "camera", target: 90, tolerance: 12, weight: 2,
+            tipLow: "Stand up straight",
+            tipHigh: "" },
+          { name: "Arms down", joint: "shoulder", side: "camera", target: 20, tolerance: 25, weight: 2,
+            tipLow: "",
+            tipHigh: "Bring your hands to your chest" }
+        ]
+      },
+      {
+        sanskrit: "Hasta Uttanasana",
+        english: "Raised arms pose",
+        breath: "in",
+        say: "Breathe in. Stretch your arms up beside your ears and lean back a little.",
+        figure: {
+          head: [47, 10], shoulder: [47, 17], elbow: [46, 9], wrist: [45, 1], hip: [50, 34],
+          knee: [50, 46], ankle: [50, 57], toe: [55, 60]
+        },
+        views: {
+          front: "Arms straight up and shoulder-width apart, the chest open.",
+          back: "Arms by the ears, the back gently arched.",
+          left: "A soft curve backwards from the hips to the fingertips.",
+          right: "A soft curve backwards from the hips to the fingertips.",
+          top: "Feet together, arms reaching up out of sight."
+        },
+        checks: [
+          { name: "Arms", joint: "shoulder", side: "camera", target: 170, tolerance: 20, weight: 2,
+            tipLow: "Reach your arms up higher",
+            tipHigh: "" },
+          { name: "Elbows", joint: "elbow", side: "camera", target: 172, tolerance: 20,
+            tipLow: "Straighten your arms",
+            tipHigh: "" },
+          { name: "Back", joint: "hip", side: "camera", target: 168, tolerance: 15, weight: 2,
+            tipLow: "Lean back a little",
+            tipHigh: "Come up a little" },
+          { name: "Knees", joint: "knee", side: "camera", target: 176, tolerance: 15,
+            tipLow: "Keep your legs straight",
+            tipHigh: "" }
+        ]
+      },
+      {
+        sanskrit: "Padahastasana",
+        english: "Hand to foot pose",
+        breath: "out",
+        say: "Breathe out. Bend forward from your hips and put your hands on the floor beside your feet. Bend your knees if you need to.",
+        figure: {
+          head: [62, 54], shoulder: [58, 48], elbow: [60, 54], wrist: [58, 59], hip: [42, 33],
+          knee: [47, 46], ankle: [50, 57], toe: [55, 60]
+        },
+        views: {
+          front: "The head hangs down between the arms, hands by the feet.",
+          back: "The back is rounded or flat, the hips high.",
+          left: "The body is folded in half over the legs.",
+          right: "The body is folded in half over the legs.",
+          top: "Hands flat on the floor next to the feet."
+        },
+        checks: [
+          { name: "Fold", joint: "hip", side: "camera", target: 30, tolerance: 35, weight: 3,
+            tipLow: "",
+            tipHigh: "Fold forward more" },
+          { name: "Knees", joint: "knee", side: "camera", target: 165, tolerance: 30,
+            tipLow: "Straighten your legs a little",
+            tipHigh: "" }
+        ]
+      },
+      {
+        sanskrit: "Ashwa Sanchalanasana",
+        english: "Horse riding pose",
+        breath: "in",
+        say: "Breathe in. Step your {leg} leg far back and rest the knee on the floor if you like. Bend your {other leg} knee and look forward.",
+        figure: {
+          head: [51, 16], shoulder: [52, 25], elbow: [57, 40], wrist: [60, 57], hip: [46, 40],
+          knee: [58, 42], ankle: [58, 57], toe: [64, 60], knee2: [32, 52], ankle2: [22, 56],
+          toe2: [19, 60]
+        },
+        views: {
+          front: "One knee bent in front, the other leg stretched far behind.",
+          back: "The back leg stretches out and the chest lifts.",
+          left: "The front knee is bent at a right angle above the ankle.",
+          right: "The front knee is bent at a right angle above the ankle.",
+          top: "Hands on the floor on both sides of the front foot."
+        },
+        checks: [
+          { name: "Front knee", joint: "knee", side: "bent", target: 95, tolerance: 25, weight: 3,
+            tipLow: "Step your foot forward more",
+            tipHigh: "Bend your front knee more" },
+          { name: "Back leg", joint: "knee", side: "straight", target: 165, tolerance: 25,
+            tipLow: "Stretch your back leg out",
+            tipHigh: "" }
+        ]
+      },
+      {
+        sanskrit: "Dandasana",
+        english: "Plank pose",
+        breath: "out",
+        say: "Breathe out. Step your {other leg} leg back too, so your body makes one straight line, like a plank.",
+        figure: {
+          head: [66, 32], shoulder: [60, 36], elbow: [60, 47], wrist: [60, 59], hip: [34, 44],
+          knee: [18, 50], ankle: [8, 56], toe: [4, 60]
+        },
+        views: {
+          front: "Arms straight under the shoulders, the head looking down.",
+          back: "The body is straight from the head to the heels.",
+          left: "One long slanting line from the heels to the head.",
+          right: "One long slanting line from the heels to the head.",
+          top: "Hands under the shoulders, feet together behind."
+        },
+        checks: [
+          { name: "Line", joint: "body", side: "camera", target: 18, tolerance: 15, weight: 3,
+            tipLow: "",
+            tipHigh: "Make one straight line" },
+          { name: "Hips", joint: "hip", side: "camera", target: 175, tolerance: 15, weight: 2,
+            tipLow: "Don't lift or drop your hips",
+            tipHigh: "" },
+          { name: "Arms", joint: "elbow", side: "camera", target: 172, tolerance: 15,
+            tipLow: "Straighten your arms",
+            tipHigh: "" },
+          { name: "Knees", joint: "knee", side: "camera", target: 170, tolerance: 15,
+            tipLow: "Straighten your legs",
+            tipHigh: "" }
+        ]
+      },
+      {
+        sanskrit: "Ashtanga Namaskara",
+        english: "Eight limbs pose",
+        breath: "out",
+        say: "Breathe out. Lower your knees, chest and chin to the floor, with your hips lifted.",
+        figure: {
+          head: [62, 57], shoulder: [56, 53], elbow: [48, 47], wrist: [49, 59], hip: [38, 45],
+          knee: [26, 58], ankle: [14, 57], toe: [10, 60]
+        },
+        views: {
+          front: "Two hands, chin, chest, two knees and two feet touch the floor.",
+          back: "The hips are lifted a little above the floor.",
+          left: "Eight points touch the floor and the elbows are bent.",
+          right: "Eight points touch the floor and the elbows are bent.",
+          top: "Hands beside the chest, elbows close to the body."
+        },
+        checks: [
+          { name: "Chest", joint: "body", side: "camera", target: 25, tolerance: 25, weight: 2,
+            tipLow: "",
+            tipHigh: "Lower your chest to the floor" },
+          { name: "Elbows", joint: "elbow", side: "camera", target: 50, tolerance: 40, weight: 2,
+            tipLow: "",
+            tipHigh: "Bend your elbows more" }
+        ]
+      },
+      {
+        sanskrit: "Bhujangasana",
+        english: "Cobra pose",
+        breath: "in",
+        say: "Breathe in. Slide forward and lift your chest into Cobra. Keep your hips down and your elbows soft.",
+        figure: {
+          head: [56, 30], shoulder: [50, 34], elbow: [56, 47], wrist: [58, 58], hip: [30, 56],
+          knee: [18, 57], ankle: [8, 57], toe: [4, 59]
+        },
+        views: {
+          front: "The chest lifts up, the arms are soft and the head looks forward.",
+          back: "The lower back is gently curved, the shoulders away from the ears.",
+          left: "The chest is up and the hips and legs rest on the floor.",
+          right: "The chest is up and the hips and legs rest on the floor.",
+          top: "Hands under the shoulders, legs straight behind."
+        },
+        checks: [
+          { name: "Legs on floor", joint: "legs", side: "camera", target: 0, tolerance: 20, weight: 3,
+            tipLow: "",
+            tipHigh: "Lie down on your stomach" },
+          { name: "Elbows", joint: "elbow", side: "camera", target: 160, tolerance: 20,
+            tipLow: "Push up a little",
+            tipHigh: "" },
+          { name: "Back", joint: "hip", side: "camera", target: 130, tolerance: 20, weight: 3,
+            tipLow: "Lower your chest a little",
+            tipHigh: "Lift your chest higher" },
+          { name: "Knees", joint: "knee", side: "camera", target: 175, tolerance: 15,
+            tipLow: "Keep your legs straight",
+            tipHigh: "" }
+        ]
+      },
+      {
+        sanskrit: "Parvatasana",
+        english: "Downward dog",
+        breath: "out",
+        say: "Breathe out. Lift your hips high, like an upside-down V. Press your heels down and keep your head between your arms.",
+        figure: {
+          head: [60, 49], shoulder: [56, 41], elbow: [62, 50], wrist: [68, 59], hip: [34, 16],
+          knee: [22, 36], ankle: [12, 56], toe: [8, 60]
+        },
+        views: {
+          front: "The head hangs between the straight arms.",
+          back: "The back is long and the hips are the highest point.",
+          left: "The body makes an upside-down V.",
+          right: "The body makes an upside-down V.",
+          top: "Hands and feet about a body length apart."
+        },
+        checks: [
+          { name: "Hips", joint: "hip", side: "camera", target: 75, tolerance: 20, weight: 3,
+            tipLow: "Lower your hips a little",
+            tipHigh: "Lift your hips higher" },
+          { name: "Legs", joint: "knee", side: "camera", target: 170, tolerance: 20,
+            tipLow: "Straighten your legs",
+            tipHigh: "" },
+          { name: "Arms", joint: "elbow", side: "camera", target: 172, tolerance: 15,
+            tipLow: "Straighten your arms",
+            tipHigh: "" },
+          { name: "Reach", joint: "shoulder", side: "camera", target: 170, tolerance: 25, weight: 2,
+            tipLow: "Push your chest toward your legs",
+            tipHigh: "" }
+        ]
+      },
+      {
+        sanskrit: "Ashwa Sanchalanasana",
+        english: "Horse riding pose",
+        breath: "in",
+        say: "Breathe in. Step your {leg} foot forward between your hands. Bend your {leg} knee and stretch your {other leg} leg back.",
+        figure: {
+          head: [51, 16], shoulder: [52, 25], elbow: [57, 40], wrist: [60, 57], hip: [46, 40],
+          knee: [58, 42], ankle: [58, 57], toe: [64, 60], knee2: [32, 52], ankle2: [22, 56],
+          toe2: [19, 60]
+        },
+        views: {
+          front: "One knee bent in front, the other leg stretched far behind.",
+          back: "The back leg stretches out and the chest lifts.",
+          left: "The front knee is bent at a right angle above the ankle.",
+          right: "The front knee is bent at a right angle above the ankle.",
+          top: "Hands on the floor on both sides of the front foot."
+        },
+        checks: [
+          { name: "Front knee", joint: "knee", side: "bent", target: 95, tolerance: 25, weight: 3,
+            tipLow: "Step your foot forward more",
+            tipHigh: "Bend your front knee more" },
+          { name: "Back leg", joint: "knee", side: "straight", target: 165, tolerance: 25,
+            tipLow: "Stretch your back leg out",
+            tipHigh: "" }
+        ]
+      },
+      {
+        sanskrit: "Padahastasana",
+        english: "Hand to foot pose",
+        breath: "out",
+        say: "Breathe out. Bring your {other leg} foot forward next to the other one, and fold forward over your legs.",
+        figure: {
+          head: [62, 54], shoulder: [58, 48], elbow: [60, 54], wrist: [58, 59], hip: [42, 33],
+          knee: [47, 46], ankle: [50, 57], toe: [55, 60]
+        },
+        views: {
+          front: "The head hangs down between the arms, hands by the feet.",
+          back: "The back is rounded or flat, the hips high.",
+          left: "The body is folded in half over the legs.",
+          right: "The body is folded in half over the legs.",
+          top: "Hands flat on the floor next to the feet."
+        },
+        checks: [
+          { name: "Fold", joint: "hip", side: "camera", target: 30, tolerance: 35, weight: 3,
+            tipLow: "",
+            tipHigh: "Fold forward more" },
+          { name: "Knees", joint: "knee", side: "camera", target: 165, tolerance: 30,
+            tipLow: "Straighten your legs a little",
+            tipHigh: "" }
+        ]
+      },
+      {
+        sanskrit: "Hasta Uttanasana",
+        english: "Raised arms pose",
+        breath: "in",
+        say: "Breathe in. Rise up slowly, stretch your arms overhead and lean back a little.",
+        figure: {
+          head: [47, 10], shoulder: [47, 17], elbow: [46, 9], wrist: [45, 1], hip: [50, 34],
+          knee: [50, 46], ankle: [50, 57], toe: [55, 60]
+        },
+        views: {
+          front: "Arms straight up and shoulder-width apart, the chest open.",
+          back: "Arms by the ears, the back gently arched.",
+          left: "A soft curve backwards from the hips to the fingertips.",
+          right: "A soft curve backwards from the hips to the fingertips.",
+          top: "Feet together, arms reaching up out of sight."
+        },
+        checks: [
+          { name: "Arms", joint: "shoulder", side: "camera", target: 170, tolerance: 20, weight: 2,
+            tipLow: "Reach your arms up higher",
+            tipHigh: "" },
+          { name: "Elbows", joint: "elbow", side: "camera", target: 172, tolerance: 20,
+            tipLow: "Straighten your arms",
+            tipHigh: "" },
+          { name: "Back", joint: "hip", side: "camera", target: 168, tolerance: 15, weight: 2,
+            tipLow: "Lean back a little",
+            tipHigh: "Come up a little" },
+          { name: "Knees", joint: "knee", side: "camera", target: 176, tolerance: 15,
+            tipLow: "Keep your legs straight",
+            tipHigh: "" }
+        ]
+      },
+      {
+        sanskrit: "Pranamasana",
+        english: "Prayer pose",
+        breath: "normal",
+        say: "Breathe out. Bring your hands back to your chest in prayer pose, and stand tall.",
+        figure: {
+          head: [50, 8], shoulder: [50, 15], elbow: [52, 25], wrist: [58, 22], hip: [50, 33],
+          knee: [50, 46], ankle: [50, 57], toe: [55, 60]
+        },
+        views: {
+          front: "Feet together, palms pressed together at the chest.",
+          back: "Shoulders relaxed, the back long and straight.",
+          left: "The body is one tall line from head to heels.",
+          right: "The body is one tall line from head to heels.",
+          top: "Feet side by side, elbows out a little."
+        },
+        checks: [
+          { name: "Knees", joint: "knee", side: "camera", target: 178, tolerance: 12,
+            tipLow: "Straighten your legs",
+            tipHigh: "" },
+          { name: "Back", joint: "hip", side: "camera", target: 178, tolerance: 12,
+            tipLow: "Stand up tall",
+            tipHigh: "" },
+          { name: "Upright", joint: "body", side: "camera", target: 90, tolerance: 12, weight: 2,
+            tipLow: "Stand up straight",
+            tipHigh: "" },
+          { name: "Arms down", joint: "shoulder", side: "camera", target: 20, tolerance: 25, weight: 2,
+            tipLow: "",
+            tipHigh: "Bring your hands to your chest" }
+        ]
+      }
+    ]
   }
 ];

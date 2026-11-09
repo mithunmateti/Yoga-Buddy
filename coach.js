@@ -19,10 +19,10 @@
 // The voice itself is in voice.js; the fixed sentences are in phrases.js.
 // =============================================================
 
-import { worstJoint, tipFor, isWrong } from "./pose-check.js?v=20261103c";
-import { buddyOn, askBuddy } from "./buddy.js?v=20261103c";
-import { say, sayFresh, isTalking, quietFor, stopTalking } from "./voice.js?v=20261103c";
-import { SAY, startIn, countFor, heldFor, roundNumber, roundsDone, finishedFlow } from "./phrases.js?v=20261103c";
+import { worstJoint, tipFor, isWrong } from "./pose-check.js?v=20261109b";
+import { buddyOn, askBuddy } from "./buddy.js?v=20261109b";
+import { say, sayFresh, isTalking, quietFor, stopTalking } from "./voice.js?v=20261109b";
+import { SAY, startIn, countFor, heldFor, roundNumber, roundsDone, finishedFlow } from "./phrases.js?v=20261109b";
 
 // ----- Settings you can change -----
 const GET_READY_SECONDS = 5;  // after Start: time to step back before the steps begin
@@ -123,6 +123,8 @@ let scoreTime = 0;    // the time (seconds) the score was counted for
 
 function reset() {
   resultBox.hidden = true;
+  scoreTotal = 0;
+  scoreTime = 0;
   stage = "countdown";
   stepIndex = 0;
   held = 0;
@@ -244,6 +246,13 @@ export function updateCoach(check) {
   lastUpdate = t;
   latestJoints = check.joints;
   noteProblem(t, check.problem);
+
+  // In a flow (Surya Namaskar) every moment we could score you counts
+  // towards the average at the end (a hold counts them in doHold)
+  if (pose.positions && stage === "steps" && check.inView && check.score !== null) {
+    scoreTotal += check.score * passed;
+    scoreTime += passed;
+  }
 
   if (stage === "findBody") {
     findBody(t, check);
@@ -564,7 +573,8 @@ function showResult() {
     average >= 70 ? "Good job! A little more practice and it will be even better." :
     average >= 50 ? "Nice effort. Try again and follow the tips to improve." :
     "Keep practising. Watch the tips and try again.";
-  document.getElementById("result-pose").textContent = pose.sanskrit + " · " + holdTime + " seconds";
+  document.getElementById("result-pose").textContent = pose.sanskrit + " · " +
+    (pose.positions ? pose.rounds + (pose.rounds === 1 ? " round" : " rounds") : holdTime + " seconds");
   document.getElementById("result-number").textContent = average === null ? "–" : average;
   document.getElementById("result-score").dataset.band = band;
   document.getElementById("result-message").textContent = message;
@@ -586,6 +596,7 @@ function finishFlow(before) {
   stage = "done";
   showStep("Well done!", "You finished " + roundsDone(pose) + ".");
   speak(before + SAY.wellDone + " " + finishedFlow(pose) + " " + SAY.restNow);
+  showResult();
 }
 
 

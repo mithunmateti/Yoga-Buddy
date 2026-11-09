@@ -39,7 +39,7 @@ export const SAY = {
   relax:       "Now slowly come out of the pose and relax.",
 
   // A flow (Surya Namaskar)
-  otherSide:   "Now the other side, leading with your left leg.",
+  otherSide:   "Now the other side, stepping back with your left leg.",
   restNow:     "Now stand still and breathe normally for a moment."
 };
 

@@ -23,14 +23,14 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="style.css?v=20261103c">
+  <link rel="stylesheet" href="style.css?v=20261109b">
 
   <!-- The opening animation only plays when the app is first opened, not
        when coming back from Settings or a pose (decided here, before anything
        is drawn). Any one of these means "already open", so skip it:
          1. it already played in this tab (sessionStorage)
          2. we came here from another Yoga Buddy page (the referrer)
-         3. the browser's Back or Forward button brought us here -->
+         3. the browser's Back, Forward or Refresh button brought us here -->
   <script>
     (function () {
       var SPLASH_NAME = "yogaBuddySplashShown";
@@ -52,7 +52,7 @@
       }
       try {
         var visit = performance.getEntriesByType("navigation")[0];
-        if (visit && visit.type === "back_forward") {
+        if (visit && (visit.type === "back_forward" || visit.type === "reload")) {
           skip = true;
         }
       } catch (error) {
@@ -133,11 +133,11 @@
 
   <!-- profile.js asks for the name, age and gender first.
        poses.js must load before home.js, because home.js uses the POSES list from it. -->
-  <script src="settings.js?v=20261103c"></script>
-  <script src="profile.js?v=20261103c"></script>
-  <script src="poses.js?v=20261103c"></script>
-  <script src="hold-time.js?v=20261103c"></script>
-  <script src="progress.js?v=20261103c"></script>
-  <script src="home.js?v=20261103c"></script>
+  <script src="settings.js?v=20261109b"></script>
+  <script src="profile.js?v=20261109b"></script>
+  <script src="poses.js?v=20261109b"></script>
+  <script src="hold-time.js?v=20261109b"></script>
+  <script src="progress.js?v=20261109b"></script>
+  <script src="home.js?v=20261109b"></script>
 </body>
 </html>

@@ -68,7 +68,9 @@ function streakDay(day) {
 
 // Did you hold all 5 poses that day?
 function allPosesDay(day) {
-  return !!day && POSES.every(function (pose) { return day.poses.includes(pose.id); });
+  // Only the single poses count (Surya Namaskar is a flow with no hold)
+  return !!day && POSES.filter(function (pose) { return !pose.positions; })
+    .every(function (pose) { return day.poses.includes(pose.id); });
 }
 
 // How many days in a row you practised for 10 minutes. Today counts once

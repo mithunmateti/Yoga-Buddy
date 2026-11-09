@@ -71,7 +71,8 @@ function chipsFor(pose) {
 
 // ----- Today's pose: a different pose each day -----
 const day = Math.floor(Date.now() / 86400000);   // days since 1970
-const today = POSES[day % POSES.length];
+const singlePoses = POSES.filter(function (pose) { return !pose.positions; });   // a flow has no hold time
+const today = singlePoses[day % singlePoses.length];
 const hero = document.getElementById("hero");
 hero.href = "guide.html?pose=" + today.id;
 hero.style.setProperty("--tint", today.tint || "var(--primary-soft)");
