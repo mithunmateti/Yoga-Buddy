@@ -16,12 +16,12 @@ import { PoseLandmarker, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@m
 import {
   measureJoints, calculateScore, canSee, outsidePicture, bodyLooksReal,
   smoothJoints, addHiddenJoints, startFresh, isWrong, jointToFix, tipFor
-} from "./pose-check.js?v=20261109f";
+} from "./pose-check.js?v=20261110b";
 
 // The voice coach (coach.js), its voice (voice.js) and its sentences (phrases.js)
-import { startCoach, restartCoach, stopCoach, updateCoach, checksNow } from "./coach.js?v=20261109f";
-import { unlockSound, chooseVoice } from "./voice.js?v=20261109f";
-import { SAY } from "./phrases.js?v=20261109f";
+import { startCoach, restartCoach, stopCoach, updateCoach, checksNow, handTarget } from "./coach.js?v=20261110b";
+import { unlockSound, chooseVoice } from "./voice.js?v=20261110b";
+import { SAY } from "./phrases.js?v=20261110b";
 
 // Where MediaPipe's helper files and the trained pose model are.
 // "lite" is the fastest model (good for phones). For more accuracy,
@@ -181,6 +181,7 @@ function loop() {
     let check = { inView: false, joints: [], score: null, tipJoint: null, problem: null, hidden: "" };
     if (scoringOn) {
       check = steady(checkPose(points));
+      addHandsAndShoulders(check, points);   // for the hand check (coach.js)
       showCheck(check);
       updateCoach(check);
     }
@@ -189,10 +190,71 @@ function loop() {
     // Draw the skeleton, coloured green/red by the joint checks
     drawSkeleton(points, check.joints);
     drawAngleLabels(check.joints);
+    drawHandTarget(handTarget());
   }
 
   // Ask the browser to run loop() again before the next screen refresh
   requestAnimationFrame(loop);
+}
+
+
+// The hand check (coach.js) needs where the hands and shoulders are.
+// Hands = the wrists and index fingers (MediaPipe 15, 16, 19, 20) we can see clearly.
+function addHandsAndShoulders(check, points) {
+  check.hands = [];
+  check.shoulders = null;
+  check.aspect = video.videoWidth / video.videoHeight;   // to measure distances in real proportions
+  if (!points) {
+    return;
+  }
+  for (const number of [15, 16, 19, 20]) {
+    if (canSee(points[number])) {
+      check.hands.push(points[number]);
+    }
+  }
+  if (canSee(points[11]) && canSee(points[12])) {
+    check.shoulders = [points[11], points[12]];
+  }
+}
+
+// The glowing circle for the hand check. It fills up with green while
+// your hand is inside it. (x and y are MediaPipe fractions, like the body points.)
+function drawHandTarget(target) {
+  if (!target) {
+    return;
+  }
+  const x = toX(target);
+  const y = toY(target);
+  const r = target.r * canvas.height;
+  const pulse = 1 + 0.06 * Math.sin(performance.now() / 180);
+
+  pen.save();
+  // Soft glow
+  pen.fillStyle = target.done ? "rgba(95, 211, 148, 0.35)" : "rgba(232, 131, 58, 0.22)";
+  pen.beginPath();
+  pen.arc(x, y, r * pulse, 0, 2 * Math.PI);
+  pen.fill();
+  // Ring
+  pen.lineWidth = Math.max(6, r * 0.12);
+  pen.strokeStyle = target.done ? "#5FD394" : "#F2A65A";
+  pen.beginPath();
+  pen.arc(x, y, r * pulse, 0, 2 * Math.PI);
+  pen.stroke();
+  // How long the hand has been inside: a green arc going round
+  if (target.progress > 0 && !target.done) {
+    pen.strokeStyle = "#5FD394";
+    pen.lineWidth = Math.max(8, r * 0.16);
+    pen.beginPath();
+    pen.arc(x, y, r * pulse, -Math.PI / 2, -Math.PI / 2 + target.progress * 2 * Math.PI);
+    pen.stroke();
+  }
+  // A hand in the middle, or a tick when it's done
+  pen.font = Math.round(r * 0.9) + "px sans-serif";
+  pen.textAlign = "center";
+  pen.textBaseline = "middle";
+  pen.fillStyle = "white";
+  pen.fillText(target.done ? "✓" : "✋", x, y);
+  pen.restore();
 }
 
 

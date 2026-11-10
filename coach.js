@@ -19,10 +19,10 @@
 // The voice itself is in voice.js; the fixed sentences are in phrases.js.
 // =============================================================
 
-import { worstJoint, tipFor, isWrong } from "./pose-check.js?v=20261109f";
-import { buddyOn, askBuddy } from "./buddy.js?v=20261109f";
-import { say, sayFresh, isTalking, quietFor, stopTalking } from "./voice.js?v=20261109f";
-import { SAY, startIn, countFor, heldFor, roundStart, roundsDone, finishedFlow } from "./phrases.js?v=20261109f";
+import { worstJoint, tipFor, isWrong } from "./pose-check.js?v=20261110b";
+import { buddyOn, askBuddy } from "./buddy.js?v=20261110b";
+import { say, sayFresh, isTalking, quietFor, stopTalking } from "./voice.js?v=20261110b";
+import { SAY, startIn, countFor, heldFor, roundStart, roundsDone, finishedFlow } from "./phrases.js?v=20261110b";
 
 // ----- Settings you can change -----
 const GET_READY_SECONDS = 5;  // after Start: time to step back before the steps begin
@@ -64,7 +64,7 @@ function now() {
 
 let pose = null;
 let getPhoto = null;          // function that takes a photo from the camera (from practice.js)
-let stage = "off";            // "countdown" → "findBody" → "steps" → "hold" → "done"
+let stage = "off";            // "countdown" → "findBody" → "handCheck" → "steps" → "hold" → "done"
 let countdownClock = null;    // the clock that counts 5, 4, 3, 2, 1
 let steps = [];               // the steps to coach (see makeSteps)
 let stepIndex = 0;            // which step we are on (0 = the first)
@@ -281,6 +281,8 @@ export function updateCoach(check) {
 
   if (stage === "findBody") {
     findBody(t, check);
+  } else if (stage === "handCheck") {
+    doHandCheck(t, passed, check);
   } else if (stage === "steps") {
     doStep(t, check);
   } else if (stage === "hold") {
@@ -410,10 +412,115 @@ function aiIsHelping(t) {
 // ----- Stage 1: after the countdown, start as soon as the person is in the picture -----
 function findBody(t, check) {
   if (check.inView) {
-    goToStep(0, SAY.begin + " ");
+    if (humanChecked) {
+      goToStep(0, SAY.begin + " ");
+    } else {
+      startHandCheck(t, check);   // first: is it a real person?
+    }
   } else if (!isTalking()) {
     guide(t);   // say what to do, e.g. "Step back a little, so your feet are in the picture"
   }
+}
+
+
+// ----- Stage 1b: the hand check -----
+// A glowing circle appears beside you (practice.js draws it). Move your hand
+// into it and keep it there for a moment: a photo or a poster can't do that,
+// so it means a real person is in front of the camera. It is done once per visit.
+const HAND_HOLD = 1.2;       // seconds the hand must stay inside the circle
+const HAND_REMIND = 10;      // say it again if nothing happens for this long
+let humanChecked = false;    // passed the hand check (stays passed after Restart)
+let target = null;           // the circle: { x, y, r } (MediaPipe fractions; r is a share of the height)
+let handInside = 0;          // seconds the hand has been inside (goes down again when it leaves)
+let handAskedAt = 0;         // when we last asked
+let handDoneUntil = 0;       // show the green tick until then
+
+function startHandCheck(t, check) {
+  stage = "handCheck";
+  target = placeTarget(check);
+  handInside = 0;
+  handAskedAt = t;
+  showStep("Hand check ✋", "Move your hand into the glowing circle and keep it there.");
+  speak(SAY.handCheck);
+}
+
+// Put the circle beside you at shoulder height, out to one side (left or
+// right at random), about where your hand reaches. It must be away from
+// where your hands are now, so you have to move to reach it.
+function placeTarget(check) {
+  const aspect = check.aspect || 1;
+  let cx = 0.5, cy = 0.35, width = 0.12;   // if we can't see the shoulders
+  if (check.shoulders) {
+    const a = check.shoulders[0];
+    const b = check.shoulders[1];
+    cx = (a.x + b.x) / 2;
+    cy = (a.y + b.y) / 2;
+    width = Math.max(0.04, Math.hypot((a.x - b.x) * aspect, a.y - b.y));   // in shares of the height
+  }
+  const r = Math.min(0.12, Math.max(0.06, width * 0.6));
+  const choices = [-1, 1].map(function (side) {
+    return {
+      // (kept away from the edges: a phone in full screen cuts a little off each side)
+      x: clamp(cx + side * width * 1.6 / aspect, 0.24, 0.76),
+      y: clamp(cy - width * 0.4, 0.1, 0.8),
+      r: r
+    };
+  });
+  // Pick a random side, but not one where a hand already is
+  const free = choices.filter(function (c) { return !handIn(check, c, 2); });
+  const list = free.length ? free : choices;
+  return list[Math.floor(Math.random() * list.length)];
+}
+
+function clamp(value, low, high) {
+  return Math.max(low, Math.min(high, value));
+}
+
+// Is one of the hands inside the circle? (bigger = how many times the radius)
+function handIn(check, circle, bigger) {
+  const aspect = check.aspect || 1;
+  return (check.hands || []).some(function (hand) {
+    const dx = (hand.x - circle.x) * aspect;
+    const dy = hand.y - circle.y;
+    return Math.hypot(dx, dy) <= circle.r * (bigger || 1);
+  });
+}
+
+function doHandCheck(t, passed, check) {
+  if (!check.inView) {
+    if (!isTalking()) {
+      guide(t);   // e.g. "Step back a little…"
+    }
+    return;
+  }
+  if (handIn(check, target)) {
+    handInside += passed;
+  } else {
+    handInside = Math.max(0, handInside - passed * 2);   // it empties if the hand leaves
+  }
+  if (handInside >= HAND_HOLD) {
+    humanChecked = true;
+    handDoneUntil = t + 1.2;
+    goToStep(0, SAY.handOk + " " + SAY.begin + " ");
+    return;
+  }
+  // Nothing yet: move the circle (maybe it was hard to reach) and ask again
+  if (t - handAskedAt > HAND_REMIND && handInside === 0 && quietFor(4)) {
+    handAskedAt = t;
+    target = placeTarget(check);
+    speak(SAY.handAgain);
+  }
+}
+
+// For practice.js: the circle to draw now, or null
+export function handTarget() {
+  if (stage === "handCheck" && target) {
+    return { x: target.x, y: target.y, r: target.r, progress: Math.min(1, handInside / HAND_HOLD), done: false };
+  }
+  if (target && now() < handDoneUntil) {
+    return { x: target.x, y: target.y, r: target.r, progress: 1, done: true };   // the green tick, for a moment
+  }
+  return null;
 }
 
 

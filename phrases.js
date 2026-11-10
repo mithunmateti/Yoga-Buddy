@@ -15,6 +15,11 @@ export const SAY = {
   startAgain:  "Okay, let's start again.",
   begin:       "Let's begin.",
 
+  // The hand check: is a real person there? (a photo can't move its hand)
+  handCheck:   "Quick check first. Move your hand into the glowing circle on the screen, and keep it there.",
+  handAgain:   "Put your hand inside the glowing circle and hold it still.",
+  handOk:      "Great! That means you're a real person, not a photo.",
+
   // When the camera can't see the person properly
   nobody:      "I can't see you yet. Stand in front of the camera, about 2 to 3 metres away.",
   tooClose:    "You're too close to the camera. Step back until I can see you from head to feet.",
