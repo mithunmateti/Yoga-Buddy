@@ -18,9 +18,10 @@ const ANGLE_POINTS = {
   hip:      ["shoulder", "hip", "knee"],
   shoulder: ["hip", "shoulder", "elbow"],
   elbow:    ["shoulder", "elbow", "wrist"],
-  legs:     ["hip", "knee", "ankle"],      // special: how steep the leg is, hip to ankle (see floorAngle)
+  legs:     ["hip", "knee", "ankle"],      // special: how steep the leg is, hip to ankle (see steepness)
   body:     ["shoulder", "hip", "knee"]    // special: how steep the body is, shoulder to hip
 };
+// (legsApart, armsLine and twist use both sides of the body: see WHOLE_BODY)
 
 // MediaPipe says how sure it is that it can see each point (0 to 1).
 // Points below this are ignored (PRD section 7, point 7).
@@ -114,44 +115,50 @@ export function floorAngle(a, b) {
 
 
 // ----- Measure every joint in a list of checks (from poses.js) -----
-// checks: the pose's checks (or, in Surya Namaskar, the checks of the
-// position we are on now).
+// checks: the pose's checks (or, in a flow, the checks of the position
+// we are on now).
+// points: MediaPipe's body points in the PICTURE (x and y from 0 to 1).
 // imageWidth and imageHeight are the camera picture's size in pixels.
+// world: (optional) MediaPipe's "world" points: the same body points in
+//   3D, in metres, measured from the middle of the hips. They are what let
+//   Yoga Buddy measure a pose from the FRONT, the SIDE or anywhere in
+//   between (see "Front, side or in between" below).
 // Gives back two lists:
 //   joints:  one entry per measured joint, like
 //            { check: (the check from poses.js), side: "left", angle: 172, off: 8,
 //              point: (the joint), numbers: [23, 25, 27] (MediaPipe numbers of the 3 points) }
 //   missing: body points we could NOT see clearly, like
 //            { name: "left ankle", point: (the MediaPipe point) }
-export function measureJoints(checks, points, imageWidth, imageHeight) {
+export function measureJoints(checks, points, imageWidth, imageHeight, world) {
   const joints = [];
   const missing = [];
+  const view = { points: points, world: world || null, width: imageWidth, height: imageHeight };
 
-  // Work out which leg is bent and which side faces the camera (see below)
+  // Which way the person faces, which leg is bent and which side is
+  // nearest the camera (see below)
+  updateFacing(view);
   const sides = {
-    bent: chooseBentLeg(points, imageWidth, imageHeight),
-    camera: chooseCameraSide(points)
+    bent: chooseBentLeg(view),
+    camera: chooseCameraSide(view)
   };
 
   for (const check of checks) {
     for (const side of sidesToCheck(check, sides)) {
-      // e.g. ["hip", "knee", "ankle"] → MediaPipe points 23, 25, 27
-      const names = ANGLE_POINTS[check.joint];
-      const numbers = [BODY_PARTS[side][names[0]], BODY_PARTS[side][names[1]], BODY_PARTS[side][names[2]]];
-      const a = points[numbers[0]];
-      const b = points[numbers[1]];
-      const c = points[numbers[2]];
+      const numbers = pointsFor(check.joint, side);
+      if (!numbers) {
+        continue;   // a joint name poses.js doesn't know
+      }
 
-      // Can't clearly see all 3 points: note which body points are the
-      // problem (each one only once) and move on to the next joint
-      const three = [a, b, c];
+      // Can't clearly see all the points: note which body points are the
+      // problem (each one only once) and move on to the next joint.
+      // (A whole-body joint measures other points than its 3 label points.)
       let allSeen = true;
-      for (let i = 0; i < 3; i++) {
-        if (!canSee(three[i], check.minVisibility)) {
+      for (const number of WHOLE_BODY_NEEDS[check.joint] || numbers) {
+        if (!canSee(points[number], check.minVisibility)) {
           allSeen = false;
-          const name = side + " " + names[i];   // e.g. "left ankle"
+          const name = PART_NAMES[number];   // e.g. "left ankle"
           if (!missing.some(function (m) { return m.name === name; })) {
-            missing.push({ name: name, point: three[i] });
+            missing.push({ name: name, point: points[number] });
           }
         }
       }
@@ -159,31 +166,17 @@ export function measureJoints(checks, points, imageWidth, imageHeight) {
         continue;
       }
 
-      let angle;
-      if (check.joint === "legs") {
-        // How steep the leg is, from the hip to the ankle
-        angle = floorAngle(toPixels(a, imageWidth, imageHeight), toPixels(c, imageWidth, imageHeight));
-      } else if (check.joint === "body") {
-        // How steep the body is, from the shoulder to the hip
-        angle = floorAngle(toPixels(a, imageWidth, imageHeight), toPixels(b, imageWidth, imageHeight));
-      } else {
-        // The angle at the middle point
-        angle = angleAt(
-          toPixels(a, imageWidth, imageHeight),
-          toPixels(b, imageWidth, imageHeight),
-          toPixels(c, imageWidth, imageHeight)
-        );
-      }
+      const angle = measureAngle(check.joint, numbers, view);
       if (angle === null) {
         continue;
       }
 
       joints.push({
         check: check,                         // name, target, tolerance, tip
-        side: side,                           // "left" or "right"
+        side: side,                           // "left", "right" or "body"
         angle: angle,                         // the measured angle, in degrees
         off: Math.abs(angle - check.target),  // how many degrees away from the target
-        point: b,                             // where the joint is (for drawing labels)
+        point: points[numbers[1]],            // where the joint is (for drawing labels)
         numbers: numbers                      // for colouring the skeleton
       });
     }
@@ -192,13 +185,191 @@ export function measureJoints(checks, points, imageWidth, imageHeight) {
   return { joints: joints, missing: missing };
 }
 
+// The names of the body points, for "I can't see your left ankle"
+const PART_NAMES = {};
+for (const side of ["left", "right"]) {
+  for (const part in BODY_PARTS[side]) {
+    PART_NAMES[BODY_PARTS[side][part]] = side + " " + part;
+  }
+}
+
+// The MediaPipe numbers of the points a joint needs. The angle is at the
+// MIDDLE one (for the drawing), e.g. "knee" on the left → [23, 25, 27].
+function pointsFor(joint, side) {
+  if (WHOLE_BODY[joint]) {
+    return WHOLE_BODY[joint];
+  }
+  const names = ANGLE_POINTS[joint];
+  if (!names || !BODY_PARTS[side]) {
+    return null;
+  }
+  return names.map(function (name) { return BODY_PARTS[side][name]; });
+}
+
+// Measure one joint, in degrees (or null if it can't be measured)
+function measureAngle(joint, n, view) {
+  if (joint === "legs") {
+    return steepness(n[0], n[2], view);                // hip to ankle
+  }
+  if (joint === "body") {
+    return steepness(n[0], n[1], view);                // shoulder to hip
+  }
+  if (joint === "legsApart") {
+    // left hip → left ankle and right hip → right ankle
+    return betweenLines([BODY_PARTS.left.hip, BODY_PARTS.left.ankle],
+                        [BODY_PARTS.right.hip, BODY_PARTS.right.ankle], view);
+  }
+  if (joint === "armsLine") {
+    // left shoulder → left wrist and right shoulder → right wrist
+    return betweenLines([BODY_PARTS.left.shoulder, BODY_PARTS.left.wrist],
+                        [BODY_PARTS.right.shoulder, BODY_PARTS.right.wrist], view);
+  }
+  if (joint === "twist") {
+    return twistAngle(view);
+  }
+  return jointAngle(n[0], n[1], n[2], view);
+}
+
+
+// =============================================================
+// FRONT, SIDE OR IN BETWEEN
+// =============================================================
+// A flat camera picture squashes any part of the body that points TOWARDS
+// the camera. Seen from the front, a knee bent forward at 90° can look
+// almost straight in the picture. So the old maths only worked when you
+// stood the way the pose said (front or side).
+//
+// MediaPipe also guesses where every point is in 3D (the "world" points,
+// in metres). Its depth guess is a bit wobbly, but it doesn't squash
+// anything. So for every joint we look at how much its two bones point
+// towards the camera:
+//   • bones flat across the picture  → trust the picture angle (exact)
+//   • bones pointing at the camera   → trust the 3D angle (not squashed)
+//   • in between                     → a mix of the two
+// That way the angles come out (nearly) the same whether you face the
+// camera, turn sideways, or stand at a slant.
+const FLAT_UNTIL = 0.2;   // depth share of a bone (0 = flat across, 1 = straight at the camera)
+const DEEP_FROM = 0.55;
+
+function jointAngle(i, j, k, view) {
+  const p = view.points;
+  const flat = angleAt(toPixels(p[i], view.width, view.height),
+                       toPixels(p[j], view.width, view.height),
+                       toPixels(p[k], view.width, view.height));
+  const w = view.world;
+  if (!w || flat === null) {
+    return flat;
+  }
+  const deep = angleAt3D(w[i], w[j], w[k]);
+  if (deep === null) {
+    return flat;
+  }
+  const depth = Math.max(depthShare(w[j], w[i]), depthShare(w[j], w[k]));
+  const trust3D = Math.min(1, Math.max(0, (depth - FLAT_UNTIL) / (DEEP_FROM - FLAT_UNTIL)));
+  return flat * (1 - trust3D) + deep * trust3D;
+}
+
+// How much the bone from a to b points towards the camera (0 to 1)
+function depthShare(a, b) {
+  const length = Math.hypot(b.x - a.x, b.y - a.y, b.z - a.z);
+  return length === 0 ? 0 : Math.abs(b.z - a.z) / length;
+}
+
+// The angle at B in 3D, the same formula as angleAt with a z added
+export function angleAt3D(a, b, c) {
+  const ba = [a.x - b.x, a.y - b.y, a.z - b.z];
+  const bc = [c.x - b.x, c.y - b.y, c.z - b.z];
+  const dot = ba[0] * bc[0] + ba[1] * bc[1] + ba[2] * bc[2];
+  const lengths = Math.hypot(ba[0], ba[1], ba[2]) * Math.hypot(bc[0], bc[1], bc[2]);
+  if (lengths === 0) {
+    return null;
+  }
+  return Math.acos(Math.max(-1, Math.min(1, dot / lengths))) * 180 / Math.PI;
+}
+
+// How steep the line from point i to point j is: 0° = flat like the floor,
+// 90° = straight up and down. In 3D "flat" is any direction across the
+// floor, towards the camera too, so lying down looks flat from every side.
+function steepness(i, j, view) {
+  if (view.world) {
+    const a = view.world[i];
+    const b = view.world[j];
+    const across = Math.hypot(b.x - a.x, b.z - a.z);
+    const down = Math.abs(b.y - a.y);
+    if (across === 0 && down === 0) {
+      return null;
+    }
+    return Math.atan2(down, across) * 180 / Math.PI;
+  }
+  return floorAngle(toPixels(view.points[i], view.width, view.height),
+                    toPixels(view.points[j], view.width, view.height));
+}
+
+// The angle between two lines (each from its first point to its second):
+// 0° = they point the same way, 180° = opposite ways.
+// "legsApart": standing with feet together ≈ 0–10°, wide legs ≈ 40–90°.
+// "armsLine":  arms stretched out in one straight line (like a T) = 180°.
+function betweenLines(lineA, lineB, view) {
+  const pick = view.world ? function (n) { return view.world[n]; }
+                          : function (n) { return withZero(toPixels(view.points[n], view.width, view.height)); };
+  const a0 = pick(lineA[0]);
+  const a1 = pick(lineA[1]);
+  const b0 = pick(lineB[0]);
+  const b1 = pick(lineB[1]);
+  // Move line B so it starts where line A starts, then measure the angle there
+  const end = { x: a0.x + (b1.x - b0.x), y: a0.y + (b1.y - b0.y), z: a0.z + (b1.z - b0.z) };
+  return angleAt3D(a1, a0, end);
+}
+
+function withZero(point) {
+  return { x: point.x, y: point.y, z: 0 };
+}
+
+// "twist": how far the shoulders are turned compared with the hips, seen
+// from above (0° = no twist). Only the 3D points can see this, so without
+// them it isn't measured.
+function twistAngle(view) {
+  const w = view.world;
+  if (!w) {
+    return null;
+  }
+  const shoulders = Math.atan2(w[12].z - w[11].z, w[12].x - w[11].x);
+  const hips = Math.atan2(w[24].z - w[23].z, w[24].x - w[23].x);
+  let turn = Math.abs(shoulders - hips) * 180 / Math.PI;
+  if (turn > 180) {
+    turn = 360 - turn;
+  }
+  // A twist past 90° isn't possible: it means MediaPipe mixed up left and right
+  return Math.min(turn, 180 - turn);
+}
+
+// Joints that use points on BOTH sides of the body, measured once
+// (side: "body" in poses.js). The middle number is where the label goes.
+const WHOLE_BODY = {
+  legsApart: [25, 23, 26],   // left knee, left hip, right knee
+  armsLine:  [13, 11, 14],   // left elbow, left shoulder, right elbow
+  twist:     [11, 23, 12]    // left shoulder, left hip, right shoulder
+};
+// …and the points they really measure, which must all be seen clearly
+const WHOLE_BODY_NEEDS = {
+  legsApart: [23, 24, 27, 28],   // both hips and both ankles
+  armsLine:  [11, 12, 15, 16],   // both shoulders and both wrists
+  twist:     [11, 12, 23, 24]    // both shoulders and both hips
+};
+
 // Which side(s) of the body a check looks at (the "side" in poses.js)
 function sidesToCheck(check, sides) {
+  if (WHOLE_BODY[check.joint] || check.side === "body") {
+    return ["body"];
+  }
   if (check.side === "both") {
     return ["left", "right"];
   }
   if (check.side === "camera") {
     return [sides.camera];
+  }
+  if (check.side === "far") {
+    return [otherSide(sides.camera)];
   }
   if (check.side === "bent") {
     return [sides.bent];
@@ -223,9 +394,9 @@ function otherSide(side) {
 const SWAP_MARGIN = 10;
 let bentLeg = null;   // "left" or "right"
 
-function chooseBentLeg(points, width, height) {
-  const left = kneeAngle(points, "left", width, height);
-  const right = kneeAngle(points, "right", width, height);
+function chooseBentLeg(view) {
+  const left = kneeAngle(view, "left");
+  const right = kneeAngle(view, "right");
 
   // Can't see both legs: keep the old answer (the missing points are
   // reported by measureJoints, so the user will be asked to step back)
@@ -249,26 +420,110 @@ function chooseBentLeg(points, width, height) {
 // visibility (0.2) is good enough.
 const LEG_CHOICE_VISIBILITY = 0.2;
 
-function kneeAngle(points, side, width, height) {
-  const hip = points[BODY_PARTS[side].hip];
-  const knee = points[BODY_PARTS[side].knee];
-  const ankle = points[BODY_PARTS[side].ankle];
-  if (!canSee(hip, LEG_CHOICE_VISIBILITY) || !canSee(knee, LEG_CHOICE_VISIBILITY) ||
-      !canSee(ankle, LEG_CHOICE_VISIBILITY)) {
-    return null;
+function kneeAngle(view, side) {
+  const parts = BODY_PARTS[side];
+  for (const number of [parts.hip, parts.knee, parts.ankle]) {
+    if (!canSee(view.points[number], LEG_CHOICE_VISIBILITY)) {
+      return null;
+    }
   }
-  return angleAt(toPixels(hip, width, height), toPixels(knee, width, height), toPixels(ankle, width, height));
+  return jointAngle(parts.hip, parts.knee, parts.ankle, view);
 }
 
 
-// ----- Which side faces the camera? (for side-view poses) -----
+// ----- Which way is the person facing? -----
+// From above, the line from shoulder to shoulder (and hip to hip) runs
+// straight across the picture when you face the camera, and points at the
+// camera when you stand sideways. The angle of that line tells us:
+//   under 35°  → "front" (facing the camera, or with your back to it)
+//   over 55°   → "side"
+//   in between → "slant"
+// It is averaged over the last few pictures so it doesn't flicker.
+const FACING_FRAMES = 15;
+const turnHistory = [];
+let facingNow = "front";
+
+function updateFacing(view) {
+  const turn = bodyTurn(view);
+  if (turn === null) {
+    return;
+  }
+  turnHistory.push(turn);
+  if (turnHistory.length > FACING_FRAMES) {
+    turnHistory.shift();
+  }
+  const average = turnHistory.reduce(function (a, b) { return a + b; }, 0) / turnHistory.length;
+  facingNow = average < 35 ? "front" : average > 55 ? "side" : "slant";
+}
+
+// How far the body is turned away from facing the camera, 0° to 90°
+function bodyTurn(view) {
+  const w = view.world;
+  const p = view.points;
+  if (w) {
+    const turns = [[11, 12], [23, 24]].map(function (pair) {
+      const a = w[pair[0]];
+      const b = w[pair[1]];
+      return Math.atan2(Math.abs(b.z - a.z), Math.abs(b.x - a.x)) * 180 / Math.PI;
+    });
+    return (turns[0] + turns[1]) / 2;
+  }
+  // Without 3D points: compare how wide the shoulders look with how long
+  // the body is. Facing the camera they are about 0.7 body-lengths wide;
+  // sideways they almost disappear (about 0.1).
+  if (!canSee(p[11]) || !canSee(p[12]) || !canSee(p[23]) || !canSee(p[24])) {
+    return null;
+  }
+  const width = pixelDistance(p[11], p[12], view.width, view.height);
+  const mid = function (a, b) { return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }; };
+  const length = pixelDistance(mid(p[11], p[12]), mid(p[23], p[24]), view.width, view.height);
+  if (length === 0) {
+    return null;
+  }
+  const share = Math.min(1, width / length / 0.7);
+  return Math.acos(share) * 180 / Math.PI;
+}
+
+// "front", "side" or "slant" (practice.js shows it, coach.js uses it)
+export function facing() {
+  return facingNow;
+}
+
+
+// ----- Which side is nearest the camera? (for side-view poses) -----
 // MediaPipe gives every point a "z" (depth): a smaller z means closer to
 // the camera. We add up z for the shoulder, hip and knee on each side;
 // the side with the smaller total is the one facing the camera.
-function chooseCameraSide(points) {
-  const left = points[11].z + points[23].z + points[25].z;
-  const right = points[12].z + points[24].z + points[26].z;
-  return left < right ? "left" : "right";
+// When you face the camera both sides are equally close, so we take the
+// side MediaPipe can see more clearly instead. Like the bent leg, we only
+// swap sides when the other side is clearly closer, so it doesn't flicker.
+let cameraSide = null;
+
+function chooseCameraSide(view) {
+  const p = view.points;
+  const z = view.world || p;
+  const depth = {
+    left: z[11].z + z[23].z + z[25].z,
+    right: z[12].z + z[24].z + z[26].z
+  };
+  const clear = {
+    left: p[11].visibility + p[23].visibility + p[25].visibility + p[27].visibility,
+    right: p[12].visibility + p[24].visibility + p[26].visibility + p[28].visibility
+  };
+  let nearer;
+  let margin;
+  if (facingNow === "front") {
+    nearer = clear.left >= clear.right ? "left" : "right";
+    margin = Math.abs(clear.left - clear.right) > 0.2;
+  } else {
+    nearer = depth.left < depth.right ? "left" : "right";
+    // world points are in metres (5 cm is clear); picture z is much smaller
+    margin = Math.abs(depth.left - depth.right) > (view.world ? 0.05 : 0.02);
+  }
+  if (cameraSide === null || margin) {
+    cameraSide = nearer;
+  }
+  return cameraSide;
 }
 
 // MediaPipe gives x and y as fractions (0 to 1) of the picture's width and
@@ -346,6 +601,8 @@ export function startFresh() {
   }
   tipKey = null;
   bentLeg = null;
+  cameraSide = null;
+  turnHistory.length = 0;
 }
 
 

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Photo check</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 16px; background: #FAF7F2; color: #1D2B2A; }
+    table { border-collapse: collapse; margin-top: 12px; }
+    td, th { border: 1px solid #ccc; padding: 4px 8px; font-size: 14px; text-align: left; }
+    img { height: 120px; display: block; }
+  </style>
+</head>
+<body>
+  <!-- tests/photo-check.html — runs the REAL body tracker (MediaPipe, the
+       full model) on the pose photos in images/, and shows each pose's
+       score the OLD way (flat picture only) and the NEW way (picture + 3D).
+       Open it from the local server: http://localhost:8000/tests/photo-check.html -->
+  <h1>Photo check</h1>
+  <p id="status">Loading the body tracker…</p>
+  <table id="results"><tr><th>Photo</th><th>Pose</th><th>Old score</th><th>New score</th><th>Joints (new)</th></tr></table>
+
+  <script src="../poses.js"></script>
+  <script type="module">
+    import { PoseLandmarker, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/vision_bundle.mjs";
+    import { measureJoints, calculateScore, startFresh, isWrong } from "../pose-check.js";
+
+    const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/wasm");
+    const tracker = await PoseLandmarker.createFromOptions(vision, {
+      baseOptions: { modelAssetPath: "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/1/pose_landmarker_full.task", delegate: "CPU" },
+      runningMode: "IMAGE", numPoses: 1
+    });
+    const table = document.getElementById("results");
+    const found = [];
+    for (const pose of POSES.filter(function (p) { return !p.positions && p.image.endsWith(".png"); })) {
+      // (fetch + createImageBitmap works even when the tab is in the background)
+      const src = "../" + pose.image;
+      const img = await createImageBitmap(await (await fetch(src)).blob());
+      img.src = src;
+      img.naturalWidth = img.width;
+      img.naturalHeight = img.height;
+      const result = tracker.detect(img);
+      const points = result.landmarks[0];
+      const world = result.worldLandmarks[0];
+      const row = document.createElement("tr");
+      if (!points) {
+        row.innerHTML = "<td><img src='" + img.src + "'></td><td>" + pose.sanskrit + "</td><td colspan=3>No body found</td>";
+        table.appendChild(row);
+        continue;
+      }
+      // Pictures of a body have no visibility problems: make every point count
+      // (the photos are cut out, so MediaPipe is sometimes unsure of the feet)
+      const sure = function (list) { return list.map(function (p) { return Object.assign({}, p, { visibility: 1 }); }); };
+      const measure = function (useWorld) {
+        startFresh();
+        let m;
+        for (let i = 0; i < 16; i++) {
+          m = measureJoints(pose.checks, sure(points), img.naturalWidth, img.naturalHeight, useWorld ? sure(world) : null);
+        }
+        return m.joints;
+      };
+      const flat = measure(false);
+      const deep = measure(true);
+      found.push({ id: pose.id, flat: calculateScore(flat), deep: calculateScore(deep),
+        joints: deep.map(function (j) { return [j.check.name, j.side, Math.round(j.angle), j.check.target]; }),
+        flatJoints: flat.map(function (j) { return [j.check.name, j.side, Math.round(j.angle)]; }) });
+      row.innerHTML = "<td><img src='" + img.src + "'></td><td>" + pose.sanskrit + "</td><td>" + calculateScore(flat) +
+        "</td><td>" + calculateScore(deep) + "</td><td>" + deep.map(function (j) {
+          return (isWrong(j) ? "✗ " : "✓ ") + j.check.name + " " + j.side + " " + Math.round(j.angle) + "° (" + j.check.target + ")";
+        }).join("<br>") + "</td>";
+      table.appendChild(row);
+    }
+    document.getElementById("status").textContent = "Done.";
+    window.photoResults = found;
+  </script>
+</body>
+</html>

@@ -29,12 +29,25 @@
 //                90 = standing up). Not an angle at a joint: it checks you are lying down.
 //   "body"     = how steep the body is, shoulder to hip (0 = flat like a plank,
 //                90 = upright). Also not an angle at a joint.
+//   These use BOTH sides of the body, so they are measured once (side: "body"):
+//   "legsApart" = the angle between the two legs, hip to ankle (feet together
+//                about 0–10, a wide stance 40–90, the splits 180)
+//   "armsLine"  = the angle between the two arms, shoulder to wrist (180 =
+//                one straight line, like a T or Triangle's arms)
+//   "twist"     = how far the shoulders are turned compared with the hips,
+//                seen from above (0 = no twist). Needs the 3D points.
+//
+// FRONT OR SIDE? The camera measures the angles in 3D as well as in the flat
+// picture (pose-check.js), so a pose works whichever way you face. "view"
+// below only says which way is BEST, so the coach can give a tip.
 //
 // side: which side of the body to check
 //   "both"     = check the left AND the right side
 //   "camera"   = only the side closest to the camera (for side-view poses)
 //   "bent"     = only the leg that is MORE bent (front leg / lifted leg)
 //   "straight" = only the leg that is LESS bent (back leg / standing leg)
+//   "far"      = only the side furthest from the camera
+//   "body"     = once, for the whole body (legsApart, armsLine, twist)
 //
 // target:    the correct angle, in degrees
 // tolerance: how many degrees off is still OK
@@ -50,6 +63,11 @@
 // In a tip, {side} is replaced by "left" or "right" (the user's own side).
 // Leave a tip empty ("") if that mistake can't happen. For example, no
 // angle can be bigger than 180°, so a 180° target never needs tipHigh.
+
+// MORE POSES live in poses-standing.js, poses-sitting.js, poses-strength.js
+// and flows.js. They add themselves to this list with POSES.push(…), and
+// say which home tab they belong on with group: "standing", "sitting" or
+// "strength" (the 5 Basic Asanas below have no group; flows go in "Flows").
 
 const POSES = [
   {
@@ -176,7 +194,7 @@ const POSES = [
     view: "side",
     // DRAFT steps written by Claude. Advaith Sai, please check and edit.
     steps: [
-      { text: "Stand with feet together, sideways to the camera.",       waitFor: [] },
+      { text: "Stand with feet together, sideways to the camera.",       waitFor: ["Feet together"] },
       { text: "Raise your arms straight up beside your ears.",           waitFor: ["Arms"] },
       { text: "Bend your knees and sit back, like sitting on a chair.",  waitFor: ["Knees"] },
       { text: "Keep your chest lifted and weight in your heels.",        waitFor: ["Hips"] },
@@ -195,7 +213,13 @@ const POSES = [
         tipHigh: "Lean forward a little" },
       { name: "Arms", joint: "shoulder", side: "camera", target: 170, tolerance: 20,
         tipLow: "Reach your arms up higher",
-        tipHigh: "" }
+        tipHigh: "" },
+      // Without this, a Warrior I lunge (front knee bent, arms up) also
+      // counted as Chair in the pose lab (tests/pose-lab.mjs). In Chair the
+      // feet stay together, so the legs point the same way.
+      { name: "Feet together", joint: "legsApart", side: "body", target: 5, tolerance: 20,
+        tipLow: "",
+        tipHigh: "Bring your feet together" }
     ]
   },
 

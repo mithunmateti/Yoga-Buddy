@@ -66,10 +66,11 @@ function streakDay(day) {
   return !!day && day.seconds >= STREAK_MINUTES * 60;
 }
 
-// Did you hold all 5 poses that day?
+// Did you hold all 5 Basic Asanas that day?
 function allPosesDay(day) {
-  // Only the single poses count (Surya Namaskar is a flow with no hold)
-  return !!day && POSES.filter(function (pose) { return !pose.positions; })
+  // Only the 5 Basic Asanas count: they have no group (the poses in the
+  // other tabs say "standing", "sitting" or "strength"), and flows have no hold
+  return !!day && POSES.filter(function (pose) { return !pose.positions && !pose.group; })
     .every(function (pose) { return day.poses.includes(pose.id); });
 }
 

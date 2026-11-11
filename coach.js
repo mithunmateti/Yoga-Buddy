@@ -14,15 +14,20 @@
 //
 // A FLOW like Surya Namaskar has no hold: each of its positions is one
 // step (checked by the camera), first leading with the right leg, then
-// again with the left leg. That is one round.
+// again with the left leg. That is one round. A position can also have a
+// short hold of its own ("hold" in poses), like in the morning flow.
+//
+// The camera also knows which way you are facing (pose-check.js). If a
+// pose is easier to see from the side and you face the camera (or the
+// other way round), the coach gives a friendly tip now and then.
 //
 // The voice itself is in voice.js; the fixed sentences are in phrases.js.
 // =============================================================
 
-import { worstJoint, tipFor, isWrong } from "./pose-check.js?v=20261110b";
-import { buddyOn, askBuddy } from "./buddy.js?v=20261110b";
-import { say, sayFresh, isTalking, quietFor, stopTalking } from "./voice.js?v=20261110b";
-import { SAY, startIn, countFor, heldFor, roundStart, roundsDone, finishedFlow } from "./phrases.js?v=20261110b";
+import { worstJoint, tipFor, isWrong } from "./pose-check.js?v=20261110c";
+import { buddyOn, askBuddy } from "./buddy.js?v=20261110c";
+import { say, sayFresh, isTalking, quietFor, stopTalking } from "./voice.js?v=20261110c";
+import { SAY, startIn, countFor, heldFor, roundStart, roundsDone, finishedFlow, stayFor } from "./phrases.js?v=20261110c";
 
 // ----- Settings you can change -----
 const GET_READY_SECONDS = 5;  // after Start: time to step back before the steps begin
@@ -37,6 +42,8 @@ const REMIND_GAP = 4;       // …but stay quiet for at least this long between 
 const SAME_TIP_GAP = 10;    // don't say the same tip again within 10 seconds
 const AI_GAP = 6;           // ask the AI buddy at most once every 6 seconds (free-tier limit)
 const AI_QUIET_LIMIT = 15;  // if the AI has had nothing to say for this long, use the angle tips
+const FACING_TIP_AFTER = 4; // facing the "wrong" way for this long → a tip…
+const FACING_TIP_GAP = 30;  // …but at most once every 30 seconds
 
 // ----- Parts of the page -----
 const coachLabel = document.getElementById("coach-label");
@@ -81,6 +88,9 @@ let problem = null;           // what's wrong with the picture now (a name from 
 let problemSince = 0;         // since when
 let lastGuide = "";           // the last "move" sentence we said…
 let lastGuideAt = -99;        // …and when
+let positionHeld = null;      // in a flow: seconds held in this position (null = not holding)
+let wrongFacingSince = null;  // since when the person faces the "wrong" way…
+let facingTipAt = -99;        // …and when we last said so
 
 // Start coaching a pose (called by the Start button, while the camera
 // is still starting). takePhoto is a function that gives a camera photo
@@ -154,6 +164,8 @@ function reset() {
   wrongSince = null;
   lastUpdate = null;
   aiAnswer = null;
+  positionHeld = null;
+  wrongFacingSince = null;
   showTimer(false);
   showStep("Get ready", "Step back 2–3 metres, so the camera can see you from head to feet.");
   countDown();
@@ -210,13 +222,15 @@ function makeSteps(thePose) {
   }
   const count = thePose.positions.length;
   const total = thePose.rounds;
+  // Does this flow take turns with the legs? (Yes if it says "{leg}" anywhere)
+  const turns = thePose.positions.some(function (position) { return position.say.includes("{leg}"); });
   for (let round = 1; round <= total; round++) {
     const leg = round % 2 === 1 ? "right" : "left";
     thePose.positions.forEach(function (position, i) {
       // At the start of a round: say the last one was complete, and which round this is
       let intro = "";
       if (i === 0) {
-        intro = (round > 1 ? SAY.roundComplete + " " : "") + roundStart(round, total, leg) + " ";
+        intro = (round > 1 ? SAY.roundComplete + " " : "") + roundStart(round, total, turns ? leg : null) + " ";
       }
       list.push({
         label: "Round " + round + " of " + total + " · " + (i + 1) + " of " + count + " · " + position.sanskrit,
@@ -226,7 +240,9 @@ function makeSteps(thePose) {
         intro: intro,
         text: withLeg(position.say, leg),
         checks: position.checks,
-        figure: position.figure
+        figure: position.figure,
+        hold: position.hold || 0,                    // seconds to stay in this position (0 = none)
+        view: position.view || thePose.view
       });
     });
   }
@@ -284,8 +300,10 @@ export function updateCoach(check) {
   } else if (stage === "handCheck") {
     doHandCheck(t, passed, check);
   } else if (stage === "steps") {
-    doStep(t, check);
+    doStep(t, passed, check);
+    facingTip(t, check);
   } else if (stage === "hold") {
+    facingTip(t, check);
     doHold(t, passed, check);
   }
 }
@@ -294,6 +312,27 @@ export function updateCoach(check) {
 // =============================================================
 // TELLING THE PERSON WHERE TO STAND
 // =============================================================
+
+// A friendly tip when the person faces the "wrong" way for this pose:
+// "side" poses are easier to see from the side, "front" poses from the
+// front. Thanks to the 3D points the checks still work, so this is only a
+// tip, never a stop. A pose with view "any" works both ways.
+function facingTip(t, check) {
+  const want = (stage === "steps" && steps[stepIndex] && steps[stepIndex].view) || pose.view;
+  const wrong = check.inView && check.facing &&
+    ((want === "side" && check.facing === "front") || (want === "front" && check.facing === "side"));
+  if (!wrong) {
+    wrongFacingSince = null;
+    return;
+  }
+  if (wrongFacingSince === null) {
+    wrongFacingSince = t;
+  }
+  if (t - wrongFacingSince >= FACING_TIP_AFTER && t - facingTipAt >= FACING_TIP_GAP && quietFor(REMIND_GAP)) {
+    facingTipAt = t;
+    speak(want === "side" ? SAY.sideOnTip : SAY.faceCameraTip);
+  }
+}
 
 // Remember what the problem is, and since when
 function noteProblem(t, newProblem) {
@@ -553,7 +592,13 @@ function nextStep(before) {
   }
 }
 
-function doStep(t, check) {
+function doStep(t, passed, check) {
+  // In a flow, staying in a position for its hold time (see holdPosition)
+  if (positionHeld !== null) {
+    holdPosition(t, passed, check);
+    return;
+  }
+
   // The person went out of the picture: say what to do, and wait
   if (!check.inView) {
     lookedRightSince = null;
@@ -594,19 +639,77 @@ function doStep(t, check) {
   }
 
   if (stepJoints.length === 0) {
-    nextStep("");                       // the camera can't measure this step (like fingers): move on
+    stepFinished("");                   // the camera can't measure this step (like fingers): move on
   } else if (stepDone) {
-    nextStep(SAY.good + " ");
+    stepFinished(SAY.good + " ");
   } else if (wrongJoint === null) {
     return;                             // it looks right just now: wait a moment to be sure
   } else if (!tipGiven) {
     tipGiven = true;
     speak(tipFor(wrongJoint));          // one tip (e.g. "Raise your arms higher"), then another gap
   } else if (pose.positions) {
-    nextStep("");                       // a flow keeps flowing: just go on
+    stepFinished("");                   // a flow keeps flowing: just go on
   } else {
-    nextStep(SAY.comfortable + " ");    // still not quite right: move on kindly
+    stepFinished(SAY.comfortable + " ");   // still not quite right: move on kindly
   }
+}
+
+// A step is done. In a flow, a position with a hold time ("hold" in
+// poses) is held first: "Stay here for 20 seconds."
+function stepFinished(before) {
+  const step = steps[stepIndex];
+  if (step.hold > 0) {
+    positionHeld = 0;
+    wrongSince = null;
+    timerOutOf.textContent = "/" + step.hold + "s";
+    showTimer(true);
+    showPositionTimer(step, "Breathe slowly…");
+    speak(before + stayFor(step.hold));
+    return;
+  }
+  nextStep(before);
+}
+
+// Holding a position of a flow. Flows are gentle, so the timer counts
+// whenever someone is in front of the camera (also while a tip is given,
+// and when part of you is hidden, which happens a lot lying down). It
+// only pauses when nobody is there at all.
+function holdPosition(t, passed, check) {
+  const step = steps[stepIndex];
+  if (check.inView || step.checks.length === 0 || check.problem !== "nobody") {
+    positionHeld += passed;
+    showPositionTimer(step, "Breathe slowly…");
+  } else {
+    showPositionTimer(step, "Paused: " + (SAY[check.problem] || "I can't see you."));
+    if (!isTalking()) {
+      guide(t);
+    }
+  }
+  if (positionHeld >= step.hold) {
+    positionHeld = null;
+    showTimer(false);
+    timerOutOf.textContent = "/" + holdTime + "s";
+    nextStep("");
+    return;
+  }
+  // One gentle tip if something stays wrong for a few seconds
+  const tipJoint = check.inView ? check.tipJoint : null;
+  if (tipJoint && step.checks.includes(tipJoint.check)) {
+    if (wrongSince === null) {
+      wrongSince = t;
+    }
+    if (t - wrongSince >= REMIND_AFTER) {
+      sayTip(t, tipFor(tipJoint));
+    }
+  } else {
+    wrongSince = null;
+  }
+}
+
+function showPositionTimer(step, note) {
+  timerNumber.textContent = Math.min(step.hold, Math.floor(positionHeld));
+  timerCard.style.setProperty("--progress", Math.min(1, positionHeld / step.hold));
+  timerNote.textContent = note;
 }
 
 
@@ -736,7 +839,8 @@ function finishFlow(before) {
   showStep("Round complete!", "Well done! You finished " + roundsDone(pose) + ".");
   flowProgress.hidden = true;
   showRoundBanner("✓ Round " + pose.rounds + " complete");
-  speak(before + SAY.roundComplete + " " + SAY.wellDone + " " + finishedFlow(pose) + " " + SAY.restNow);
+  // A flow can end with its own words ("restSay"), e.g. the bedtime flow ends lying down
+  speak(before + SAY.roundComplete + " " + SAY.wellDone + " " + finishedFlow(pose) + " " + (pose.restSay || SAY.restNow));
   showResult();
 }
 

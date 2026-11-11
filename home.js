@@ -54,7 +54,7 @@ function showStreak() {
       </div>
     </div>
     <ol class="week">${days}</ol>
-    <p class="streak-note">⭐ ${allFiveDays} day${allFiveDays === 1 ? "" : "s"} with all 5 asanas this week</p>
+    <p class="streak-note">⭐ ${allFiveDays} day${allFiveDays === 1 ? "" : "s"} with all 5 basic asanas this week</p>
   `;
 }
 showStreak();
@@ -69,9 +69,20 @@ function chipsFor(pose) {
   }).join("");
 }
 
-// ----- Today's pose: a different pose each day -----
+// ----- Which tab each pose is on -----
+// A pose says its group in the pose files ("standing", "sitting" or
+// "strength"). The 5 Basic Asanas in poses.js have none, and every flow
+// (Surya Namaskar and the flows in flows.js) goes in "flows".
+function tabOf(pose) {
+  if (pose.positions) {
+    return "flows";
+  }
+  return pose.group || "basic";
+}
+
+// ----- Today's pose: a different Basic Asana each day -----
 const day = Math.floor(Date.now() / 86400000);   // days since 1970
-const singlePoses = POSES.filter(function (pose) { return !pose.positions; });   // a flow has no hold time
+const singlePoses = POSES.filter(function (pose) { return tabOf(pose) === "basic"; });
 const today = singlePoses[day % singlePoses.length];
 const hero = document.getElementById("hero");
 hero.href = "guide.html?pose=" + today.id;
@@ -95,8 +106,7 @@ showTodayHold();
 window.addEventListener("pageshow", showTodayHold);   // it may have changed on the guide
 
 // ----- The pose cards -----
-// One card for every pose in poses.js. The single poses go in the "Basic
-// Asanas" tab, the flows (Surya Namaskar) in the "Surya Namaskar" tab.
+// One card for every pose, in the tab it belongs to (see tabOf).
 function makePoseCard(pose) {
   // Each card is a link, e.g. guide.html?pose=tadasana
   const card = document.createElement("a");
@@ -119,41 +129,39 @@ function makePoseCard(pose) {
     </div>
   `;
 
-  // A flow (Surya Namaskar) gets a small label: how many poses it has
+  // A flow gets a small label: how many poses it has
   if (pose.positions) {
-    card.querySelector(".chips").innerHTML += `<span class="chip">☀️ ${pose.positions.length} poses</span>`;
+    card.querySelector(".chips").innerHTML += `<span class="chip">${pose.icon || "☀️"} ${pose.positions.length} poses</span>`;
   }
   return card;
 }
 
-const grid = document.getElementById("pose-grid");
-const flowGrid = document.getElementById("flow-grid");
-const flows = POSES.filter(function (pose) { return pose.positions; });
-
-for (const pose of singlePoses) {
-  grid.appendChild(makePoseCard(pose));
+const TABS = ["basic", "standing", "sitting", "strength", "flows"];
+const inTab = {};
+for (const name of TABS) {
+  inTab[name] = POSES.filter(function (pose) { return tabOf(pose) === name; });
+  const grid = document.getElementById("grid-" + name);
+  for (const pose of inTab[name]) {
+    grid.appendChild(makePoseCard(pose));
+  }
+  // "6 poses" or "4 flows" under the tab's name
+  const count = inTab[name].length;
+  document.getElementById("tab-" + name + "-count").textContent =
+    count + (name === "flows" ? (count === 1 ? " flow" : " flows") : (count === 1 ? " pose" : " poses"));
 }
-for (const pose of flows) {
-  flowGrid.appendChild(makePoseCard(pose));
-}
 
 
-// ----- The tabs: Basic Asanas | Surya Namaskar -----
-// The chosen tab is kept in the web address (#basic or #surya). So when you
+// ----- The tabs: Basic Asanas | Standing | Sitting | Strength | Flows -----
+// The chosen tab is kept in the web address (e.g. #sitting). So when you
 // refresh, or come back from a pose with the Back button, you are still on
 // the same tab. (replaceState changes the address without adding a history
 // step or jumping the page.)
-const TABS = ["basic", "surya"];
 const tabButtons = {};
 const tabPanels = {};
 for (const name of TABS) {
   tabButtons[name] = document.getElementById("tab-" + name);
   tabPanels[name] = document.getElementById("panel-" + name);
 }
-
-document.getElementById("tab-basic-count").textContent = singlePoses.length + " poses";
-document.getElementById("tab-surya-count").textContent =
-  flows.length === 1 ? flows[0].positions.length + " positions" : flows.length + " flows";
 
 // A screen reader says "vertical" or "horizontal" to match the layout (style.css)
 const wideScreen = window.matchMedia("(min-width: 820px)");
@@ -166,7 +174,10 @@ if (wideScreen.addEventListener) {
 }
 
 function tabFromAddress() {
-  const name = location.hash.replace("#", "");
+  let name = location.hash.replace("#", "");
+  if (name === "surya") {
+    name = "flows";   // the old address of the Surya Namaskar tab
+  }
   return TABS.includes(name) ? name : "basic";
 }
 
@@ -179,6 +190,15 @@ function showTab(name, focusIt) {
   }
   if (focusIt) {
     tabButtons[name].focus();
+  }
+  // On a phone the tabs are a row you can swipe: show the chosen one
+  // (only sideways, so the page itself doesn't jump)
+  if (!wideScreen.matches) {
+    const row = tabButtons[name].parentElement;
+    const button = tabButtons[name];
+    if (button.offsetLeft < row.scrollLeft || button.offsetLeft + button.offsetWidth > row.scrollLeft + row.clientWidth) {
+      row.scrollLeft = button.offsetLeft - 16;
+    }
   }
 }
 

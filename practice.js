@@ -15,19 +15,24 @@ import { PoseLandmarker, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@m
 // Our own pose-checking maths (pose-check.js)
 import {
   measureJoints, calculateScore, canSee, outsidePicture, bodyLooksReal,
-  smoothJoints, addHiddenJoints, startFresh, isWrong, jointToFix, tipFor
-} from "./pose-check.js?v=20261110b";
+  smoothJoints, addHiddenJoints, startFresh, isWrong, jointToFix, tipFor, facing
+} from "./pose-check.js?v=20261110c";
 
 // The voice coach (coach.js), its voice (voice.js) and its sentences (phrases.js)
-import { startCoach, restartCoach, stopCoach, updateCoach, checksNow, handTarget } from "./coach.js?v=20261110b";
-import { unlockSound, chooseVoice } from "./voice.js?v=20261110b";
-import { SAY } from "./phrases.js?v=20261110b";
+import { startCoach, restartCoach, stopCoach, updateCoach, checksNow, handTarget } from "./coach.js?v=20261110c";
+import { unlockSound, chooseVoice } from "./voice.js?v=20261110c";
+import { SAY } from "./phrases.js?v=20261110c";
 
-// Where MediaPipe's helper files and the trained pose model are.
-// "lite" is the fastest model (good for phones). For more accuracy,
-// change both "lite" words in MODEL_URL to "full".
+// Where MediaPipe's helper files and the trained pose models are.
+// "lite" is the fastest model: phones use it, so they don't get hot and
+// the battery lasts. "full" is slower but more accurate, especially its
+// 3D guesses (the "world" points that let us measure a pose from the front
+// AND the side), so laptops and desktops use it.
 const WASM_URL = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/wasm";
-const MODEL_URL = "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task";
+const MODEL_LITE = "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task";
+const MODEL_FULL = "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/1/pose_landmarker_full.task";
+// A touch screen (phone or tablet) gets the lite model
+const onPhone = window.matchMedia("(pointer: coarse)").matches;
 
 // Lines to draw between body points, using MediaPipe's landmark numbers
 // (PRD section 7): 11/12 shoulders, 13/14 elbows, 15/16 wrists,
@@ -119,15 +124,23 @@ async function loadPoseModel() {
     minPosePresenceConfidence: 0.7,
     minTrackingConfidence: 0.7
   };
-  try {
-    // First try the graphics chip (GPU), which is faster
-    options.baseOptions = { modelAssetPath: MODEL_URL, delegate: "GPU" };
-    poseLandmarker = await PoseLandmarker.createFromOptions(vision, options);
-  } catch (error) {
-    // Some devices can't use the GPU for this, so use the normal processor (CPU)
-    options.baseOptions = { modelAssetPath: MODEL_URL, delegate: "CPU" };
-    poseLandmarker = await PoseLandmarker.createFromOptions(vision, options);
+  // Try the best choice first: the graphics chip (GPU) is faster than the
+  // normal processor (CPU), and some devices can't use it for this. If the
+  // full model can't load (e.g. a slow connection), the lite one still works.
+  const tries = onPhone
+    ? [[MODEL_LITE, "GPU"], [MODEL_LITE, "CPU"]]
+    : [[MODEL_FULL, "GPU"], [MODEL_FULL, "CPU"], [MODEL_LITE, "GPU"], [MODEL_LITE, "CPU"]];
+  let lastError = null;
+  for (const choice of tries) {
+    try {
+      options.baseOptions = { modelAssetPath: choice[0], delegate: choice[1] };
+      poseLandmarker = await PoseLandmarker.createFromOptions(vision, options);
+      return;
+    } catch (error) {
+      lastError = error;
+    }
   }
+  throw lastError;
 }
 
 
@@ -175,12 +188,15 @@ function loop() {
     // result.landmarks is a list of people found. We asked for one,
     // so take the first. It is empty if nobody is in view.
     const points = result.landmarks[0];
+    // The same body points in 3D, in metres (for measuring from any side)
+    const world = result.worldLandmarks ? result.worldLandmarks[0] : null;
 
     // Check the pose (measure the angles, work out the score and the tip),
     // show it, then tell the voice coach what we found
     let check = { inView: false, joints: [], score: null, tipJoint: null, problem: null, hidden: "" };
     if (scoringOn) {
-      check = steady(checkPose(points));
+      check = steady(checkPose(points, world));
+      check.facing = facing();               // "front", "side" or "slant" (coach.js)
       addHandsAndShoulders(check, points);   // for the hand check (coach.js)
       showCheck(check);
       updateCoach(check);
@@ -365,7 +381,7 @@ function toY(point) {
 //             (e.g. "feetOut", "moveLeft", "cantSeeArms"), or null
 //   hidden:   (debug) which body points are hidden right now
 
-function checkPose(points) {
+function checkPose(points, world) {
   // Nobody found in the picture
   if (!points) {
     return notInView("nobody", "Nobody found");
@@ -384,7 +400,7 @@ function checkPose(points) {
     lastChecks = checks;
     startFresh();
   }
-  const measured = measureJoints(checks, points, video.videoWidth, video.videoHeight);
+  const measured = measureJoints(checks, points, video.videoWidth, video.videoHeight, world);
 
   // Part of the body is outside the picture: the person needs to move
   const move = whereToMove(points, measured.missing);
@@ -581,6 +597,7 @@ function showAngles(joints, hidden) {
   if (hidden) {
     html += "<li>Hidden: " + hidden + "</li>";
   }
+  html += "<li>Facing: " + facing() + "</li>";
   debugList.innerHTML = html;
 }
 

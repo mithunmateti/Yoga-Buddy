@@ -33,6 +33,9 @@ export const SAY = {
   cantSeeLegs: "I can't see your legs clearly.",
   faceCamera:  "Please face the camera.",
   sideOn:      "Please turn sideways to the camera.",
+  // Friendly tips when you face the other way (the checks still work)
+  sideOnTip:     "Tip: turn sideways to the camera, so I can see this pose better.",
+  faceCameraTip: "Tip: face the camera, so I can see this pose better.",
 
   // The steps
   good:        "Good!",
@@ -63,8 +66,17 @@ export function heldFor(pose, seconds) {
 
 // Flows (Surya Namaskar): "Round 2 of 4. This round you step back with your left leg."
 // The legs take turns: round 1 steps back with the right leg, round 2 with the left, and so on.
+// A flow that doesn't take turns (leg is null) just says "Round 1 of 2."
 export function roundStart(round, total, leg) {
+  if (!leg) {
+    return "Round " + round + " of " + total + ".";
+  }
   return "Round " + round + " of " + total + ". This round you step back with your " + leg + " leg.";
+}
+
+// A position with its own hold, in a flow like the morning flow
+export function stayFor(seconds) {
+  return "Stay here and breathe for " + seconds + " seconds.";
 }
 
 export function roundsDone(pose) {

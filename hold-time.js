@@ -33,7 +33,9 @@ const HOLD_TABLE = [
   { upToAge: 110, steady: 15, balance: 5,  legs: 10 }
 ];
 
-// Which column each pose uses. Tadasana lifts the heels, so it is a balance pose here.
+// Which column each pose uses. A pose in the other pose files says it
+// itself ("holdKind" in poses-standing.js and the others); these are the
+// five Basic Asanas. Tadasana lifts the heels, so it is a balance pose here.
 // Virabhadrasana stays "steady" because a study of older adults (Lu & Fishman, 2016)
 // held it for 30 seconds. Utkatasana is "legs": it loaded the knees most in a lab study.
 const HOLD_KIND = {
@@ -50,11 +52,18 @@ function holdAge() {
   return age > 0 ? age : 30;
 }
 
+// The pose with this id, from the POSES list (poses.js and the other pose files)
+function poseById(poseId) {
+  return typeof POSES === "undefined" ? null : POSES.find(function (p) { return p.id === poseId; }) || null;
+}
+
 function recommendedHold(poseId) {
   const age = holdAge();
   const row = HOLD_TABLE.find(function (group) { return age <= group.upToAge; }) ||
               HOLD_TABLE[HOLD_TABLE.length - 1];
-  return row[HOLD_KIND[poseId] || "steady"];
+  const pose = poseById(poseId);
+  const kind = HOLD_KIND[poseId] || (pose && pose.holdKind) || "steady";
+  return row[kind];
 }
 
 function validHold(seconds) {
@@ -106,11 +115,13 @@ function holdForThisVisit() {
 
 
 // =============================================================
-// Rounds of a flow (Surya Namaskar)
+// Rounds of a flow (Surya Namaskar, Chandra Namaskar, …)
 //
-// One round = the 12 positions once. The legs take turns: round 1 steps
-// back with the right leg, round 2 with the left, and so on, so an even
-// number of rounds works both legs equally. 2 rounds is the suggestion.
+// One round = all the positions once. In Surya and Chandra Namaskar the
+// legs take turns: round 1 steps back with the right leg, round 2 with the
+// left, and so on, so an even number of rounds works both legs equally.
+// 2 rounds is the suggestion, unless the flow says otherwise
+// ("roundsRecommended", e.g. 1 for the 5-minute morning flow).
 // =============================================================
 const ROUNDS_MIN = 1;
 const ROUNDS_MAX = 12;
@@ -129,10 +140,16 @@ function loadRounds() {
   }
 }
 
+// The suggested number of rounds for this flow
+function recommendedRounds(poseId) {
+  const pose = poseById(poseId);
+  return (pose && pose.roundsRecommended) || ROUNDS_RECOMMENDED;
+}
+
 // The rounds for this flow: the number chosen before, or else the suggestion
 function roundsFor(poseId) {
   const chosen = Number(loadRounds()[poseId]);
-  return validRounds(chosen) ? chosen : ROUNDS_RECOMMENDED;
+  return validRounds(chosen) ? chosen : recommendedRounds(poseId);
 }
 
 function saveRounds(poseId, rounds) {

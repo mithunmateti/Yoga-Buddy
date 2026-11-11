@@ -2741,7 +2741,7 @@ a.avatar:active {
   background: transparent;
 }
 
-/* ----- 18. The tabs on Home: Basic Asanas | Surya Namaskar -----
+/* ----- 18. The tabs on Home: Basic | Standing | Sitting | Strength | Flows -----
    A row of two buttons on a phone. On a bigger screen the buttons stand
    in a column on the LEFT, and everything else sits to their right. */
 .side-tabs {
@@ -2751,10 +2751,21 @@ a.avatar:active {
   padding: 4px;
   background: rgba(29, 43, 42, 0.06);
   border-radius: 999px;
+  /* Five tabs don't fit on a phone: the row can be swiped sideways */
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.side-tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .side-tab {
-  flex: 1;
+  flex: 1 0 auto;
+  scroll-snap-align: start;
+  white-space: nowrap;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2799,6 +2810,11 @@ a.avatar:active {
   flex-direction: column;
 }
 
+/* A short name on a phone ("Flows"), the full name on a laptop */
+.tab-long {
+  display: none;
+}
+
 /* "5 poses" under the name. On a phone there is only room for the name. */
 .tab-text small {
   display: none;
@@ -2838,7 +2854,7 @@ a.avatar:active {
 
   .page.home > .side-tabs {
     grid-column: 1;
-    grid-row: 1 / span 4;
+    grid-row: 1 / span 8;
     position: sticky;
     top: calc(96px + var(--safe-top));
     flex-direction: column;
@@ -2874,6 +2890,22 @@ a.avatar:active {
 
   .tab-text small {
     display: block;
+  }
+
+  .side-tabs {
+    overflow: visible;
+  }
+
+  .side-tab {
+    white-space: normal;
+  }
+
+  .tab-long {
+    display: inline;
+  }
+
+  .tab-short {
+    display: none;
   }
 }
 

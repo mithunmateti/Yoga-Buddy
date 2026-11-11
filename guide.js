@@ -64,10 +64,13 @@ if (!pose) {
   const viewText = document.getElementById("view-text");
   if (pose.view === "side") {
     badge.textContent = "Side view";
-    viewText.textContent = "Turn sideways to the camera.";
+    viewText.textContent = "Turn sideways to the camera (it can also see you from the front, just less well).";
+  } else if (pose.view === "any") {
+    badge.textContent = "Any view";
+    viewText.textContent = "Face the camera or turn sideways, whichever is comfortable.";
   } else {
     badge.textContent = "Front view";
-    viewText.textContent = "Face the camera.";
+    viewText.textContent = "Face the camera (it can also see you from the side, just less well).";
   }
   if (pose.view === "side") {
     document.getElementById("pose-chips").innerHTML += '<span class="chip">Side view</span>';
@@ -78,10 +81,8 @@ if (!pose) {
   // "Start with camera" button opens the practice screen for this pose
   document.getElementById("start-button").href = "practice.html?pose=" + pose.id;
 
-  // The back arrow goes to the tab this pose lives in
-  if (pose.positions) {
-    document.querySelector(".app-bar .icon-button").href = "index.html#surya";
-  }
+  // The back arrow goes to the tab this pose lives in (home.js)
+  document.querySelector(".app-bar .icon-button").href = "index.html#" + tabOf(pose);
 
   // A single pose has a hold time to choose. A flow has rounds instead.
   if (!pose.positions) {
@@ -91,6 +92,24 @@ if (!pose) {
   }
 }
 
+
+// Which home tab a pose is on: "basic", "standing", "sitting", "strength" or "flows"
+function tabOf(pose) {
+  if (pose.positions) {
+    return "flows";
+  }
+  return pose.group || "basic";
+}
+
+// About how long one round of a flow takes, in seconds: about 7 seconds
+// for each position (saying it and doing it) plus its hold time
+function secondsPerRound(pose) {
+  let seconds = 0;
+  for (const position of pose.positions) {
+    seconds += 7 + (position.hold || 0);
+  }
+  return seconds;
+}
 
 // ----- How many rounds: the bar and the Recommended button (a flow) -----
 function showRoundsChoice(pose) {
@@ -102,21 +121,29 @@ function showRoundsChoice(pose) {
   range.max = ROUNDS_MAX;
   range.step = 1;
 
+  const count = pose.positions.length;
+  const turns = pose.positions.some(function (position) { return position.say.includes("{leg}"); });
+  const recommended = recommendedRounds(pose.id);
+  const perRound = secondsPerRound(pose);
+  document.getElementById("rounds-estimate").textContent = "One round is the " + count + " positions" +
+    (turns ? ". The legs take turns, so an even number works both legs equally." : ".");
+
   function showRounds(rounds) {
     range.value = rounds;
     range.style.setProperty("--fill", (rounds - ROUNDS_MIN) / (ROUNDS_MAX - ROUNDS_MIN) * 100 + "%");
     document.getElementById("rounds-count").textContent = rounds;
     document.getElementById("rounds-unit").textContent = rounds === 1 ? "round" : "rounds";
     document.getElementById("hold-note").textContent =
-      "You will do " + rounds + (rounds === 1 ? " round" : " rounds") + " of the 12 positions. " +
-      "Round 1 steps back with your right leg, round 2 with your left, and so on. " +
+      "You will do " + rounds + (rounds === 1 ? " round" : " rounds") + " of the " + count + " positions " +
+      "(about " + Math.max(1, Math.round(rounds * perRound / 60)) + " minutes). " +
+      (turns ? "Round 1 steps back with your right leg, round 2 with your left, and so on. " : "") +
       "Yoga Buddy's voice will guide you. 🔊";
     document.getElementById("start-button").href = "practice.html?pose=" + pose.id + "&rounds=" + rounds;
 
-    const isRecommended = rounds === ROUNDS_RECOMMENDED;
+    const isRecommended = rounds === recommended;
     recommendedButton.classList.toggle("chosen", isRecommended);
     recommendedButton.textContent = (isRecommended ? "✓ Recommended: " : "⭐ Use recommended: ") +
-      ROUNDS_RECOMMENDED + " rounds (each leg once)";
+      recommended + (recommended === 1 ? " round" : " rounds") + (turns && recommended === 2 ? " (each leg once)" : "");
   }
 
   range.addEventListener("input", function () {
@@ -127,7 +154,7 @@ function showRoundsChoice(pose) {
 
   recommendedButton.addEventListener("click", function () {
     clearRounds(pose.id);
-    showRounds(ROUNDS_RECOMMENDED);
+    showRounds(recommended);
   });
 
   showRounds(roundsFor(pose.id));
@@ -202,22 +229,26 @@ function showPositions(pose, list) {
   for (const position of pose.positions) {
     const item = document.createElement("li");
     item.className = "position";
+    // "See it from every side" (if poses has the words for it)
+    const v = position.views;
+    const views = v ? `
+        <details>
+          <summary>See it from every side</summary>
+          <ul class="views">
+            <li><b>Front:</b> ${v.front}</li>
+            <li><b>Back:</b> ${v.back}</li>
+            <li><b>Left side:</b> ${v.left}</li>
+            <li><b>Right side:</b> ${v.right}</li>
+            <li><b>From above:</b> ${v.top}</li>
+          </ul>
+        </details>` : "";
+    const hold = position.hold ? " · ⏱️ Stay " + position.hold + " s" : "";
     item.innerHTML = `
       <div class="position-figure">${figureSVG(position.figure)}</div>
       <div class="position-text">
         <h3>${position.sanskrit} <span>(${position.english})</span></h3>
-        <p class="breath">${BREATH[position.breath]}</p>
-        <p>${forGuide(position.say)}</p>
-        <details>
-          <summary>See it from every side</summary>
-          <ul class="views">
-            <li><b>Front:</b> ${position.views.front}</li>
-            <li><b>Back:</b> ${position.views.back}</li>
-            <li><b>Left side:</b> ${position.views.left}</li>
-            <li><b>Right side:</b> ${position.views.right}</li>
-            <li><b>From above:</b> ${position.views.top}</li>
-          </ul>
-        </details>
+        <p class="breath">${BREATH[position.breath] || BREATH.normal}${hold}</p>
+        <p>${forGuide(position.say)}</p>${views}
       </div>
     `;
     list.appendChild(item);

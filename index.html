@@ -23,7 +23,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="style.css?v=20261110b">
+  <link rel="stylesheet" href="style.css?v=20261110c">
 
   <!-- The opening animation only plays when the app is first opened, not
        when coming back from Settings or a pose (decided here, before anything
@@ -125,17 +125,30 @@
       <section id="streak" class="streak-card"></section>
     </div>
 
-    <!-- The tabs: on the left of a laptop screen, a row on a phone (home.js).
-         The chosen tab is kept in the web address (#basic or #surya), so
-         refreshing the page stays on the same tab. -->
+    <!-- The tabs: on the left of a laptop screen, a row you can swipe on a
+         phone (home.js). The chosen tab is kept in the web address (#basic,
+         #standing, #sitting, #strength or #flows), so refreshing the page
+         stays on the same tab. -->
     <div class="side-tabs" role="tablist" aria-label="Kinds of yoga" aria-orientation="horizontal">
       <button id="tab-basic" class="side-tab" type="button" role="tab" aria-selected="true" aria-controls="panel-basic" data-tab="basic">
         <span class="tab-icon" aria-hidden="true">🧘</span>
-        <span class="tab-text">Basic Asanas<small id="tab-basic-count"></small></span>
+        <span class="tab-text"><span class="tab-long">Basic Asanas</span><span class="tab-short">Basic</span><small id="tab-basic-count"></small></span>
       </button>
-      <button id="tab-surya" class="side-tab" type="button" role="tab" aria-selected="false" aria-controls="panel-surya" data-tab="surya" tabindex="-1">
+      <button id="tab-standing" class="side-tab" type="button" role="tab" aria-selected="false" aria-controls="panel-standing" data-tab="standing" tabindex="-1">
+        <span class="tab-icon" aria-hidden="true">🌳</span>
+        <span class="tab-text"><span class="tab-long">Standing</span><span class="tab-short">Standing</span><small id="tab-standing-count"></small></span>
+      </button>
+      <button id="tab-sitting" class="side-tab" type="button" role="tab" aria-selected="false" aria-controls="panel-sitting" data-tab="sitting" tabindex="-1">
+        <span class="tab-icon" aria-hidden="true">🪷</span>
+        <span class="tab-text"><span class="tab-long">Sitting</span><span class="tab-short">Sitting</span><small id="tab-sitting-count"></small></span>
+      </button>
+      <button id="tab-strength" class="side-tab" type="button" role="tab" aria-selected="false" aria-controls="panel-strength" data-tab="strength" tabindex="-1">
+        <span class="tab-icon" aria-hidden="true">💪</span>
+        <span class="tab-text"><span class="tab-long">Strength</span><span class="tab-short">Strength</span><small id="tab-strength-count"></small></span>
+      </button>
+      <button id="tab-flows" class="side-tab" type="button" role="tab" aria-selected="false" aria-controls="panel-flows" data-tab="flows" tabindex="-1">
         <span class="tab-icon" aria-hidden="true">☀️</span>
-        <span class="tab-text">Surya Namaskar<small id="tab-surya-count"></small></span>
+        <span class="tab-text"><span class="tab-long">Surya Namaskar &amp; Flows</span><span class="tab-short">Flows</span><small id="tab-flows-count"></small></span>
       </button>
     </div>
 
@@ -147,24 +160,49 @@
 
       <!-- The pose cards are added here by home.js -->
       <h2 class="section-title">Basic Asanas</h2>
-      <div id="pose-grid" class="pose-grid"></div>
+      <div id="grid-basic" class="pose-grid"></div>
     </section>
 
-    <!-- TAB 2: Surya Namaskar: the flows (home.js) -->
-    <section id="panel-surya" class="tab-panel" role="tabpanel" aria-labelledby="tab-surya" hidden>
-      <h2 class="section-title">Surya Namaskar</h2>
-      <p class="flow-intro">A flow of poses, one after another, like a moving yoga lesson. Yoga Buddy's voice tells you what to do next and checks each pose with the camera.</p>
-      <div id="flow-grid" class="pose-grid flows"></div>
+    <!-- TAB 2: Standing poses (poses-standing.js) -->
+    <section id="panel-standing" class="tab-panel" role="tabpanel" aria-labelledby="tab-standing" hidden>
+      <h2 class="section-title">Standing poses</h2>
+      <p class="flow-intro">Build balance, strong legs and good posture. Most of these are done on one side: do the other side afterwards too.</p>
+      <div id="grid-standing" class="pose-grid"></div>
+    </section>
+
+    <!-- TAB 3: Sitting poses (poses-sitting.js) -->
+    <section id="panel-sitting" class="tab-panel" role="tabpanel" aria-labelledby="tab-sitting" hidden>
+      <h2 class="section-title">Sitting poses</h2>
+      <p class="flow-intro">Calm poses on the floor, plus chair yoga for anyone who finds the floor hard. Put the camera low, at about the height of your chest when you sit.</p>
+      <div id="grid-sitting" class="pose-grid"></div>
+    </section>
+
+    <!-- TAB 4: Strength poses (poses-strength.js) -->
+    <section id="panel-strength" class="tab-panel" role="tabpanel" aria-labelledby="tab-strength" hidden>
+      <h2 class="section-title">Strength poses</h2>
+      <p class="flow-intro">For strong arms, a strong middle and a strong back. Put the camera low, near the floor, and turn sideways to it for the poses on the floor.</p>
+      <div id="grid-strength" class="pose-grid"></div>
+    </section>
+
+    <!-- TAB 5: Flows: Surya Namaskar and the other flows (poses.js, flows.js) -->
+    <section id="panel-flows" class="tab-panel" role="tabpanel" aria-labelledby="tab-flows" hidden>
+      <h2 class="section-title">Surya Namaskar &amp; Flows</h2>
+      <p class="flow-intro">A flow is poses one after another, like a moving yoga lesson. Yoga Buddy's voice tells you what to do next and checks each pose with the camera.</p>
+      <div id="grid-flows" class="pose-grid flows"></div>
     </section>
   </main>
 
   <!-- profile.js asks for the name, age and gender first.
        poses.js must load before home.js, because home.js uses the POSES list from it. -->
-  <script src="settings.js?v=20261110b"></script>
-  <script src="profile.js?v=20261110b"></script>
-  <script src="poses.js?v=20261110b"></script>
-  <script src="hold-time.js?v=20261110b"></script>
-  <script src="progress.js?v=20261110b"></script>
-  <script src="home.js?v=20261110b"></script>
+  <script src="settings.js?v=20261110c"></script>
+  <script src="profile.js?v=20261110c"></script>
+  <script src="poses.js?v=20261110c"></script>
+  <script src="poses-standing.js?v=20261110c"></script>
+  <script src="poses-sitting.js?v=20261110c"></script>
+  <script src="poses-strength.js?v=20261110c"></script>
+  <script src="flows.js?v=20261110c"></script>
+  <script src="hold-time.js?v=20261110c"></script>
+  <script src="progress.js?v=20261110c"></script>
+  <script src="home.js?v=20261110c"></script>
 </body>
 </html>

@@ -3,3 +3,6 @@ __pycache__/
 _ai-test.html
 # secret key: keep it off GitHub (see gemini-key.js)
 gemini-key.local.js
+
+# The anatomy book (copyrighted, only for reading here)
+*.pdf
