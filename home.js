@@ -232,6 +232,37 @@ for (const name of TABS) {
   });
 }
 
+// ----- The sidebar: big (icons and names) or small (just the icons) -----
+// Only on a laptop or a sideways iPad (on a phone the tabs are a row).
+// The choice is remembered on this device (a head script in index.html
+// puts it back before the page is drawn, so the page doesn't jump).
+const SIDE_BAR_NAME = "yogaBuddySideBar";
+const sideBarToggle = document.getElementById("side-bar-toggle");
+
+function showSideBarSize() {
+  const small = document.documentElement.classList.contains("side-bar-small");
+  sideBarToggle.setAttribute("aria-expanded", small ? "false" : "true");
+  sideBarToggle.setAttribute("aria-label", small ? "Make the menu big" : "Make the menu small");
+  sideBarToggle.title = small ? "Show the menu" : "Hide the menu";
+  sideBarToggle.querySelector(".side-bar-arrow").textContent = small ? "»" : "«";
+  // When it is small, hovering an icon shows the tab's name
+  for (const name of TABS) {
+    const button = tabButtons[name];
+    button.title = small ? button.querySelector(".tab-long").textContent : "";
+  }
+}
+
+sideBarToggle.addEventListener("click", function () {
+  const small = document.documentElement.classList.toggle("side-bar-small");
+  try {
+    localStorage.setItem(SIDE_BAR_NAME, small ? "small" : "big");
+  } catch (error) {
+    // storage blocked: it just isn't remembered
+  }
+  showSideBarSize();
+});
+showSideBarSize();
+
 // Arrow keys move between the tabs (Home and End jump to the first and last)
 document.querySelector(".side-tabs").addEventListener("keydown", function (event) {
   const now = TABS.indexOf(tabFromAddress());

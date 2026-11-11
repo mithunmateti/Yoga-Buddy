@@ -2839,34 +2839,93 @@ a.avatar:active {
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
 }
 
-/* A laptop or an iPad held sideways: tabs on the left, in a column */
+/* The button that makes the sidebar small: only on a laptop (below) */
+.side-bar-toggle {
+  display: none;
+}
+
+/* A laptop or an iPad held sideways: the tabs are a SIDEBAR on the left
+   edge of the screen. The button at its top makes it small (just the
+   icons) or big again; the page moves over to make room. */
 @media (min-width: 820px) {
+  :root {
+    --side-bar-width: 236px;
+  }
+
+  :root.side-bar-small {
+    --side-bar-width: 76px;
+  }
+
   .page.home {
-    display: grid;
-    grid-template-columns: 220px minmax(0, 1fr);
-    column-gap: 32px;
-    align-items: start;
+    /* In the middle of the screen, unless that would be under the sidebar */
+    margin-left: max(calc(var(--side-bar-width) + 40px), calc((100vw - 1080px) / 2));
+    transition: margin-left 0.25s ease;
   }
 
-  .page.home > * {
-    grid-column: 2;
-  }
-
-  .page.home > .side-tabs {
-    grid-column: 1;
-    grid-row: 1 / span 8;
-    position: sticky;
-    top: calc(96px + var(--safe-top));
+  .side-bar {
+    position: fixed;
+    z-index: 15;
+    top: calc(92px + var(--safe-top));
+    left: 16px;
+    width: var(--side-bar-width);
+    max-height: calc(100vh - 110px - var(--safe-top));
+    display: flex;
     flex-direction: column;
-    gap: 8px;
-    margin: 32px 0 0;
+    gap: 6px;
     padding: 10px;
+    overflow-x: hidden;
+    overflow-y: auto;
     background: var(--glass, rgba(255, 255, 255, 0.6));
     -webkit-backdrop-filter: var(--glass-blur, none);
     backdrop-filter: var(--glass-blur, none);
     border: 1px solid var(--glass-edge, var(--border));
     border-radius: var(--radius);
     box-shadow: var(--glass-shine, none), var(--glass-shadow, var(--shadow));
+    transition: width 0.25s ease;
+  }
+
+  .side-bar-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    min-height: 40px;
+    padding: 6px 14px;
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-small);
+    color: var(--text-soft);
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .side-bar-toggle:hover {
+    background: rgba(29, 43, 42, 0.06);
+  }
+
+  .side-bar-toggle:focus-visible {
+    outline: 3px solid var(--primary);
+    outline-offset: 2px;
+  }
+
+  .side-bar-arrow {
+    width: 24px;
+    font-size: 1.3rem;
+    line-height: 1;
+    text-align: center;
+  }
+
+  .side-bar .side-tabs {
+    flex-direction: column;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+    background: none;
+    border-radius: 0;
   }
 
   .side-tab {
@@ -2877,6 +2936,7 @@ a.avatar:active {
     padding: 8px 14px;
     border-radius: var(--radius-small);
     font-size: 1rem;
+    white-space: normal;
   }
 
   .side-tab[aria-selected="true"] {
@@ -2885,19 +2945,13 @@ a.avatar:active {
   }
 
   .tab-icon {
+    width: 24px;
     font-size: 1.5rem;
+    text-align: center;
   }
 
   .tab-text small {
     display: block;
-  }
-
-  .side-tabs {
-    overflow: visible;
-  }
-
-  .side-tab {
-    white-space: normal;
   }
 
   .tab-long {
@@ -2906,6 +2960,32 @@ a.avatar:active {
 
   .tab-short {
     display: none;
+  }
+
+  /* Small: just the icons. The names are hidden from the eye but still
+     read out by screen readers, and show when you hover an icon. */
+  .side-bar-small .side-tab,
+  .side-bar-small .side-bar-toggle {
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .side-bar-small .tab-text,
+  .side-bar-small .side-bar-word {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}
+
+@media (min-width: 820px) and (prefers-reduced-motion: reduce) {
+  .page.home,
+  .side-bar {
+    transition: none;
   }
 }
 

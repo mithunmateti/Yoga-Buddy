@@ -23,7 +23,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="style.css?v=20261111a">
+  <link rel="stylesheet" href="style.css?v=20261111b">
 
   <!-- The opening animation only plays when the app is first opened, not
        when coming back from Settings or a pose (decided here, before anything
@@ -62,6 +62,15 @@
         document.documentElement.classList.add("opened-before");
       }
     })();
+    // The sidebar of tabs stays small if it was made small last time
+    // (decided here, before anything is drawn, so it doesn't jump)
+    try {
+      if (localStorage.getItem("yogaBuddySideBar") === "small") {
+        document.documentElement.classList.add("side-bar-small");
+      }
+    } catch (error) {
+      // storage blocked: the sidebar starts open
+    }
   </script>
 </head>
 <body data-ask-later>
@@ -129,7 +138,13 @@
          phone (home.js). The chosen tab is kept in the web address (#basic,
          #standing, #prone, #flows…), so refreshing the page
          stays on the same tab. -->
-    <div class="side-tabs" role="tablist" aria-label="Kinds of yoga" aria-orientation="horizontal">
+    <!-- On a laptop this is a sidebar on the left edge of the screen; the
+         button makes it small (just the icons) or big again (home.js) -->
+    <div id="side-bar" class="side-bar">
+    <button id="side-bar-toggle" class="side-bar-toggle" type="button" aria-controls="side-tabs" aria-expanded="true" aria-label="Make the menu small">
+      <span class="side-bar-arrow" aria-hidden="true">«</span><span class="side-bar-word">Hide menu</span>
+    </button>
+    <div id="side-tabs" class="side-tabs" role="tablist" aria-label="Kinds of yoga" aria-orientation="horizontal">
       <button id="tab-basic" class="side-tab" type="button" role="tab" aria-selected="true" aria-controls="panel-basic" data-tab="basic">
         <span class="tab-icon" aria-hidden="true">🧘</span>
         <span class="tab-text"><span class="tab-long">Basic Asanas</span><span class="tab-short">Basic</span><small id="tab-basic-count"></small></span>
@@ -162,6 +177,7 @@
         <span class="tab-icon" aria-hidden="true">☀️</span>
         <span class="tab-text"><span class="tab-long">Surya Namaskar &amp; Flows</span><span class="tab-short">Flows</span><small id="tab-flows-count"></small></span>
       </button>
+    </div>
     </div>
 
     <!-- TAB 1: Basic Asanas: today's pose and the five basic poses -->
@@ -231,18 +247,18 @@
 
   <!-- profile.js asks for the name, age and gender first.
        poses.js must load before home.js, because home.js uses the POSES list from it. -->
-  <script src="settings.js?v=20261111a"></script>
-  <script src="profile.js?v=20261111a"></script>
-  <script src="poses.js?v=20261111a"></script>
-  <script src="poses-standing.js?v=20261111a"></script>
-  <script src="poses-sitting.js?v=20261111a"></script>
-  <script src="poses-kneeling.js?v=20261111a"></script>
-  <script src="poses-supine.js?v=20261111a"></script>
-  <script src="poses-prone.js?v=20261111a"></script>
-  <script src="poses-arm-support.js?v=20261111a"></script>
-  <script src="flows.js?v=20261111a"></script>
-  <script src="hold-time.js?v=20261111a"></script>
-  <script src="progress.js?v=20261111a"></script>
-  <script src="home.js?v=20261111a"></script>
+  <script src="settings.js?v=20261111b"></script>
+  <script src="profile.js?v=20261111b"></script>
+  <script src="poses.js?v=20261111b"></script>
+  <script src="poses-standing.js?v=20261111b"></script>
+  <script src="poses-sitting.js?v=20261111b"></script>
+  <script src="poses-kneeling.js?v=20261111b"></script>
+  <script src="poses-supine.js?v=20261111b"></script>
+  <script src="poses-prone.js?v=20261111b"></script>
+  <script src="poses-arm-support.js?v=20261111b"></script>
+  <script src="flows.js?v=20261111b"></script>
+  <script src="hold-time.js?v=20261111b"></script>
+  <script src="progress.js?v=20261111b"></script>
+  <script src="home.js?v=20261111b"></script>
 </body>
 </html>
