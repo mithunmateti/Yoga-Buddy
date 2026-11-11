@@ -69,20 +69,26 @@ function chipsFor(pose) {
   }).join("");
 }
 
-// ----- Which tab each pose is on -----
-// A pose says its group in the pose files ("standing", "sitting" or
-// "strength"). The 5 Basic Asanas in poses.js have none, and every flow
-// (Surya Namaskar and the flows in flows.js) goes in "flows".
-function tabOf(pose) {
+// ----- Which tab a pose is on -----
+// The tabs sort the poses by the position of your body, like the chapters
+// of the book Yoga Anatomy (Kaminoff). Each pose says its "group" in the
+// pose files: "standing", "sitting", "kneeling", "supine" (lying on your
+// back), "prone" (lying on your tummy) or "armsupport" (on your hands).
+// The 5 Basic Asanas (basic: true) are on the "basic" tab too, and every
+// flow (Surya Namaskar and the flows in flows.js) is on "flows".
+function isOnTab(pose, name) {
   if (pose.positions) {
-    return "flows";
+    return name === "flows";
   }
-  return pose.group || "basic";
+  if (name === "basic") {
+    return !!pose.basic;
+  }
+  return pose.group === name;
 }
 
 // ----- Today's pose: a different Basic Asana each day -----
 const day = Math.floor(Date.now() / 86400000);   // days since 1970
-const singlePoses = POSES.filter(function (pose) { return tabOf(pose) === "basic"; });
+const singlePoses = POSES.filter(function (pose) { return isOnTab(pose, "basic"); });
 const today = singlePoses[day % singlePoses.length];
 const hero = document.getElementById("hero");
 hero.href = "guide.html?pose=" + today.id;
@@ -106,7 +112,7 @@ showTodayHold();
 window.addEventListener("pageshow", showTodayHold);   // it may have changed on the guide
 
 // ----- The pose cards -----
-// One card for every pose, in the tab it belongs to (see tabOf).
+// One card for every pose, in the tab(s) it belongs to (see isOnTab).
 function makePoseCard(pose) {
   // Each card is a link, e.g. guide.html?pose=tadasana
   const card = document.createElement("a");
@@ -136,10 +142,24 @@ function makePoseCard(pose) {
   return card;
 }
 
-const TABS = ["basic", "standing", "sitting", "strength", "flows"];
+const TABS = ["basic", "standing", "sitting", "kneeling", "supine", "prone", "armsupport", "flows"];
+
+// In book order: poses with a bookPage first (by page), then the rest as
+// they are in the pose files
+function bookOrder(list) {
+  return list.map(function (pose, i) { return { pose: pose, i: i }; }).sort(function (a, b) {
+    const pa = a.pose.bookPage || Infinity;
+    const pb = b.pose.bookPage || Infinity;
+    return pa !== pb ? pa - pb : a.i - b.i;
+  }).map(function (item) { return item.pose; });
+}
+
 const inTab = {};
 for (const name of TABS) {
-  inTab[name] = POSES.filter(function (pose) { return tabOf(pose) === name; });
+  inTab[name] = POSES.filter(function (pose) { return isOnTab(pose, name); });
+  if (name !== "basic" && name !== "flows") {
+    inTab[name] = bookOrder(inTab[name]);
+  }
   const grid = document.getElementById("grid-" + name);
   for (const pose of inTab[name]) {
     grid.appendChild(makePoseCard(pose));
@@ -175,8 +195,11 @@ if (wideScreen.addEventListener) {
 
 function tabFromAddress() {
   let name = location.hash.replace("#", "");
+  // Old addresses of tabs that have moved
   if (name === "surya") {
-    name = "flows";   // the old address of the Surya Namaskar tab
+    name = "flows";
+  } else if (name === "strength") {
+    name = "armsupport";
   }
   return TABS.includes(name) ? name : "basic";
 }

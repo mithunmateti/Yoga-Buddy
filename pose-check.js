@@ -227,6 +227,12 @@ function measureAngle(joint, n, view) {
   if (joint === "twist") {
     return twistAngle(view);
   }
+  if (joint === "shoulderLine") {
+    return steepness(BODY_PARTS.left.shoulder, BODY_PARTS.right.shoulder, view);
+  }
+  if (joint === "handCross") {
+    return handCross(view);
+  }
   return jointAngle(n[0], n[1], n[2], view);
 }
 
@@ -343,18 +349,48 @@ function twistAngle(view) {
   return Math.min(turn, 180 - turn);
 }
 
+// "shoulderLine": how steep the line from shoulder to shoulder is.
+// 0° = shoulders level (standing normally), 90° = one shoulder straight
+// above the other (like in Side Angle, where the chest turns to the side).
+
+// "handCross": which hand is down by the feet? 0° = the hand on the SAME
+// side as the foot it is next to (Triangle: left hand by the left foot),
+// 180° = the OTHER hand (Revolved Triangle: right hand by the left foot).
+// It compares how far the lower wrist is from each ankle.
+function handCross(view) {
+  const at = function (n) {
+    return view.world ? view.world[n] : withZero(toPixels(view.points[n], view.width, view.height));
+  };
+  const far = function (a, b) { return Math.hypot(a.x - b.x, a.y - b.y, a.z - b.z); };
+  // The lower wrist (y goes DOWN, so the bigger y is lower)
+  const leftLower = at(15).y > at(16).y;
+  const wrist = at(leftLower ? 15 : 16);
+  const sameAnkle = at(leftLower ? 27 : 28);
+  const otherAnkle = at(leftLower ? 28 : 27);
+  const same = far(wrist, sameAnkle);
+  const other = far(wrist, otherAnkle);
+  if (same + other === 0) {
+    return null;
+  }
+  return 180 * same / (same + other);
+}
+
 // Joints that use points on BOTH sides of the body, measured once
 // (side: "body" in poses.js). The middle number is where the label goes.
 const WHOLE_BODY = {
-  legsApart: [25, 23, 26],   // left knee, left hip, right knee
-  armsLine:  [13, 11, 14],   // left elbow, left shoulder, right elbow
-  twist:     [11, 23, 12]    // left shoulder, left hip, right shoulder
+  legsApart:    [25, 23, 26],   // left knee, left hip, right knee
+  armsLine:     [13, 11, 14],   // left elbow, left shoulder, right elbow
+  twist:        [11, 23, 12],   // left shoulder, left hip, right shoulder
+  shoulderLine: [13, 11, 12],   // left elbow, left shoulder, right shoulder
+  handCross:    [15, 27, 16]    // left wrist, left ankle, right wrist
 };
 // …and the points they really measure, which must all be seen clearly
 const WHOLE_BODY_NEEDS = {
-  legsApart: [23, 24, 27, 28],   // both hips and both ankles
-  armsLine:  [11, 12, 15, 16],   // both shoulders and both wrists
-  twist:     [11, 12, 23, 24]    // both shoulders and both hips
+  legsApart:    [23, 24, 27, 28],   // both hips and both ankles
+  armsLine:     [11, 12, 15, 16],   // both shoulders and both wrists
+  twist:        [11, 12, 23, 24],   // both shoulders and both hips
+  shoulderLine: [11, 12],           // both shoulders
+  handCross:    [15, 16, 27, 28]    // both wrists and both ankles
 };
 
 // Which side(s) of the body a check looks at (the "side" in poses.js)

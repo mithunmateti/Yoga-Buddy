@@ -75,6 +75,11 @@ if (!pose) {
   if (pose.view === "side") {
     document.getElementById("pose-chips").innerHTML += '<span class="chip">Side view</span>';
   }
+  // Where the pose is in the book the tabs follow (Yoga Anatomy, Kaminoff)
+  if (pose.bookPage) {
+    document.getElementById("pose-chips").innerHTML +=
+      '<span class="chip" title="Yoga Anatomy by Leslie Kaminoff and Amy Matthews">📖 Yoga Anatomy, p. ' + pose.bookPage + "</span>";
+  }
   // Where to put the camera (a pose can have its own advice in poses.js)
   viewText.textContent += " " + (pose.camera || "Place it about 2 metres away so your whole body fits on screen.");
 
@@ -93,10 +98,15 @@ if (!pose) {
 }
 
 
-// Which home tab a pose is on: "basic", "standing", "sitting", "strength" or "flows"
+// Which home tab the back arrow goes to: "basic" for the 5 Basic Asanas,
+// "flows" for a flow, or the pose's group ("standing", "sitting", "kneeling",
+// "supine", "prone" or "armsupport", see home.js)
 function tabOf(pose) {
   if (pose.positions) {
     return "flows";
+  }
+  if (pose.basic) {
+    return "basic";
   }
   return pose.group || "basic";
 }

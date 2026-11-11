@@ -23,7 +23,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="style.css?v=20261110c">
+  <link rel="stylesheet" href="style.css?v=20261111a">
 
   <!-- The opening animation only plays when the app is first opened, not
        when coming back from Settings or a pose (decided here, before anything
@@ -127,7 +127,7 @@
 
     <!-- The tabs: on the left of a laptop screen, a row you can swipe on a
          phone (home.js). The chosen tab is kept in the web address (#basic,
-         #standing, #sitting, #strength or #flows), so refreshing the page
+         #standing, #prone, #flows…), so refreshing the page
          stays on the same tab. -->
     <div class="side-tabs" role="tablist" aria-label="Kinds of yoga" aria-orientation="horizontal">
       <button id="tab-basic" class="side-tab" type="button" role="tab" aria-selected="true" aria-controls="panel-basic" data-tab="basic">
@@ -142,9 +142,21 @@
         <span class="tab-icon" aria-hidden="true">🪷</span>
         <span class="tab-text"><span class="tab-long">Sitting</span><span class="tab-short">Sitting</span><small id="tab-sitting-count"></small></span>
       </button>
-      <button id="tab-strength" class="side-tab" type="button" role="tab" aria-selected="false" aria-controls="panel-strength" data-tab="strength" tabindex="-1">
+      <button id="tab-kneeling" class="side-tab" type="button" role="tab" aria-selected="false" aria-controls="panel-kneeling" data-tab="kneeling" tabindex="-1">
+        <span class="tab-icon" aria-hidden="true">🙇</span>
+        <span class="tab-text"><span class="tab-long">Kneeling</span><span class="tab-short">Kneeling</span><small id="tab-kneeling-count"></small></span>
+      </button>
+      <button id="tab-supine" class="side-tab" type="button" role="tab" aria-selected="false" aria-controls="panel-supine" data-tab="supine" tabindex="-1">
+        <span class="tab-icon" aria-hidden="true">🛌</span>
+        <span class="tab-text"><span class="tab-long">Lying on your back</span><span class="tab-short">On your back</span><small id="tab-supine-count"></small></span>
+      </button>
+      <button id="tab-prone" class="side-tab" type="button" role="tab" aria-selected="false" aria-controls="panel-prone" data-tab="prone" tabindex="-1">
+        <span class="tab-icon" aria-hidden="true">🐍</span>
+        <span class="tab-text"><span class="tab-long">Lying on your tummy</span><span class="tab-short">On your tummy</span><small id="tab-prone-count"></small></span>
+      </button>
+      <button id="tab-armsupport" class="side-tab" type="button" role="tab" aria-selected="false" aria-controls="panel-armsupport" data-tab="armsupport" tabindex="-1">
         <span class="tab-icon" aria-hidden="true">💪</span>
-        <span class="tab-text"><span class="tab-long">Strength</span><span class="tab-short">Strength</span><small id="tab-strength-count"></small></span>
+        <span class="tab-text"><span class="tab-long">On your hands</span><span class="tab-short">On your hands</span><small id="tab-armsupport-count"></small></span>
       </button>
       <button id="tab-flows" class="side-tab" type="button" role="tab" aria-selected="false" aria-controls="panel-flows" data-tab="flows" tabindex="-1">
         <span class="tab-icon" aria-hidden="true">☀️</span>
@@ -163,10 +175,14 @@
       <div id="grid-basic" class="pose-grid"></div>
     </section>
 
-    <!-- TAB 2: Standing poses (poses-standing.js) -->
+    <!-- TABS 2–7: the poses sorted by the position of your body, like the
+         chapters of the book Yoga Anatomy (Kaminoff). home.js fills each grid
+         with the poses whose "group" matches, in the book's order. -->
+
+    <!-- TAB 2: Standing poses (poses-standing.js, and 4 Basic Asanas from poses.js) -->
     <section id="panel-standing" class="tab-panel" role="tabpanel" aria-labelledby="tab-standing" hidden>
       <h2 class="section-title">Standing poses</h2>
-      <p class="flow-intro">Build balance, strong legs and good posture. Most of these are done on one side: do the other side afterwards too.</p>
+      <p class="flow-intro">Poses on your feet, in the same order as the Standing Poses chapter of the book <i>Yoga Anatomy</i>. They build balance, strong legs and good posture, and what you learn here helps every other pose. Many are done on one side: do the other side afterwards too.</p>
       <div id="grid-standing" class="pose-grid"></div>
     </section>
 
@@ -177,11 +193,32 @@
       <div id="grid-sitting" class="pose-grid"></div>
     </section>
 
-    <!-- TAB 4: Strength poses (poses-strength.js) -->
-    <section id="panel-strength" class="tab-panel" role="tabpanel" aria-labelledby="tab-strength" hidden>
-      <h2 class="section-title">Strength poses</h2>
-      <p class="flow-intro">For strong arms, a strong middle and a strong back. Put the camera low, near the floor, and turn sideways to it for the poses on the floor.</p>
-      <div id="grid-strength" class="pose-grid"></div>
+    <!-- TAB 4: Kneeling poses (poses-kneeling.js) -->
+    <section id="panel-kneeling" class="tab-panel" role="tabpanel" aria-labelledby="tab-kneeling" hidden>
+      <h2 class="section-title">Kneeling poses</h2>
+      <p class="flow-intro">Poses on your knees. Put a folded blanket under your knees if they feel the floor, and put the camera low.</p>
+      <div id="grid-kneeling" class="pose-grid"></div>
+    </section>
+
+    <!-- TAB 5: Supine poses: lying on your back (poses-supine.js) -->
+    <section id="panel-supine" class="tab-panel" role="tabpanel" aria-labelledby="tab-supine" hidden>
+      <h2 class="section-title">Lying on your back</h2>
+      <p class="flow-intro">Poses lying face up (yoga books call them <b>supine</b> poses). Put the camera low, near the floor, and lie sideways to it.</p>
+      <div id="grid-supine" class="pose-grid"></div>
+    </section>
+
+    <!-- TAB 6: Prone poses: lying on your tummy (poses-prone.js, and Cobra from poses.js) -->
+    <section id="panel-prone" class="tab-panel" role="tabpanel" aria-labelledby="tab-prone" hidden>
+      <h2 class="section-title">Lying on your tummy</h2>
+      <p class="flow-intro">Poses lying face down (yoga books call them <b>prone</b> poses). They make your back strong. Put the camera low, near the floor, and lie sideways to it.</p>
+      <div id="grid-prone" class="pose-grid"></div>
+    </section>
+
+    <!-- TAB 7: Arm support poses: on your hands (poses-arm-support.js) -->
+    <section id="panel-armsupport" class="tab-panel" role="tabpanel" aria-labelledby="tab-armsupport" hidden>
+      <h2 class="section-title">On your hands</h2>
+      <p class="flow-intro">Poses where your hands and arms hold you up (yoga books call them <b>arm support</b> poses). They make your arms and middle strong. Put the camera low and turn sideways to it.</p>
+      <div id="grid-armsupport" class="pose-grid"></div>
     </section>
 
     <!-- TAB 5: Flows: Surya Namaskar and the other flows (poses.js, flows.js) -->
@@ -194,15 +231,18 @@
 
   <!-- profile.js asks for the name, age and gender first.
        poses.js must load before home.js, because home.js uses the POSES list from it. -->
-  <script src="settings.js?v=20261110c"></script>
-  <script src="profile.js?v=20261110c"></script>
-  <script src="poses.js?v=20261110c"></script>
-  <script src="poses-standing.js?v=20261110c"></script>
-  <script src="poses-sitting.js?v=20261110c"></script>
-  <script src="poses-strength.js?v=20261110c"></script>
-  <script src="flows.js?v=20261110c"></script>
-  <script src="hold-time.js?v=20261110c"></script>
-  <script src="progress.js?v=20261110c"></script>
-  <script src="home.js?v=20261110c"></script>
+  <script src="settings.js?v=20261111a"></script>
+  <script src="profile.js?v=20261111a"></script>
+  <script src="poses.js?v=20261111a"></script>
+  <script src="poses-standing.js?v=20261111a"></script>
+  <script src="poses-sitting.js?v=20261111a"></script>
+  <script src="poses-kneeling.js?v=20261111a"></script>
+  <script src="poses-supine.js?v=20261111a"></script>
+  <script src="poses-prone.js?v=20261111a"></script>
+  <script src="poses-arm-support.js?v=20261111a"></script>
+  <script src="flows.js?v=20261111a"></script>
+  <script src="hold-time.js?v=20261111a"></script>
+  <script src="progress.js?v=20261111a"></script>
+  <script src="home.js?v=20261111a"></script>
 </body>
 </html>

@@ -36,6 +36,10 @@
 //                one straight line, like a T or Triangle's arms)
 //   "twist"     = how far the shoulders are turned compared with the hips,
 //                seen from above (0 = no twist). Needs the 3D points.
+//   "shoulderLine" = how steep the shoulder-to-shoulder line is (0 = level,
+//                90 = one shoulder right above the other, as in Side Angle)
+//   "handCross" = is the hand by your feet the same-side hand (0, Triangle)
+//                or the other hand (180, Revolved Triangle)?
 //
 // FRONT OR SIDE? The camera measures the angles in 3D as well as in the flat
 // picture (pose-check.js), so a pose works whichever way you face. "view"
@@ -64,21 +68,33 @@
 // Leave a tip empty ("") if that mistake can't happen. For example, no
 // angle can be bigger than 180°, so a 180° target never needs tipHigh.
 
-// MORE POSES live in poses-standing.js, poses-sitting.js, poses-strength.js
-// and flows.js. They add themselves to this list with POSES.push(…), and
-// say which home tab they belong on with group: "standing", "sitting" or
-// "strength" (the 5 Basic Asanas below have no group; flows go in "Flows").
+// MORE POSES live in poses-standing.js, poses-sitting.js, poses-kneeling.js,
+// poses-supine.js, poses-prone.js, poses-arm-support.js and flows.js. They
+// add themselves to this list with POSES.push(…).
+//
+// THE HOME TABS sort the poses by the position of your body, like the
+// chapters of the book Yoga Anatomy (Kaminoff): every pose says its
+// group: "standing", "sitting", "kneeling", "supine" (lying on your back),
+// "prone" (lying on your tummy) or "armsupport" (on your hands).
+// The 5 Basic Asanas below also say basic: true, so they are on the
+// "Basic Asanas" tab as well. Flows go on the "Flows" tab.
+// bookPage (optional) = the page of the pose in that book. Each tab lists
+// its poses in book order.
 
 const POSES = [
   {
     id: "tadasana",                 // short name used in web addresses
+    basic: true,   // also on the "Basic Asanas" tab
+    group: "standing",
+    bookPage: 34,   // Yoga Anatomy (Kaminoff), chapter 4 "Standing Poses"
     sanskrit: "Tadasana",
     english: "Palm Tree",
-    level: "Easy",                 // shown on the pose card: "Easy" or "Medium"
+    level: "Easy",                 // shown on the pose card: "Easy", "Medium" or "Hard"
     focus: "Posture",
     tint: "#F3ECE0",               // the pose's own soft colour (cards, guide)
     image: "images/tadasana.png",
     view: "front",                  // "front" = face the camera, "side" = turn sideways
+    safety: "If you get headaches, sleep badly or have low blood pressure, don't stand still for too long. Come down off your toes if you wobble.",
     // Steps follow the Common Yoga Protocol (Ministry of AYUSH) version of Tadasana.
     steps: [
       { text: "Stand tall with your feet a little apart.",       waitFor: ["Knees", "Hips"] },
@@ -110,6 +126,9 @@ const POSES = [
 
   {
     id: "vrikshasana",
+    basic: true,   // also on the "Basic Asanas" tab
+    group: "standing",
+    bookPage: 46,   // Yoga Anatomy (Kaminoff), chapter 4 "Standing Poses"
     sanskrit: "Vrikshasana",
     english: "Tree",
     level: "Medium",
@@ -117,6 +136,7 @@ const POSES = [
     tint: "#E1F0E8",
     image: "images/vrikshasana.png",
     view: "front",
+    safety: "Never press your foot on your knee. If you get dizzy or have a balance problem, stand next to a wall.",
     // Steps follow the Common Yoga Protocol (Ministry of AYUSH) version.
     steps: [
       { text: "Stand tall and look at one spot in front of you.",               waitFor: [] },
@@ -148,13 +168,17 @@ const POSES = [
 
   {
     id: "virabhadrasana2",
+    basic: true,   // also on the "Basic Asanas" tab
+    group: "standing",
+    bookPage: 58,   // Yoga Anatomy (Kaminoff), chapter 4 "Standing Poses"
     sanskrit: "Virabhadrasana II",
     english: "Warrior II",
-    level: "Medium",
-    focus: "Strength",
+    level: "Easy",
+    focus: "Hip opener",
     tint: "#F8E4DC",
     image: "images/virabhadrasana2.png",
     view: "front",
+    safety: "Keep your front knee over your ankle, pointing the same way as your toes. Keep the outer edge of your back foot pressing down. Go gently if your knees or hips hurt.",
     // DRAFT steps written by Claude. Advaith Sai, please check and edit.
     steps: [
       { text: "Stand with your feet wide apart.",            waitFor: [] },
@@ -185,13 +209,17 @@ const POSES = [
 
   {
     id: "utkatasana",
+    basic: true,   // also on the "Basic Asanas" tab
+    group: "standing",
+    bookPage: 40,   // Yoga Anatomy (Kaminoff), chapter 4 "Standing Poses"
     sanskrit: "Utkatasana",
     english: "Chair",
-    level: "Medium",
-    focus: "Legs",
+    level: "Easy",
+    focus: "Strong legs",
     tint: "#ECE6F5",
     image: "images/utkatasana.png",
     view: "side",
+    safety: "Keep your knees pointing straight ahead over your toes, never twisting: bent knees are easy to hurt. Go gently if your knees or back hurt.",
     // DRAFT steps written by Claude. Advaith Sai, please check and edit.
     steps: [
       { text: "Stand with feet together, sideways to the camera.",       waitFor: ["Feet together"] },
@@ -225,6 +253,8 @@ const POSES = [
 
   {
     id: "bhujangasana",
+    basic: true,   // also on the "Basic Asanas" tab
+    group: "prone",
     sanskrit: "Bhujangasana",
     english: "Cobra",
     level: "Easy",

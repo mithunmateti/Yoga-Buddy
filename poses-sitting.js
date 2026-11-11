@@ -1,13 +1,10 @@
 // =============================================================
-// poses-sitting.js — the SITTING poses (the "Sitting" tab on the home page).
+// poses-sitting.js — the SITTING poses (the "Sitting" tab).
 //
-// 6 poses on the floor and 2 chair-yoga poses. The chair poses are for
-// older people, or anyone who finds getting down to the floor hard.
-// Each pose adds itself to the POSES list from poses.js (see the notes at
-// the top of poses.js for what every field means).
-//
-// Sitting poses need the camera LOW: about as high as your chest when you
-// sit, and about 2 metres away, so it can see your hips, knees and feet.
+// Poses done sitting on the floor (or on a chair, for chair yoga).
+// The chair poses are for older people, or anyone who finds getting down to
+// the floor hard. Sitting poses need the camera LOW: about as high as your
+// chest when you sit, and about 2 metres away.
 //
 // Useful numbers for sitting (see pose-check.js):
 //   "body" steepness about 80–85 = back upright, smaller = leaning forward.
@@ -18,9 +15,19 @@
 //                         (thighs level, shins upright). Standing is 90.
 //   "hip" angle: 90 = sitting up tall, smaller = folding forward.
 //
-// Targets worked out from the test skeletons (tests/skeletons/sitting.mjs)
-// and usual alignment cues; NOT yet tested on real people. Please test
-// them yourselves and change the numbers if a pose scores too low or high.
+// The poses are sorted into tabs by the position of your body, the
+// same way the book Yoga Anatomy (Kaminoff) sorts its chapters:
+// standing, sitting, kneeling, supine (on your back), prone (on your
+// tummy) and arm support (on your hands). Each pose says which one
+// with "group".
+//
+// They use exactly the same format as poses.js (read the comments at the
+// top of poses.js to see what every field means). This file just adds
+// them to the same POSES list with POSES.push(…).
+//
+// Targets worked out from the test skeletons (tests/skeletons/) and usual
+// alignment cues; NOT yet tested on real people. Please test them yourselves
+// and change the numbers if a pose scores too low or too high.
 // =============================================================
 
 POSES.push(
@@ -96,46 +103,12 @@ POSES.push(
       { name: "Knees", joint: "knee", side: "both", target: 175, tolerance: 25, weight: 2,
         tipLow: "Straighten your legs a little",
         tipHigh: "" },
-      { name: "Legs on floor", joint: "legs", side: "camera", target: 0, tolerance: 15,
+      // Both legs, not just the one nearest the camera: standing on one leg
+      // with the other leg lifted forward (Hand-to-Big-Toe) looked like
+      // Staff Pose in the pose lab when only one leg was checked.
+      { name: "Legs on floor", joint: "legs", side: "both", target: 0, tolerance: 15,
         tipLow: "",
         tipHigh: "Rest your legs on the floor" }
-    ]
-  },
-
-  {
-    id: "vajrasana",
-    sanskrit: "Vajrasana",
-    english: "Thunderbolt",
-    level: "Easy",
-    focus: "Digestion",
-    group: "sitting",
-    holdKind: "steady",
-    tint: "#F6EADF",
-    image: "images/vajrasana.svg",
-    view: "side",
-    camera: "Put the camera low, about chest height when you sit, and 2 metres away.",
-    safety: "Put a folded blanket under your knees or between your heels and hips if it feels uncomfortable. Skip it if you have knee or ankle pain.",
-    steps: [
-      { text: "Kneel on the floor, sideways to the camera.",       waitFor: [] },
-      { text: "Bring your big toes together behind you.",          waitFor: [] },
-      { text: "Sit back gently on your heels.",                    waitFor: ["Knees", "On the heels"] },
-      { text: "Rest your hands on your thighs and sit tall.",      waitFor: ["Back"] },
-      { text: "Breathe slowly and relax.",                         waitFor: [] }
-    ],
-    // Sitting back on the heels (knees folded tight) IS this pose: 3 times.
-    // "On the heels": the hips are almost straight above the ankles, so the
-    // hip-to-ankle line is steep (it is flat in cross-legged sitting).
-    // The feet are partly hidden under the body, so they may be less sure.
-    checks: [
-      { name: "Knees", joint: "knee", side: "both", target: 35, tolerance: 25, weight: 3, minVisibility: 0.3,
-        tipLow: "Lift your hips a little",
-        tipHigh: "Sit back on your heels" },
-      { name: "On the heels", joint: "legs", side: "camera", target: 75, tolerance: 20, minVisibility: 0.3,
-        tipLow: "Sit back on your heels",
-        tipHigh: "" },
-      { name: "Back", joint: "body", side: "camera", target: 82, tolerance: 15, weight: 2,
-        tipLow: "Sit up tall",
-        tipHigh: "" }
     ]
   },
 
@@ -327,6 +300,48 @@ POSES.push(
       { name: "On the chair", joint: "legs", side: "both", target: 45, tolerance: 12,
         tipLow: "Bring your feet under your knees",
         tipHigh: "Sit down on the chair" }
+    ]
+  },
+
+  {
+    id: "navasana",
+    sanskrit: "Navasana",
+    english: "Boat",
+    level: "Medium",
+    focus: "Core",
+    group: "sitting",
+    holdKind: "balance",
+    tint: "#DDF0EE",
+    image: "images/navasana.svg",
+    view: "side",
+    camera: "Put the camera low, near the floor, and sit sideways to it.",
+    safety: "Keep your knees bent if your belly or back feels strained. Skip it if you have back pain or are pregnant.",
+    steps: [
+      { text: "Sit on the floor, sideways to the camera.",           waitFor: [] },
+      { text: "Lean back a little and balance on your sit bones.",   waitFor: ["Lean back"] },
+      { text: "Lift your feet off the floor, knees bent or straight.", waitFor: ["Legs up", "Knees"] },
+      { text: "Make a V shape with your body and legs.",             waitFor: ["V shape"] },
+      { text: "Reach your arms forward and breathe.",                waitFor: ["Arms"] }
+    ],
+    // The V shape (the angle at the hips) IS this pose, so it counts 3 times.
+    // Knees can be bent (shins level with the floor, about 115–125°) or straight,
+    // so the knee check is wide: it passes from 90° to 180°.
+    checks: [
+      { name: "V shape", joint: "hip", side: "camera", target: 80, tolerance: 20, weight: 3,
+        tipLow: "Open your V a little",
+        tipHigh: "Bring your legs and chest closer" },
+      { name: "Lean back", joint: "body", side: "camera", target: 50, tolerance: 20, weight: 2,
+        tipLow: "Sit up a little taller",
+        tipHigh: "Lean back a little more" },
+      { name: "Legs up", joint: "legs", side: "camera", target: 45, tolerance: 20, weight: 2,
+        tipLow: "Lift your feet higher",
+        tipHigh: "Lower your feet a little" },
+      { name: "Knees", joint: "knee", side: "camera", target: 135, tolerance: 45,
+        tipLow: "Straighten your legs a little",
+        tipHigh: "" },
+      { name: "Arms", joint: "shoulder", side: "camera", target: 50, tolerance: 25,
+        tipLow: "Lift your arms a little",
+        tipHigh: "Reach your arms forward, not up" }
     ]
   }
 );

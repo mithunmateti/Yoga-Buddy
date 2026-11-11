@@ -68,9 +68,8 @@ function streakDay(day) {
 
 // Did you hold all 5 Basic Asanas that day?
 function allPosesDay(day) {
-  // Only the 5 Basic Asanas count: they have no group (the poses in the
-  // other tabs say "standing", "sitting" or "strength"), and flows have no hold
-  return !!day && POSES.filter(function (pose) { return !pose.positions && !pose.group; })
+  // Only the 5 Basic Asanas count (basic: true in poses.js)
+  return !!day && POSES.filter(function (pose) { return pose.basic; })
     .every(function (pose) { return day.poses.includes(pose.id); });
 }
 
