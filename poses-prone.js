@@ -30,7 +30,7 @@ POSES.push(
     // Lifting the legs and chest is tiring for the back, so short holds are safer
     holdKind: "balance",
     tint: "#F5EFD9",
-    image: "images/salabhasana.svg",
+    image: "images/salabhasana.webp",
     view: "side",
     camera: "Put the camera low, near the floor, and lie sideways to it.",
     safety: "Lift only a little and never force it. Skip it if you have back pain or are pregnant.",
@@ -76,7 +76,7 @@ POSES.push(
     group: "prone",
     holdKind: "steady",
     tint: "#E0ECF4",
-    image: "images/ardhabhujangasana.svg",
+    image: "images/ardhabhujangasana.webp",
     view: "side",
     camera: "Put the camera low, near the floor, and lie sideways to it.",
     safety: "Lift only as high as feels easy for your back. Skip it if you have back pain or are pregnant.",

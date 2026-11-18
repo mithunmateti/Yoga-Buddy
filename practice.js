@@ -16,12 +16,12 @@ import { PoseLandmarker, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@m
 import {
   measureJoints, calculateScore, canSee, outsidePicture, bodyLooksReal,
   smoothJoints, addHiddenJoints, startFresh, isWrong, jointToFix, tipFor, facing
-} from "./pose-check.js?v=20261111b";
+} from "./pose-check.js?v=20261118a";
 
 // The voice coach (coach.js), its voice (voice.js) and its sentences (phrases.js)
-import { startCoach, restartCoach, stopCoach, updateCoach, checksNow, handTarget } from "./coach.js?v=20261111b";
-import { unlockSound, chooseVoice } from "./voice.js?v=20261111b";
-import { SAY } from "./phrases.js?v=20261111b";
+import { startCoach, restartCoach, stopCoach, updateCoach, checksNow, handTarget } from "./coach.js?v=20261118a";
+import { unlockSound, chooseVoice } from "./voice.js?v=20261118a";
+import { SAY } from "./phrases.js?v=20261118a";
 
 // Where MediaPipe's helper files and the trained pose models are.
 // "lite" is the fastest model: phones use it, so they don't get hot and

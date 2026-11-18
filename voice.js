@@ -16,8 +16,8 @@
 // Everything said is split into sentences and played one after another.
 // =============================================================
 
-import { GEMINI_KEY } from "./gemini-key.js?v=20261111b";
-import { sentences, sentenceKey, forSpeaking } from "./phrases.js?v=20261111b";
+import { GEMINI_KEY } from "./gemini-key.js?v=20261118a";
+import { sentences, sentenceKey, forSpeaking } from "./phrases.js?v=20261118a";
 
 const AI_VOICE = "Sulafat";                 // must match VOICE in voice/make-recordings.mjs
 const RECORDINGS = "voice/sulafat/";        // where the ready-made recordings are

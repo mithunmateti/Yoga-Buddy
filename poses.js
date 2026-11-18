@@ -92,7 +92,7 @@ const POSES = [
     level: "Easy",                 // shown on the pose card: "Easy", "Medium" or "Hard"
     focus: "Posture",
     tint: "#F3ECE0",               // the pose's own soft colour (cards, guide)
-    image: "images/tadasana.png",
+    image: "images/tadasana.webp",
     view: "front",                  // "front" = face the camera, "side" = turn sideways
     safety: "If you get headaches, sleep badly or have low blood pressure, don't stand still for too long. Come down off your toes if you wobble.",
     // Steps follow the Common Yoga Protocol (Ministry of AYUSH) version of Tadasana.
@@ -134,7 +134,7 @@ const POSES = [
     level: "Medium",
     focus: "Balance",
     tint: "#E1F0E8",
-    image: "images/vrikshasana.png",
+    image: "images/vrikshasana.webp",
     view: "front",
     safety: "Never press your foot on your knee. If you get dizzy or have a balance problem, stand next to a wall.",
     // Steps follow the Common Yoga Protocol (Ministry of AYUSH) version.
@@ -176,7 +176,7 @@ const POSES = [
     level: "Easy",
     focus: "Hip opener",
     tint: "#F8E4DC",
-    image: "images/virabhadrasana2.png",
+    image: "images/virabhadrasana2.webp",
     view: "front",
     safety: "Keep your front knee over your ankle, pointing the same way as your toes. Keep the outer edge of your back foot pressing down. Go gently if your knees or hips hurt.",
     // DRAFT steps written by Claude. Advaith Sai, please check and edit.
@@ -217,7 +217,7 @@ const POSES = [
     level: "Easy",
     focus: "Strong legs",
     tint: "#ECE6F5",
-    image: "images/utkatasana.png",
+    image: "images/utkatasana.webp",
     view: "side",
     safety: "Keep your knees pointing straight ahead over your toes, never twisting: bent knees are easy to hurt. Go gently if your knees or back hurt.",
     // DRAFT steps written by Claude. Advaith Sai, please check and edit.
@@ -260,7 +260,7 @@ const POSES = [
     level: "Easy",
     focus: "Back stretch",
     tint: "#E2EDF6",
-    image: "images/bhujangasana.png",
+    image: "images/bhujangasana.webp",
     view: "side",
     // DRAFT steps written by Claude. Advaith Sai, please check and edit.
     steps: [
@@ -317,7 +317,7 @@ const POSES = [
     level: "Medium",
     focus: "Full body flow",
     tint: "#FBE7D2",
-    image: "images/suryanamaskar.svg",
+    image: "images/suryanamaskar.webp",
     view: "side",
     rounds: 2,   // the number chosen on the guide screen replaces this (hold-time.js)
     roundNote: "One round is the 12 positions, one after another. Round 1 steps back with your right leg, round 2 with your left, and so on. Yoga Buddy's voice will guide you. 🔊",
