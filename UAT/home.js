@@ -19,10 +19,34 @@ showHello();
 document.addEventListener("profilechange", showHello);
 
 // ----- Your week: the streak, today's minutes, and Monday to Sunday -----
-// A day counts when you practised for 10 minutes (progress.js). A ⭐ day is
-// one where you held all 5 poses.
+// A day counts when you practised for your daily goal (progress.js). A ⭐ day
+// is one where you held all 5 poses. Until a goal is chosen, the card asks
+// for one, with the recommended goal marked.
+let pickingGoal = false;   // the "Change" button opened the goal choices
+
+function goalPicker() {
+  const recommended = recommendedMinutes();
+  const chosen = chosenGoal();
+  const buttons = GOAL_CHOICES.map(function (minutes) {
+    const classes = ["goal-option"];
+    if (minutes === chosen) classes.push("chosen");
+    if (minutes === recommended) classes.push("recommended");
+    return `<button type="button" class="${classes.join(" ")}" data-goal="${minutes}">
+        <b>${minutes}</b><small>min</small>${minutes === recommended ? '<span class="goal-tag">⭐ Best for you</span>' : ""}
+      </button>`;
+  }).join("");
+  return `
+    <div class="goal-picker">
+      <p class="goal-title">🎯 ${chosen ? "Change your daily goal" : "Choose your daily goal"}</p>
+      <p class="goal-hint">Practise this long each day to keep your streak. We recommend <b>${recommended} minutes</b>. ${recommendedReason()}</p>
+      <div class="goal-options">${buttons}</div>
+    </div>`;
+}
+
 function showStreak() {
   const progress = loadProgress();
+  const STREAK_MINUTES = dailyGoal();
+  const askGoal = !chosenGoal() || pickingGoal;
   const streak = currentStreak(progress);
   const minutesToday = Math.floor(((progress[dayKey()] || {}).seconds || 0) / 60);
   const week = thisWeek(progress);
@@ -53,10 +77,26 @@ function showStreak() {
         <div class="streak-bar"><span style="width: ${Math.min(100, minutesToday / STREAK_MINUTES * 100)}%"></span></div>
       </div>
     </div>
+    ${askGoal ? goalPicker() : `<p class="goal-line">🎯 Daily goal: <b>${STREAK_MINUTES} min</b> <button type="button" class="goal-change">Change</button></p>`}
     <ol class="week">${days}</ol>
     <p class="streak-note">⭐ ${allFiveDays} day${allFiveDays === 1 ? "" : "s"} with all 5 basic asanas this week</p>
   `;
 }
+
+// Tapping a goal saves it; "Change" opens the choices again
+document.getElementById("streak").addEventListener("click", function (event) {
+  const option = event.target.closest("[data-goal]");
+  if (option) {
+    setDailyGoal(Number(option.dataset.goal));
+    pickingGoal = false;
+    showStreak();
+  } else if (event.target.closest(".goal-change")) {
+    pickingGoal = true;
+    showStreak();
+  }
+});
+// The recommendation depends on the age, which may be asked after the page opens
+document.addEventListener("profilechange", showStreak);
 showStreak();
 // Coming back to this page (e.g. with the Back button) shows the newest numbers
 window.addEventListener("pageshow", showStreak);

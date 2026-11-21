@@ -5,7 +5,7 @@
 // to someone else.
 // =============================================================
 
-import { sayFresh, unlockSound, chooseVoice } from "./voice.js?v=20261121e";
+import { sayFresh, unlockSound, chooseVoice } from "./voice.js?v=20261122a";
 
 chooseVoice("");   // the same voice as the practice screen
 let settings = loadSettings();
@@ -92,9 +92,26 @@ function showStreakSummary() {
   const streak = currentStreak(progress);
   const minutes = Math.floor(((progress[dayKey()] || {}).seconds || 0) / 60);
   document.getElementById("streak-summary").textContent =
-    streak + " day" + (streak === 1 ? "" : "s") + " in a row · " + minutes + " min today";
+    streak + " day" + (streak === 1 ? "" : "s") + " in a row · " + minutes + " of " + dailyGoal() + " min today";
 }
 showStreakSummary();
+
+// The daily goal: 5–30 minutes, with ⭐ on the recommended one
+function showGoalChoices() {
+  const recommended = recommendedMinutes();
+  const goal = dailyGoal();
+  document.getElementById("goal-choices").innerHTML = GOAL_CHOICES.map(function (minutes) {
+    return `<label><input type="radio" name="goal" value="${minutes}"${minutes === goal ? " checked" : ""}>` +
+           `<span>${minutes === recommended ? '<span class="goal-star">⭐</span>' : ""}${minutes}m</span></label>`;
+  }).join("");
+  document.getElementById("goal-hint").textContent =
+    "Practise this long each day to keep your streak. ⭐ We recommend " + recommended + " minutes. " + recommendedReason();
+}
+showGoalChoices();
+document.getElementById("goal-choices").addEventListener("change", function (event) {
+  setDailyGoal(Number(event.target.value));
+  showStreakSummary();
+});
 
 // Buttons that need two taps: the first explains, the second does it
 function twoTaps(button, warning, sureText, action) {
@@ -129,6 +146,8 @@ twoTaps(document.getElementById("switch-person"), document.getElementById("switc
     try {
       localStorage.removeItem(PROFILE_NAME);
       localStorage.removeItem(PROGRESS_NAME);
+      localStorage.removeItem(GOAL_NAME);
+      localStorage.removeItem("yogaBuddyRecord");
       localStorage.removeItem(SETTINGS_NAME);
       localStorage.removeItem("yogaBuddyHoldTimes");
       localStorage.removeItem("yogaBuddyRounds");
@@ -138,3 +157,4 @@ twoTaps(document.getElementById("switch-person"), document.getElementById("switc
     }
     location.href = "index.html";   // the start page and the questions come back
   });
+document.addEventListener("profilechange", showGoalChoices);   // the age decides the recommendation
