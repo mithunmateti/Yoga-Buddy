@@ -16,12 +16,13 @@ import { PoseLandmarker, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@m
 import {
   measureJoints, calculateScore, canSee, outsidePicture, bodyLooksReal,
   smoothJoints, addHiddenJoints, startFresh, isWrong, jointToFix, tipFor, facing
-} from "./pose-check.js?v=20261121c";
+} from "./pose-check.js?v=20261121d";
 
 // The voice coach (coach.js), its voice (voice.js) and its sentences (phrases.js)
-import { startCoach, restartCoach, stopCoach, updateCoach, checksNow, handTarget } from "./coach.js?v=20261121c";
-import { unlockSound, chooseVoice } from "./voice.js?v=20261121c";
-import { SAY } from "./phrases.js?v=20261121c";
+import { startCoach, restartCoach, stopCoach, updateCoach, checksNow, handTarget } from "./coach.js?v=20261121d";
+import { unlockSound, chooseVoice } from "./voice.js?v=20261121d";
+import { SAY } from "./phrases.js?v=20261121d";
+import { canCastPage, startCasting, stopCasting, isCasting, onCastChange, sendToTv } from "./cast.js?v=20261121d";
 
 // Where MediaPipe's helper files and the trained pose models are.
 // "lite" is the fastest model: phones use it, so they don't get hot and
@@ -285,11 +286,63 @@ function loop() {
     drawSkeleton(points, check.joints);
     drawAngleLabels(check.joints);
     drawHandTarget(handTarget());
+    tellTheTv();
   }
 
   // Ask the browser to run loop() again before the next screen refresh
   requestAnimationFrame(loop);
 }
+
+
+// ----- Showing it on a TV (cast.js) -----
+// The skeleton lines and dots from drawSkeleton, as 0–1 positions
+const tvFrame = { bones: [], dots: [] };
+const castButton = document.getElementById("cast-button");
+const castHelp = document.getElementById("cast-help");
+
+function tellTheTv() {
+  if (!isCasting()) {
+    return;
+  }
+  const timerCard = document.getElementById("timer-card");
+  const timer = timerCard && !timerCard.hidden
+    ? document.getElementById("timer-seconds").textContent + " s held · " + document.getElementById("timer-note").textContent
+    : "";
+  sendToTv({
+    pose: document.getElementById("pose-name").textContent,
+    score: scoreText.textContent,
+    tip: tipText.textContent,
+    tipGood: tipText.classList.contains("good"),
+    coach: document.getElementById("coach-text").textContent,
+    timer: timer,
+    aspect: video.videoWidth && video.videoHeight ? video.videoWidth / video.videoHeight : 0.75,
+    bones: tvFrame.bones,
+    dots: tvFrame.dots
+  });
+}
+
+// 📺: cast to a TV if this browser can (Chrome + Chromecast), otherwise
+// show how to mirror the screen with the phone's own button
+castButton.addEventListener("click", async function () {
+  if (isCasting()) {
+    stopCasting();
+    return;
+  }
+  const started = canCastPage() && await startCasting();
+  if (!started) {
+    castHelp.hidden = false;
+  }
+});
+
+document.getElementById("cast-help-close").addEventListener("click", function () {
+  castHelp.hidden = true;
+});
+
+onCastChange(function (casting) {
+  castButton.classList.toggle("casting", casting);
+  castButton.setAttribute("aria-label", casting ? "Stop showing on the TV" : "Show on a TV");
+  castButton.title = castButton.getAttribute("aria-label");
+});
 
 
 // The hand check (coach.js) needs where the hands and shoulders are.
@@ -369,6 +422,8 @@ function drawSkeleton(points, joints) {
 
   // Wipe off the last drawing
   pen.clearRect(0, 0, canvas.width, canvas.height);
+  tvFrame.bones = [];
+  tvFrame.dots = [];
 
   // Nobody found in this picture: nothing to draw
   if (!points) {
@@ -389,6 +444,7 @@ function drawSkeleton(points, joints) {
       continue;
     }
     pen.strokeStyle = colours.bones[boneKey(bone[0], bone[1])] || WHITE;
+    tvFrame.bones.push([1 - start.x, start.y, 1 - end.x, end.y, pen.strokeStyle]);
     pen.beginPath();
     pen.moveTo(toX(start), toY(start));
     pen.lineTo(toX(end), toY(end));
@@ -402,6 +458,7 @@ function drawSkeleton(points, joints) {
       continue;
     }
     pen.fillStyle = colours.dots[number] || WHITE;
+    tvFrame.dots.push([1 - point.x, point.y, pen.fillStyle]);
     pen.beginPath();
     pen.arc(toX(point), toY(point), 10, 0, 2 * Math.PI);   // a circle with radius 10
     pen.fill();
