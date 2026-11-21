@@ -16,13 +16,13 @@ import { PoseLandmarker, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@m
 import {
   measureJoints, calculateScore, canSee, outsidePicture, bodyLooksReal,
   smoothJoints, addHiddenJoints, startFresh, isWrong, jointToFix, tipFor, facing
-} from "./pose-check.js?v=20261121d";
+} from "./pose-check.js?v=20261121e";
 
 // The voice coach (coach.js), its voice (voice.js) and its sentences (phrases.js)
-import { startCoach, restartCoach, stopCoach, updateCoach, checksNow, handTarget } from "./coach.js?v=20261121d";
-import { unlockSound, chooseVoice } from "./voice.js?v=20261121d";
-import { SAY } from "./phrases.js?v=20261121d";
-import { canCastPage, startCasting, stopCasting, isCasting, onCastChange, sendToTv } from "./cast.js?v=20261121d";
+import { startCoach, restartCoach, stopCoach, updateCoach, checksNow, handTarget } from "./coach.js?v=20261121e";
+import { unlockSound, chooseVoice } from "./voice.js?v=20261121e";
+import { SAY } from "./phrases.js?v=20261121e";
+import { canCastPage, startCasting, stopCasting, isCasting, onCastChange, sendToTv } from "./cast.js?v=20261121e";
 
 // Where MediaPipe's helper files and the trained pose models are.
 // "lite" is the fastest model: phones use it, so they don't get hot and
@@ -34,6 +34,15 @@ const MODEL_LITE = "https://storage.googleapis.com/mediapipe-models/pose_landmar
 const MODEL_FULL = "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/1/pose_landmarker_full.task";
 // A touch screen (phone or tablet) gets the lite model
 const onPhone = window.matchMedia("(pointer: coarse)").matches;
+// iPhones and iPads. Every browser on them (Safari, Chrome, …) is really
+// Safari inside (WebKit). (New iPads say they are a Mac, but have a touch screen.)
+const onApple = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+                (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+if (onApple) {
+  document.documentElement.classList.add("apple");   // style.css: lighter effects on iPhones
+}
+// For testing: practice.html?pose=tadasana&delegate=cpu (or gpu)
+const forcedDelegate = (new URLSearchParams(location.search).get("delegate") || "").toUpperCase();
 
 // Lines to draw between body points, using MediaPipe's landmark numbers
 // (PRD section 7): 11/12 shoulders, 13/14 elbows, 15/16 wrists,
@@ -113,24 +122,45 @@ const scoringOn = !!pose;
 //     new: whole 4:3 width (51°)                      → 2.0 m away
 //   head to feet 1.6 m (+20% room) up the picture (66°) → 1.5 m away
 const CAMERA_LONG_SIDE = 1280;
+const CAMERA_LONG_SIDE_APPLE = 640;
 
 let cameraUpright = null;   // which way the phone was held when the camera started
 
+let cameraTurn = 0;          // counts camera (re)starts: only the newest one counts
+let cameraSwitching = false; // true while the camera is (re)starting: don't track then
+
 async function startCamera() {
+  const myTurn = ++cameraTurn;
+  cameraSwitching = true;
+  try {
+    await openCamera(myTurn);
+  } finally {
+    if (myTurn === cameraTurn) {
+      cameraSwitching = false;
+    }
+  }
+}
+
+async function openCamera(myTurn) {
   // Ask the browser for the front ("user") camera. The browser asks
   // the user for permission the first time.
   // A phone or iPad held upright gets a tall picture (3:4), a laptop or a
   // phone on its side gets a wide one (4:3).
   const upright = window.innerHeight > window.innerWidth;
-  const longSide = CAMERA_LONG_SIDE;
+  // iPhones get a smaller picture (640 × 480): it still shows the camera's
+  // whole 4:3 view (so you stand just as close), but it is 4 times less
+  // work for the body tracker each picture, which iPhones need.
+  const longSide = onApple ? CAMERA_LONG_SIDE_APPLE : CAMERA_LONG_SIDE;
   const shortSide = Math.round(longSide * 3 / 4);
   const wanted = {
     facingMode: "user",
     aspectRatio: { ideal: upright ? 3 / 4 : 4 / 3 },
     width: { ideal: upright ? shortSide : longSide },
-    height: { ideal: upright ? longSide : shortSide },
-    resizeMode: { ideal: "none" }   // the camera's own picture, not a cut-out of it
+    height: { ideal: upright ? longSide : shortSide }
   };
+  if (!onApple) {
+    wanted.resizeMode = { ideal: "none" };   // the camera's own picture, not a cut-out of it
+  }
 
   let stream;
   try {
@@ -143,19 +173,90 @@ async function startCamera() {
     stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
   }
 
-  // Stop the old camera picture (when restarting after turning the phone)
-  const old = video.srcObject;
-  if (old) {
-    for (const track of old.getTracks()) {
-      track.stop();
-    }
+  // A newer restart started while we waited: this camera isn't needed
+  if (myTurn !== cameraTurn) {
+    stopStream(stream);
+    return;
   }
 
-  await zoomAllTheWayOut(stream.getVideoTracks()[0]);
+  // Stop the old camera picture (when restarting after turning the phone)
+  stopStream(video.srcObject);
+
+  const track = stream.getVideoTracks()[0];
+  await zoomAllTheWayOut(track);
+  watchTrack(track);
   cameraUpright = upright;
   video.srcObject = stream;   // show the camera in the <video> element
   await video.play();         // wait until the video is playing
+  lastVideoTime = -1;
+  lastNewPicture = performance.now();
 }
+
+function stopStream(stream) {
+  if (stream) {
+    for (const track of stream.getTracks()) {
+      track.stop();
+    }
+  }
+}
+
+// iPhones sometimes pause or cut off the camera (a phone call, Siri,
+// Control Center, switching app). Notice it and get the camera back.
+function watchTrack(track) {
+  if (!track) {
+    return;
+  }
+  track.addEventListener("ended", function () {
+    if (video.srcObject && video.srcObject.getVideoTracks()[0] === track) {
+      console.warn("Camera stopped by the phone: starting it again");
+      restartCamera();
+    }
+  });
+  track.addEventListener("unmute", function () {
+    video.play().catch(function () {});
+  });
+}
+
+// Start the camera again (at most once every 3 seconds)
+let lastRestart = -1e9;
+function restartCamera() {
+  const t = performance.now();
+  if (cameraSwitching || t - lastRestart < 3000) {
+    return;
+  }
+  lastRestart = t;
+  startCamera().catch(function (error) {
+    console.error(error);
+  });
+}
+
+// The camera watchdog, called by the main loop. If the video hasn't moved
+// on to a new picture for a while: first just press "play" again, and if
+// that doesn't help, start the camera again.
+let lastNewPicture = 0;
+function checkCameraIsMoving() {
+  if (cameraSwitching || document.hidden) {
+    lastNewPicture = performance.now();
+    return;
+  }
+  const still = performance.now() - lastNewPicture;
+  if (still > 1500 && video.paused) {
+    video.play().catch(function () {});
+  }
+  const track = video.srcObject ? video.srcObject.getVideoTracks()[0] : null;
+  if (still > 4000 || (track && track.readyState === "ended")) {
+    console.warn("Camera picture stuck for " + Math.round(still) + " ms: starting it again");
+    restartCamera();
+  }
+}
+
+// Coming back to the page: the phone paused the video, so play it again
+document.addEventListener("visibilitychange", function () {
+  if (!document.hidden && video.srcObject) {
+    lastNewPicture = performance.now();
+    video.play().catch(function () {});
+  }
+});
 
 // Some phones start the selfie camera a little zoomed in. If the browser
 // lets us (Chrome on Android, Safari 17+ on iPhone), zoom right out: a
@@ -206,20 +307,74 @@ async function loadPoseModel() {
   // Try the best choice first: the graphics chip (GPU) is faster than the
   // normal processor (CPU), and some devices can't use it for this. If the
   // full model can't load (e.g. a slow connection), the lite one still works.
-  const tries = onPhone
-    ? [[MODEL_LITE, "GPU"], [MODEL_LITE, "CPU"]]
-    : [[MODEL_FULL, "GPU"], [MODEL_FULL, "CPU"], [MODEL_LITE, "GPU"], [MODEL_LITE, "CPU"]];
+  // iPhones are the other way round: there, the GPU way makes the phone
+  // wait for the graphics chip after every picture, which can freeze the
+  // whole page a second after starting. The CPU way is smooth on iPhones.
+  let tries = onApple
+    ? [[MODEL_LITE, "CPU"], [MODEL_LITE, "GPU"]]
+    : onPhone
+      ? [[MODEL_LITE, "GPU"], [MODEL_LITE, "CPU"]]
+      : [[MODEL_FULL, "GPU"], [MODEL_FULL, "CPU"], [MODEL_LITE, "GPU"], [MODEL_LITE, "CPU"]];
+  if (forcedDelegate === "CPU" || forcedDelegate === "GPU") {
+    tries = tries.filter(function (choice) { return choice[1] === forcedDelegate; });
+  }
+  visionFiles = vision;
+  modelOptions = options;
   let lastError = null;
   for (const choice of tries) {
     try {
       options.baseOptions = { modelAssetPath: choice[0], delegate: choice[1] };
-      poseLandmarker = await PoseLandmarker.createFromOptions(vision, options);
+      // Give up on a choice that hangs (it happened on iPhones) and try the next
+      poseLandmarker = await withTimeLimit(PoseLandmarker.createFromOptions(vision, options), 20000);
+      trackerChoice = choice;
+      console.log("Body tracker: " + (choice[0] === MODEL_FULL ? "full" : "lite") + " model, " + choice[1]);
       return;
     } catch (error) {
       lastError = error;
+      console.warn("Body tracker " + choice[1] + " didn't load:", error);
     }
   }
   throw lastError;
+}
+
+let visionFiles = null;     // MediaPipe's helper files (to start the tracker again)
+let modelOptions = null;
+let trackerChoice = null;   // [model, "GPU" or "CPU"] that is running now
+let trackerSwitching = false;
+
+function withTimeLimit(promise, ms) {
+  return new Promise(function (resolve, reject) {
+    const timer = setTimeout(function () { reject(new Error("took too long")); }, ms);
+    promise.then(
+      function (value) { clearTimeout(timer); resolve(value); },
+      function (error) { clearTimeout(timer); reject(error); }
+    );
+  });
+}
+
+// Something is wrong with the tracker (it keeps failing, or the GPU way is
+// too slow): start it again the CPU way, which works everywhere
+async function switchTrackerToCPU(reason) {
+  if (trackerSwitching || !visionFiles) {
+    return;
+  }
+  trackerSwitching = true;
+  console.warn("Body tracker: switching to CPU (" + reason + ")");
+  try {
+    const old = poseLandmarker;
+    const options = Object.assign({}, modelOptions, {
+      baseOptions: { modelAssetPath: trackerChoice ? trackerChoice[0] : MODEL_LITE, delegate: "CPU" }
+    });
+    const fresh = await withTimeLimit(PoseLandmarker.createFromOptions(visionFiles, options), 20000);
+    poseLandmarker = fresh;
+    trackerChoice = [options.baseOptions.modelAssetPath, "CPU"];
+    lastStamp = 0;
+    try { old.close(); } catch (error) { /* already broken */ }
+  } catch (error) {
+    console.error("Body tracker: CPU didn't load either", error);
+  }
+  loopErrors = 0;
+  trackerSwitching = false;
 }
 
 
@@ -256,13 +411,43 @@ document.addEventListener("visibilitychange", function () {
 
 
 // ----- 4. The main loop: runs again and again, many times a second -----
-function loop() {
-  // Only check the video if it has moved on to a new picture
-  if (video.currentTime !== lastVideoTime) {
-    lastVideoTime = video.currentTime;
+let loopErrors = 0;     // problems in a row (a few in a row: start the tracker again)
+let lastStamp = 0;      // MediaPipe needs each picture's time to be later than the last
+let slowFrames = 0;     // GPU pictures that took too long (iPhones)
+let timedFrames = 0;
 
+function loop() {
+  // Book the next turn FIRST, so one problem can never stop the loop for good
+  requestAnimationFrame(loop);
+
+  checkCameraIsMoving();
+
+  // Only check the video if it is playing and has moved on to a new picture
+  const ready = !cameraSwitching && !trackerSwitching && video.readyState >= 2 &&
+                video.videoWidth > 0 && !video.paused;
+  if (ready && video.currentTime !== lastVideoTime) {
+    lastVideoTime = video.currentTime;
+    lastNewPicture = performance.now();
+    try {
+      lookAtPicture();
+      loopErrors = 0;
+    } catch (error) {
+      loopErrors++;
+      console.error("Body tracker problem (" + loopErrors + " in a row):", error);
+      if (loopErrors >= 3) {
+        switchTrackerToCPU("it kept failing");
+      }
+    }
+  }
+}
+
+function lookAtPicture() {
+  {
     // Ask MediaPipe to find the body in the current video picture
-    const result = poseLandmarker.detectForVideo(video, performance.now());
+    const stamp = Math.max(performance.now(), lastStamp + 1);
+    lastStamp = stamp;
+    const result = poseLandmarker.detectForVideo(video, stamp);
+    timeTheTracker(performance.now() - stamp);
 
     // result.landmarks is a list of people found. We asked for one,
     // so take the first. It is empty if nobody is in view.
@@ -288,9 +473,25 @@ function loop() {
     drawHandTarget(handTarget());
     tellTheTv();
   }
+}
 
-  // Ask the browser to run loop() again before the next screen refresh
-  requestAnimationFrame(loop);
+// On an iPhone, if the GPU way is in use and finding the body takes too long
+// (over 70 ms a picture, most of the time), switch to the CPU way
+function timeTheTracker(ms) {
+  if (!onApple || !trackerChoice || trackerChoice[1] !== "GPU" || forcedDelegate === "GPU") {
+    return;
+  }
+  timedFrames++;
+  if (ms > 70) {
+    slowFrames++;
+  }
+  if (timedFrames >= 20) {
+    if (slowFrames > 10) {
+      switchTrackerToCPU("too slow: " + slowFrames + " of 20 pictures over 70 ms");
+    }
+    timedFrames = 0;
+    slowFrames = 0;
+  }
 }
 
 
@@ -679,6 +880,9 @@ function showCheck(check) {
 const PHOTO_WIDTH = 640;
 const photoCanvas = document.createElement("canvas");
 function takePhoto() {
+  if (!video.videoWidth) {
+    return null;   // the camera is (re)starting: no photo this time
+  }
   photoCanvas.width = PHOTO_WIDTH;
   photoCanvas.height = Math.round(PHOTO_WIDTH * video.videoHeight / video.videoWidth);
   photoCanvas.getContext("2d").drawImage(video, 0, 0, photoCanvas.width, photoCanvas.height);
@@ -770,6 +974,7 @@ async function start() {
     await loadPoseModel();
 
     statusText.textContent = "";   // an empty message is hidden
+    lastNewPicture = performance.now();   // the watchdog starts counting now
     loop();
   } catch (error) {
     console.error(error);
