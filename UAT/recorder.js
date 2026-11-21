@@ -10,14 +10,14 @@
 // and the browser's MediaRecorder turns that canvas into a video file.
 // It all happens on this device. Nothing is uploaded.
 //
-// Saving it:
+// Saving it: when the pose is finished and Done is tapped, practice.js
+// offers a Save button (only if recording was switched on):
 //   • iPhone / iPad: websites aren't allowed to put files in Photos by
-//     themselves, so a "Save to Photos" button opens the share sheet,
-//     where "Save Video" puts it in Photos (one tap).
-//   • Android: the video is downloaded straight away, so it appears in
-//     the Gallery / Google Photos (Download folder). A button can save
-//     or share it again.
-//   • Laptop: it is downloaded to the Downloads folder.
+//     themselves, so Save opens the share sheet, where "Save Video" puts
+//     it in Photos.
+//   • Android: Save downloads it, and it appears in the Gallery /
+//     Google Photos (Download album).
+//   • Laptop: Save downloads it to the Downloads folder.
 // =============================================================
 
 const CHOICE_NAME = "yogaBuddyRecord";   // remembers the "Record my practice" switch
@@ -300,13 +300,10 @@ function makeFile() {
   }
   lastClip = { file: file, url: URL.createObjectURL(blob), name: name };
 
-  // Android and laptops: save it straight away. iPhone: needs a tap (see saveClip).
-  let saved = false;
-  if (!onApple) {
-    saved = download(lastClip);
-  }
+  // It is saved when the person taps Save (practice.js shows the button
+  // at the end, when Done is tapped).
   if (onFinished) {
-    onFinished({ saved: saved, onApple: onApple, onAndroid: onAndroid, seconds: Math.round((performance.now() - startedAt) / 1000) });
+    onFinished({ saved: false, onApple: onApple, onAndroid: onAndroid, seconds: Math.round((performance.now() - startedAt) / 1000) });
   }
 }
 
@@ -334,6 +331,11 @@ function download(clip) {
 export async function saveClip() {
   if (!lastClip) {
     return "none";
+  }
+  // Android and laptops: download it (Android puts downloaded videos in the
+  // Gallery). iPhone: the share sheet, where "Save Video" puts it in Photos.
+  if (!onApple && download(lastClip)) {
+    return "downloaded";
   }
   const files = [lastClip.file];
   if (navigator.canShare && navigator.share && navigator.canShare({ files: files })) {
