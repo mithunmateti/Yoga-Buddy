@@ -20,9 +20,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="style.css?v=20261122a">
+  <link rel="stylesheet" href="style.css?v=20261122b">
   <!-- Light or dark mode, set before anything is drawn (theme.js) -->
-  <script src="theme.js?v=20261122a"></script>
+  <script src="theme.js?v=20261122b"></script>
 </head>
 <body class="settings-body">
   <!-- SCREEN 4: SETTINGS -->
@@ -119,7 +119,12 @@
           <b>🎯 Daily goal</b>
           <small id="goal-hint">Practise this long each day to keep your streak.</small>
         </span>
-        <div id="goal-choices" class="segmented" role="radiogroup" aria-label="Daily goal in minutes"></div>
+        <p class="goal-value" id="goal-value"></p>
+        <div class="goal-slider-wrap">
+          <input id="goal-slider" class="goal-slider" type="range" min="5" max="90" step="5" aria-label="Daily goal in minutes">
+          <span id="goal-mark" class="goal-mark" title="Recommended">⭐</span>
+        </div>
+        <div class="goal-scale"><span>5 min</span><span>45 min</span><span>1 h 30</span></div>
       </div>
       <p id="streak-warning" class="sheet-warning" hidden>
         This sets your streak and this week's days back to 0. Your name and settings stay.
@@ -138,17 +143,17 @@
     <p class="settings-about">Yoga Buddy · made for the science fair 🧘</p>
   </main>
 
-  <script src="settings.js?v=20261122a"></script>
-  <script src="profile.js?v=20261122a"></script>
-  <script src="poses.js?v=20261122a"></script>
-  <script src="poses-standing.js?v=20261122a"></script>
-  <script src="poses-sitting.js?v=20261122a"></script>
-  <script src="poses-kneeling.js?v=20261122a"></script>
-  <script src="poses-supine.js?v=20261122a"></script>
-  <script src="poses-prone.js?v=20261122a"></script>
-  <script src="poses-arm-support.js?v=20261122a"></script>
-  <script src="flows.js?v=20261122a"></script>
-  <script src="progress.js?v=20261122a"></script>
-  <script type="module" src="settings-page.js?v=20261122a"></script>
+  <script src="settings.js?v=20261122b"></script>
+  <script src="profile.js?v=20261122b"></script>
+  <script src="poses.js?v=20261122b"></script>
+  <script src="poses-standing.js?v=20261122b"></script>
+  <script src="poses-sitting.js?v=20261122b"></script>
+  <script src="poses-kneeling.js?v=20261122b"></script>
+  <script src="poses-supine.js?v=20261122b"></script>
+  <script src="poses-prone.js?v=20261122b"></script>
+  <script src="poses-arm-support.js?v=20261122b"></script>
+  <script src="flows.js?v=20261122b"></script>
+  <script src="progress.js?v=20261122b"></script>
+  <script type="module" src="settings-page.js?v=20261122b"></script>
 </body>
 </html>

@@ -8,13 +8,15 @@
 //   goal:    the daily goal (minutes) that day
 //
 // A day counts for your streak when you practised for your daily goal.
-// You choose the goal (5–30 minutes) and the app recommends one for your
+// You choose the goal (5 minutes to 1.5 hours, on a slider) and the app recommends one for your
 // age. The home screen (home.js) shows the streak and this week's days.
 // =============================================================
 
 const PROGRESS_NAME = "yogaBuddyProgress";
 const GOAL_NAME = "yogaBuddyGoal";           // the daily goal you chose, in minutes
-const GOAL_CHOICES = [5, 10, 15, 20, 30];
+const GOAL_MIN = 5;              // the slider goes from 5 minutes…
+const GOAL_MAX = 90;             // …to 1.5 hours
+const GOAL_STEP = 5;
 const OLD_STREAK_MINUTES = 10;   // days saved before you could choose counted at 10 minutes
 
 // The goal we recommend, from your age (profile.js). Short enough to do
@@ -46,7 +48,7 @@ function recommendedReason() {
 function chosenGoal() {
   try {
     const minutes = Number(localStorage.getItem(GOAL_NAME));
-    return GOAL_CHOICES.includes(minutes) ? minutes : null;
+    return minutes >= GOAL_MIN && minutes <= GOAL_MAX ? minutes : null;
   } catch (error) {
     return null;
   }
@@ -67,6 +69,14 @@ function setDailyGoal(minutes) {
   const progress = loadProgress();
   todayIn(progress).goal = minutes;
   saveProgress(progress);
+}
+
+// "25 min", "1 h", "1 h 30 min"
+function goalText(minutes) {
+  if (minutes < 60) return minutes + " min";
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return h + " h" + (m ? " " + m + " min" : "");
 }
 
 // The goal for one day: the goal that day, or for older days the old 10 minutes
