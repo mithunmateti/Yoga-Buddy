@@ -24,10 +24,10 @@
 // The voice itself is in voice.js; the fixed sentences are in phrases.js.
 // =============================================================
 
-import { worstJoint, tipFor, isWrong } from "./pose-check.js?v=20261121e";
-import { buddyOn, askBuddy } from "./buddy.js?v=20261121e";
-import { say, sayFresh, isTalking, quietFor, stopTalking } from "./voice.js?v=20261121e";
-import { SAY, startIn, countFor, heldFor, roundStart, roundsDone, finishedFlow, stayFor } from "./phrases.js?v=20261121e";
+import { worstJoint, tipFor, isWrong } from "./pose-check.js?v=20261122g";
+import { buddyOn, askBuddy } from "./buddy.js?v=20261122g";
+import { say, sayFresh, isTalking, quietFor, stopTalking } from "./voice.js?v=20261122g";
+import { SAY, startIn, countFor, heldFor, roundStart, roundsDone, finishedFlow, stayFor } from "./phrases.js?v=20261122g";
 
 // ----- Settings you can change -----
 const GET_READY_SECONDS = 5;  // after Start: time to step back before the steps begin
@@ -117,6 +117,12 @@ function hello() {
 
 function wellDoneName() {
   return window.yogaProfile ? "Well done, " + window.yogaProfile.name + "!" : SAY.wellDone;
+}
+
+// Where the coach is now: "countdown", "findBody", "handCheck", "steps",
+// "hold", "done" or "off" (practice.js uses it to start and stop recording)
+export function coachStage() {
+  return stage;
 }
 
 // Start again from the beginning (the "Restart" button)

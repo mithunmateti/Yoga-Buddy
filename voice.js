@@ -16,8 +16,8 @@
 // Everything said is split into sentences and played one after another.
 // =============================================================
 
-import { GEMINI_KEY } from "./gemini-key.js?v=20261121e";
-import { sentences, sentenceKey, forSpeaking } from "./phrases.js?v=20261121e";
+import { GEMINI_KEY } from "./gemini-key.js?v=20261122g";
+import { sentences, sentenceKey, forSpeaking } from "./phrases.js?v=20261122g";
 
 const AI_VOICE = "Sulafat";                 // must match VOICE in voice/make-recordings.mjs
 const RECORDINGS = "voice/sulafat/";        // where the ready-made recordings are
@@ -48,6 +48,7 @@ let pieceStarted = 0;         // when the current sentence started (seconds)
 let quietSince = 0;           // when we last finished talking (seconds)
 let round = 0;                // goes up when we stop, so old sentences are dropped
 let currentWords = null;      // kept here so the browser doesn't throw the words away
+let currentText = "";         // the piece being said now
 const liveSounds = new Map(); // sentences Gemini made live this time: key → Promise of a sound
 const restUntil = {};         // model → time until which Google asked us to wait
 
@@ -149,15 +150,29 @@ function bestComputerVoice() {
 // Browsers only play sound after you tap something. Call this inside a
 // click (the Start and Try buttons): it plays a tiny silent sound, which
 // lets the page play the voice later.
-export function unlockSound() {
-  // iPhones and iPads (Safari 17+): play sound even when the silent switch is on
+// iPhones and iPads (Safari 17+): "playback" plays sound even when the
+// silent switch is on. While recording with the microphone it must be
+// "play-and-record" instead (the microphone doesn't work with "playback"),
+// which is also not muted by the silent switch.
+let soundType = "playback";
+
+export function soundForRecording(on) {
+  soundType = on ? "play-and-record" : "playback";
+  setSoundType();
+}
+
+function setSoundType() {
   if (navigator.audioSession) {
     try {
-      navigator.audioSession.type = "playback";
+      navigator.audioSession.type = soundType;
     } catch (error) {
       // not allowed here: the silent switch decides
     }
   }
+}
+
+export function unlockSound() {
+  setSoundType();
   player.src = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA=";
   player.play().catch(function () {});
   if (canSpeak) {
@@ -166,6 +181,37 @@ export function unlockSound() {
     hello.volume = 0;
     speechSynthesis.resume();
     speechSynthesis.speak(hello);
+  }
+}
+
+// iPhones: starting or stopping a video recording (recorder.js) changes the
+// phone's sound settings. That can cut off the sentence being said and
+// leave the voice stuck, or send it to the quiet ear speaker. This puts the
+// sound back on the loudspeaker and says the cut-off sentence again.
+export function wakeVoice() {
+  if (navigator.audioSession) {
+    try {
+      navigator.audioSession.type = "auto";
+      setTimeout(setSoundType, 60);
+    } catch (error) {
+      // not allowed here
+    }
+  }
+  if (!busy && !freshPending) {
+    if (canSpeak) {
+      speechSynthesis.resume();   // in case Safari left it "paused"
+    }
+    return;
+  }
+  // Still talking normally? Then nothing was cut off: leave it alone
+  if (canSpeak && speechSynthesis.speaking && !speechSynthesis.paused) {
+    return;
+  }
+  // Say what was cut off (and what was waiting) again, from the start
+  const again = [busy ? currentText : ""].concat(queue.map(function (piece) { return piece.text; }))
+    .filter(Boolean).join(" ");
+  if (again) {
+    sayFresh(again);
   }
 }
 
@@ -263,6 +309,7 @@ async function playNext(myRound) {
   }
   busy = true;
   pieceStarted = now();
+  currentText = piece.text;
   // A recording or live sound, or null = computer voice. Only wait when we
   // have to: Safari only lets the first sentence play if it starts straight
   // away inside the tap, not after waiting.

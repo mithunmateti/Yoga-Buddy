@@ -5,12 +5,85 @@
 //   seconds: how long you practised (only while the camera can see you)
 //   poses:   which poses you held for the full time you chose
 //
-// A day counts for your streak when you practised for 10 minutes.
-// The home screen (home.js) shows the streak and this week's days.
+//   goal:    the daily goal (minutes) that day
+//
+// A day counts for your streak when you practised for your daily goal.
+// You choose the goal (5 minutes to 1.5 hours, on a slider) and the app recommends one for your
+// age. The home screen (home.js) shows the streak and this week's days.
 // =============================================================
 
 const PROGRESS_NAME = "yogaBuddyProgress";
-const STREAK_MINUTES = 10;      // practise this long in a day to keep the streak
+const GOAL_NAME = "yogaBuddyGoal";           // the daily goal you chose, in minutes
+const GOAL_MIN = 5;              // the slider goes from 5 minutes…
+const GOAL_MAX = 90;             // …to 1.5 hours
+const GOAL_STEP = 5;
+const OLD_STREAK_MINUTES = 10;   // days saved before you could choose counted at 10 minutes
+
+// The goal we recommend, from your age (profile.js). Short enough to do
+// every day: doing a little each day builds the habit better than a lot
+// once a week.
+//   under 13: 10 min · 13–17: 15 min · 18–59: 20 min · 60 and over: 15 min
+function recommendedMinutes() {
+  const profile = (typeof getProfile === "function" ? getProfile() : null) || window.yogaProfile || {};
+  const age = Number(profile.age);
+  if (!age) return 10;
+  if (age < 13) return 10;
+  if (age < 18) return 15;
+  if (age < 60) return 20;
+  return 15;
+}
+
+// Why we recommend it (shown under the choices)
+function recommendedReason() {
+  const profile = (typeof getProfile === "function" ? getProfile() : null) || window.yogaProfile || {};
+  const age = Number(profile.age);
+  if (!age) return "A good start for anyone.";
+  if (age < 13) return "Just right for kids: short and fun every day.";
+  if (age < 18) return "Fits around school, and enough to build strength and focus.";
+  if (age < 60) return "Enough to feel stronger and calmer, without taking over your day.";
+  return "Gentle and steady every day.";
+}
+
+// The goal you chose, or null if you haven't chosen yet
+function chosenGoal() {
+  try {
+    const minutes = Number(localStorage.getItem(GOAL_NAME));
+    return minutes >= GOAL_MIN && minutes <= GOAL_MAX ? minutes : null;
+  } catch (error) {
+    return null;
+  }
+}
+
+// The goal in use now: your choice, or the recommended one until you choose
+function dailyGoal() {
+  return chosenGoal() || recommendedMinutes();
+}
+
+function setDailyGoal(minutes) {
+  try {
+    localStorage.setItem(GOAL_NAME, String(minutes));
+  } catch (error) {
+    // storage blocked: the goal works for this visit only
+  }
+  // Today counts with the new goal
+  const progress = loadProgress();
+  todayIn(progress).goal = minutes;
+  saveProgress(progress);
+}
+
+// "25 min", "1 h", "1 h 30 min"
+function goalText(minutes) {
+  if (minutes < 60) return minutes + " min";
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return h + " h" + (m ? " " + m + " min" : "");
+}
+
+// The goal for one day: the goal that day, or for older days the old 10 minutes
+function goalFor(day, isToday) {
+  if (isToday) return dailyGoal();
+  return (day && day.goal) || OLD_STREAK_MINUTES;
+}
 
 // Today's date as "2026-10-28" (in the person's own time zone)
 function dayKey(date) {
@@ -47,7 +120,9 @@ function todayIn(progress) {
 // Add some practice time to today (practice.js calls this every few seconds)
 function addPracticeTime(seconds) {
   const progress = loadProgress();
-  todayIn(progress).seconds += seconds;
+  const day = todayIn(progress);
+  day.seconds += seconds;
+  day.goal = dailyGoal();   // remember today's goal, so changing it later doesn't change old days
   saveProgress(progress);
 }
 
@@ -61,9 +136,9 @@ function recordPose(poseId) {
   saveProgress(progress);
 }
 
-// Did this day count for the streak? (10 minutes of practice)
-function streakDay(day) {
-  return !!day && day.seconds >= STREAK_MINUTES * 60;
+// Did this day count for the streak? (practised for that day's goal)
+function streakDay(day, isToday) {
+  return !!day && day.seconds >= goalFor(day, isToday) * 60;
 }
 
 // Did you hold all 5 Basic Asanas that day?
@@ -73,15 +148,16 @@ function allPosesDay(day) {
     .every(function (pose) { return day.poses.includes(pose.id); });
 }
 
-// How many days in a row you practised for 10 minutes. Today counts once
+// How many days in a row you reached your daily goal. Today counts once
 // it is done; until then the streak from yesterday still stands.
 function currentStreak(progress) {
   const date = new Date();
-  if (!streakDay(progress[dayKey(date)])) {
+  const today = dayKey(date);
+  if (!streakDay(progress[today], true)) {
     date.setDate(date.getDate() - 1);
   }
   let days = 0;
-  while (streakDay(progress[dayKey(date)])) {
+  while (streakDay(progress[dayKey(date)], dayKey(date) === today)) {
     days++;
     date.setDate(date.getDate() - 1);
   }
@@ -101,7 +177,7 @@ function thisWeek(progress) {
       letter: "MTWTFSS"[i],
       isToday: dayKey(date) === dayKey(),
       isFuture: date > new Date() && dayKey(date) !== dayKey(),
-      practised: streakDay(day),
+      practised: streakDay(day, dayKey(date) === dayKey()),
       allFive: allPosesDay(day)
     });
   }

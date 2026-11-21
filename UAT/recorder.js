@@ -18,6 +18,12 @@
 // How it works: a hidden canvas is redrawn about 30 times a second with
 // the newest camera picture, the skeleton and the words, and the
 // browser's MediaRecorder turns that canvas into an MP4 (or WebM) video.
+//
+// Sound: browsers don't let any website record their built-in voice
+// directly, so the video's sound comes from the phone's microphone, which
+// hears the voice coach through the loudspeaker (and you). Echo
+// cancelling is switched off, otherwise the phone would remove the
+// coach's voice on purpose.
 // =============================================================
 
 const FRAMES_PER_SECOND = 30;
@@ -29,21 +35,31 @@ const onAndroid = /Android/i.test(navigator.userAgent);
 
 // The video types to try, best first. MP4 works in Photos and every
 // gallery app; WebM is for older Chrome versions that can't make MP4.
-const TYPES = ["video/mp4;codecs=avc1", "video/mp4", "video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"];
+const TYPES = ["video/mp4;codecs=avc1,mp4a.40.2", "video/mp4", "video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm"];
+
+// The microphone settings for recording (practice.js asks for them with the camera)
+export const MIC_WISHES = { echoCancellation: false, noiseSuppression: false, autoGainControl: false };
+
+// The Yoga Buddy logo, drawn small in the corner of the video
+const logo = new Image();
+logo.src = "images/icon-192.png";
 
 const sheet = document.createElement("canvas");   // the hidden canvas the video is made from
 const pen = sheet.getContext("2d");
 
 let recorder = null;
-let pieces = [];
 let startedAt = 0;
 let stopTimer = null;
 let clockTimer = null;
 let drawTimer = null;
 let getFrame = null;     // practice.js: gives { video, skeleton, words } for each picture
 let drawing = true;      // recording our drawing (false: the plain camera)
-let lastClip = null;     // { file, url, name, saved } of the newest video
+let clips = [];          // the videos made on this visit: { file, url, name, saved }
 let fileWaiters = [];    // waiting for the video file (see whenFileReady)
+let audioCtx = null;     // Web Audio: carries the microphone into the video
+let soundOut = null;     // …into this, whose sound track goes into every video
+let micNode = null;
+let micStream = null;    // the camera stream with the microphone in it
 let finishing = false;   // stopped, and the video file is still being made
 
 // Can this browser record? (Safari 14.5+ on iPhone, Chrome on Android and laptops)
@@ -86,7 +102,7 @@ export function hasVideoComing() {
 // record our drawing; then the plain camera is recorded).
 // Gives back true if it started.
 export function startRecording(frameGiver, camera) {
-  if (isRecording() || !canRecord()) {
+  if (hasVideoComing() || !canRecord()) {
     return false;
   }
   getFrame = frameGiver;
@@ -100,11 +116,11 @@ export function startRecording(frameGiver, camera) {
   sheet.height = upright ? long : short;
   drawFrame();
 
-  let stream = null;
+  let pictures = null;
   drawing = canDraw();
   if (drawing) {
     try {
-      stream = sheet.captureStream(FRAMES_PER_SECOND);
+      pictures = sheet.captureStream(FRAMES_PER_SECOND);
     } catch (error) {
       drawing = false;
     }
@@ -113,32 +129,62 @@ export function startRecording(frameGiver, camera) {
     if (!camera) {
       return false;   // practice.js tries again once the camera is on
     }
-    stream = camera;
+    pictures = new MediaStream(camera.getVideoTracks());
   }
 
+  // The sound track: always there (silent until the microphone is connected)
+  const sound = soundTrack();
+  if (camera) {
+    useMicrophone(camera);
+  }
+  const withSound = sound ? new MediaStream(pictures.getVideoTracks().concat([sound])) : pictures;
+
+  const first = makeRecorder(withSound);
+  if (first && startWith(first)) {
+    return true;
+  }
+  // This browser can't record that sound: record the pictures only
+  const quiet = sound ? makeRecorder(pictures) : null;
+  return !!quiet && startWith(quiet);
+}
+
+function makeRecorder(stream) {
   const type = bestType();
   try {
-    recorder = type
+    return type
       ? new MediaRecorder(stream, { mimeType: type, videoBitsPerSecond: 2500000 })
       : new MediaRecorder(stream);
   } catch (error) {
     try {
-      recorder = new MediaRecorder(stream);   // this browser chooses
+      return new MediaRecorder(stream);   // this browser chooses
     } catch (error2) {
       console.warn("Recording isn't possible here", error2);
-      recorder = null;
-      return false;
+      return null;
     }
   }
+}
 
-  pieces = [];
-  recorder.addEventListener("dataavailable", function (event) {
+// Collect the pieces of this recorder, start it, start drawing
+function startWith(mine) {
+  recorder = mine;
+  const pieces = [];
+  mine.addEventListener("dataavailable", function (event) {
     if (event.data && event.data.size > 0) {
       pieces.push(event.data);
     }
   });
-  recorder.addEventListener("stop", makeFile);
-  recorder.start(1000);   // a piece every second, so a long video isn't one huge block
+  mine.addEventListener("stop", function () {
+    makeFile(mine, pieces);
+  });
+  try {
+    if (mine.state === "inactive") {
+      mine.start(1000);   // a piece every second, so a long video isn't one huge block
+    }
+  } catch (error) {
+    console.warn("Recording isn't possible here", error);
+    recorder = null;
+    return false;
+  }
   startedAt = performance.now();
   stopTimer = setTimeout(stopRecording, LONGEST);
   if (drawing) {
@@ -146,6 +192,46 @@ export function startRecording(frameGiver, camera) {
   }
   showRecLight(true);
   return true;
+}
+
+// The video's sound track (made once). Must first happen inside a tap
+// (Start recording), or iPhones keep the sound switched off.
+function soundTrack() {
+  try {
+    if (!audioCtx) {
+      const Context = window.AudioContext || window.webkitAudioContext;
+      audioCtx = new Context();
+      soundOut = audioCtx.createMediaStreamDestination();
+    }
+    if (audioCtx.state === "suspended") {
+      audioCtx.resume();
+    }
+    return soundOut.stream.getAudioTracks()[0] || null;
+  } catch (error) {
+    return null;   // no Web Audio: videos without sound
+  }
+}
+
+// The camera stream came with the microphone: carry it into the video.
+// (Called again when the camera restarts, e.g. after turning the phone.)
+export function useMicrophone(stream) {
+  micStream = stream;
+  if (!audioCtx || !soundOut || !stream) {
+    return;
+  }
+  const tracks = stream.getAudioTracks();
+  if (!tracks.length) {
+    return;
+  }
+  try {
+    if (micNode) {
+      micNode.disconnect();
+    }
+    micNode = audioCtx.createMediaStreamSource(new MediaStream([tracks[0]]));
+    micNode.connect(soundOut);   // NOT to the loudspeaker (that would howl)
+  } catch (error) {
+    console.warn("Couldn't use the microphone for the video", error);
+  }
 }
 
 // Stop recording. The video file is ready a moment later (whenFileReady).
@@ -225,9 +311,32 @@ function drawWords(words, w, h) {
     text("score", w - pad, pad + unit * 2.2, unit * 0.7, "#ffffff", "right");
   }
   if (words.tip) {
-    wrapText(words.tip, w / 2, h - pad - unit * 3.4, w - pad * 2, unit, words.tipGood ? "#7CF29A" : "#ffffff", text);
+    wrapText(words.tip, w / 2, h - pad - unit * 5, w - pad * 2, unit, words.tipGood ? "#7CF29A" : "#ffffff", text);
   }
-  text("Yoga Buddy", w - pad, h - pad - unit * 0.8, unit * 0.65, "rgba(255,255,255,0.85)", "right");
+  drawLogo(w, h, unit);
+}
+
+// The Yoga Buddy logo as a small watermark in the bottom-right corner
+function drawLogo(w, h, unit) {
+  if (!logo.complete || !logo.naturalWidth) {
+    return;
+  }
+  const size = Math.round(unit * 1.7);
+  const x = w - size - unit * 0.6;
+  const y = h - size - unit * 0.6;
+  const r = size * 0.22;   // rounded corners, like the app icon
+  pen.save();
+  pen.globalAlpha = 0.85;
+  pen.beginPath();
+  pen.moveTo(x + r, y);
+  pen.arcTo(x + size, y, x + size, y + size, r);
+  pen.arcTo(x + size, y + size, x, y + size, r);
+  pen.arcTo(x, y + size, x, y, r);
+  pen.arcTo(x, y, x + size, y, r);
+  pen.closePath();
+  pen.clip();
+  pen.drawImage(logo, x, y, size, size);
+  pen.restore();
 }
 
 // Long tips go over two lines
@@ -248,30 +357,27 @@ function wrapText(str, x, y, maxWidth, unit, colour, text) {
 }
 
 // The recording has stopped: join the pieces into one video file
-function makeFile() {
-  const type = (recorder && recorder.mimeType) || bestType() || "video/mp4";
-  recorder = null;
-  finishing = false;
-  if (!pieces.length) {
-    finishWaiting();
-    return;
+function makeFile(mine, pieces) {
+  const type = mine.mimeType || bestType() || "video/mp4";
+  if (recorder === mine) {
+    recorder = null;
+    finishing = false;
   }
-  const blob = new Blob(pieces, { type: type.split(";")[0] });
-  pieces = [];
-  const ending = type.includes("mp4") ? "mp4" : "webm";
-  const stamp = new Date();
-  const name = "Yoga-Buddy-" + stamp.getFullYear() + "-" + pad2(stamp.getMonth() + 1) + "-" + pad2(stamp.getDate()) +
-               "-" + pad2(stamp.getHours()) + pad2(stamp.getMinutes()) + pad2(stamp.getSeconds()) + "." + ending;
-  if (lastClip) {
-    URL.revokeObjectURL(lastClip.url);
+  if (pieces.length) {
+    const blob = new Blob(pieces, { type: type.split(";")[0] });
+    const ending = type.includes("mp4") ? "mp4" : "webm";
+    const stamp = new Date();
+    const name = "Yoga-Buddy-" + stamp.getFullYear() + "-" + pad2(stamp.getMonth() + 1) + "-" + pad2(stamp.getDate()) +
+                 "-" + pad2(stamp.getHours()) + pad2(stamp.getMinutes()) + pad2(stamp.getSeconds()) +
+                 (clips.length ? "-" + (clips.length + 1) : "") + "." + ending;
+    let file;
+    try {
+      file = new File([blob], name, { type: blob.type });
+    } catch (error) {
+      file = blob;   // very old browsers: no File; a Blob still downloads
+    }
+    clips.push({ file: file, url: URL.createObjectURL(blob), name: name, saved: false });
   }
-  let file;
-  try {
-    file = new File([blob], name, { type: blob.type });
-  } catch (error) {
-    file = blob;   // very old browsers: no File; a Blob still downloads
-  }
-  lastClip = { file: file, url: URL.createObjectURL(blob), name: name, saved: false };
   finishWaiting();
 }
 
@@ -294,8 +400,12 @@ export function whenFileReady() {
   });
 }
 
+function unsavedClips() {
+  return clips.filter(function (clip) { return !clip.saved; });
+}
+
 export function hasUnsavedClip() {
-  return !!lastClip && !lastClip.saved;
+  return unsavedClips().length > 0;
 }
 
 function pad2(n) {
@@ -316,40 +426,56 @@ function download(clip) {
   }
 }
 
-// Save the newest video. On an iPhone this must happen inside a tap (Done):
-// the share sheet opens, and "Save Video" puts it in Photos.
-// Gives back "saved", "cancelled" (share sheet closed), "needs-tap"
-// (iPhone: not inside a tap any more) or "failed".
+// Save every video that hasn't been saved yet (usually one; more if
+// "Practice again" was used). On an iPhone this must happen inside a tap
+// (Done): the share sheet opens, and "Save Video" puts them in Photos.
+// Gives back "saved", "downloaded" (iPhone: went to the Files app instead),
+// "cancelled" (share sheet closed), "needs-tap" (iPhone: not inside a tap
+// any more) or "failed".
 export async function saveClip() {
-  if (!lastClip) {
+  const todo = unsavedClips();
+  if (!todo.length) {
     return "failed";
   }
-  // Android and laptops: download it (Android shows downloaded videos in
+  // Android and laptops: download them (Android shows downloaded videos in
   // the Gallery and Google Photos)
-  if (!onApple && download(lastClip)) {
-    lastClip.saved = true;
-    return "saved";
+  if (!onApple) {
+    let all = true;
+    for (const clip of todo) {
+      if (download(clip)) {
+        clip.saved = true;
+      } else {
+        all = false;
+      }
+    }
+    if (all) {
+      return "saved";
+    }
   }
-  const files = [lastClip.file];
+  const left = unsavedClips();
+  const files = left.map(function (clip) { return clip.file; });
   if (navigator.canShare && navigator.share && navigator.canShare({ files: files })) {
     try {
       await navigator.share({ files: files });
-      lastClip.saved = true;
+      left.forEach(function (clip) { clip.saved = true; });
       return "saved";
     } catch (error) {
       if (error.name === "AbortError") {
         return "cancelled";    // the person closed the share sheet
       }
-      if (error.name === "NotAllowedError") {
-        return "needs-tap";    // not inside a tap any more
+      if (onApple) {
+        return "needs-tap";    // not inside a tap any more (or another hiccup): ask for a tap
       }
     }
   }
-  if (download(lastClip)) {
-    lastClip.saved = true;
-    return "saved";
+  let any = false;
+  for (const clip of left) {
+    if (download(clip)) {
+      clip.saved = true;
+      any = true;
+    }
   }
-  return "failed";
+  return any ? (onApple ? "downloaded" : "saved") : "failed";
 }
 
 // Where the saved video went, for the message on the screen

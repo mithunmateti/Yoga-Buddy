@@ -16,13 +16,14 @@ import { PoseLandmarker, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@m
 import {
   measureJoints, calculateScore, canSee, outsidePicture, bodyLooksReal,
   smoothJoints, addHiddenJoints, startFresh, isWrong, jointToFix, tipFor, facing
-} from "./pose-check.js?v=20261121e";
+} from "./pose-check.js?v=20261122g";
 
 // The voice coach (coach.js), its voice (voice.js) and its sentences (phrases.js)
-import { startCoach, restartCoach, stopCoach, updateCoach, checksNow, handTarget } from "./coach.js?v=20261121e";
-import { unlockSound, chooseVoice } from "./voice.js?v=20261121e";
-import { SAY } from "./phrases.js?v=20261121e";
-import { canCastPage, startCasting, stopCasting, isCasting, onCastChange, sendToTv } from "./cast.js?v=20261121e";
+import { startCoach, restartCoach, stopCoach, updateCoach, checksNow, handTarget, coachStage } from "./coach.js?v=20261122g";
+import { MIC_WISHES, useMicrophone, canRecord, whyNoRecording, isRecording, hasVideoComing, startRecording, stopRecording, whenFileReady, hasUnsavedClip, saveClip, savedWhere } from "./recorder.js?v=20261122g";
+import { unlockSound, chooseVoice, wakeVoice, soundForRecording } from "./voice.js?v=20261122g";
+import { SAY } from "./phrases.js?v=20261122g";
+import { canCastPage, startCasting, stopCasting, isCasting, onCastChange, sendToTv } from "./cast.js?v=20261122g";
 
 // Where MediaPipe's helper files and the trained pose models are.
 // "lite" is the fastest model: phones use it, so they don't get hot and
@@ -164,13 +165,13 @@ async function openCamera(myTurn) {
 
   let stream;
   try {
-    stream = await navigator.mediaDevices.getUserMedia({ video: wanted, audio: false });
+    stream = await getCamera(wanted);
   } catch (error) {
     if (error.name !== "OverconstrainedError" && error.name !== "TypeError") {
       throw error;   // e.g. permission refused: show that message
     }
     // A browser that doesn't like one of the wishes: just the front camera
-    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
+    stream = await getCamera({ facingMode: "user" });
   }
 
   // A newer restart started while we waited: this camera isn't needed
@@ -186,10 +187,29 @@ async function openCamera(myTurn) {
   await zoomAllTheWayOut(track);
   watchTrack(track);
   cameraUpright = upright;
-  video.srcObject = stream;   // show the camera in the <video> element
+  useMicrophone(stream);      // recording: the microphone goes into the video (recorder.js)
+  video.srcObject = stream;   // show the camera in the <video> element (muted: no echo)
   await video.play();         // wait until the video is playing
   lastVideoTime = -1;
   lastNewPicture = performance.now();
+}
+
+// The camera, plus the microphone while recording (so the video has the
+// voice coach's sound). If the microphone is refused, just the camera.
+let micRefused = false;
+async function getCamera(videoWishes) {
+  if (recordingWanted && !micRefused) {
+    try {
+      return await navigator.mediaDevices.getUserMedia({ video: videoWishes, audio: MIC_WISHES });
+    } catch (error) {
+      if (error.name === "OverconstrainedError" || error.name === "TypeError") {
+        throw error;   // a camera wish problem: handled by the caller
+      }
+      micRefused = true;   // e.g. "Don't allow" for the microphone: record without sound
+      console.warn("No microphone for the recording:", error);
+    }
+  }
+  return navigator.mediaDevices.getUserMedia({ video: videoWishes, audio: false });
 }
 
 function stopStream(stream) {
@@ -472,6 +492,7 @@ function lookAtPicture() {
     drawAngleLabels(check.joints);
     drawHandTarget(handTarget());
     tellTheTv();
+    recordThePractice();
   }
 }
 
@@ -493,6 +514,204 @@ function timeTheTracker(ms) {
     slowFrames = 0;
   }
 }
+
+
+// ----- Start recording (recorder.js) -----
+// "🔴 Start recording" on the Start screen (or ⏺ in the top bar) starts the
+// practice AND the video straight away. The video stops by itself a moment
+// after the pose and its hold are done. Tapping Done then saves it to
+// Photos (iPhone) / the Gallery (Android) / Downloads (laptop) and says so.
+const startRecordButton = document.getElementById("start-record-button");
+const recordButton = document.getElementById("record-button");
+const clipSheet = document.getElementById("clip-sheet");
+const clipTitle = document.getElementById("clip-title");
+const clipText = document.getElementById("clip-text");
+const clipSave = document.getElementById("clip-save");
+const clipClose = document.getElementById("clip-close");
+let recordingWanted = false;   // the person chose to record this practice
+let recordingStarted = false;  // a recorder was started for it
+let recordingFailed = false;   // it couldn't start: don't keep trying
+let doneSince = null;          // when the coach said the pose was finished
+let closeGoesHome = false;     // the message's other button goes to the home screen
+
+// What goes into each picture of the video
+function frameNow() {
+  const timerCard = document.getElementById("timer-card");
+  return {
+    video: video,
+    skeleton: canvas,
+    words: {
+      pose: pose ? pose.sanskrit : "",
+      timer: timerCard && !timerCard.hidden ? timerCard.querySelector(".timer-number").textContent : "",
+      score: scoreText.textContent !== "\u2013" ? scoreText.textContent : "",
+      scoreColour: scoreCard.dataset.band === "great" ? "#7CF29A" : scoreCard.dataset.band === "ok" ? "#FFD166" : "#FF9F6B",
+      tip: tipText.textContent,
+      tipGood: tipText.classList.contains("good")
+    }
+  };
+}
+
+function beginRecording() {
+  if (recordingFailed) {
+    return false;
+  }
+  const ok = startRecording(frameNow, video.srcObject);
+  if (ok && onApple) {
+    setTimeout(wakeVoice, 600);   // starting a recorder can silence the voice on iPhones
+  }
+  showRecordButton();
+  return ok;
+}
+
+// Called for every new camera picture (the main loop)
+function recordThePractice() {
+  if (!recordingWanted) {
+    return;
+  }
+  if (!isRecording()) {
+    // This browser can only record the plain camera: start once it is on
+    if (!recordingStarted && !recordingFailed && video.srcObject && !hasVideoComing()) {
+      recordingStarted = beginRecording();
+      if (!recordingStarted) {
+        recordingFailed = true;
+        showMessage("\ud83c\udfa5 Recording", "Sorry, this phone couldn't start the recording. The practice carries on without it.", "", "OK", false);
+      }
+    }
+    return;
+  }
+  // The pose (and its hold) is done: stop a moment later, so the video is
+  // ready by the time Done is tapped
+  if (coachStage() === "done") {
+    doneSince = doneSince || performance.now();
+    if (performance.now() - doneSince > 700) {   // before the result card appears (1.2 s)
+      stopRecording();
+      showRecordButton();
+    }
+  } else {
+    doneSince = null;
+  }
+}
+
+function showRecordButton() {
+  const on = isRecording();
+  recordButton.classList.toggle("armed", on);
+  recordButton.setAttribute("aria-pressed", on ? "true" : "false");
+  recordButton.querySelector(".record-word").textContent = on ? "Stop" : "Record";
+}
+
+// The ⏺ button in the top bar
+recordButton.addEventListener("click", function () {
+  if (!canRecord()) {
+    showMessage("\ud83c\udfa5 Recording", whyNoRecording(), "", "OK", false);
+    return;
+  }
+  if (!document.body.classList.contains("live")) {
+    startPractice(true);   // before Start: the same as "Start recording"
+    return;
+  }
+  if (isRecording()) {
+    stopRecording();       // kept until Done (or Restart) saves it
+    recordingWanted = false;
+    showRecordButton();
+    return;
+  }
+  recordingWanted = true;
+  recordingFailed = false;
+  // The camera was started without the microphone: start it again with it,
+  // so the video has sound
+  const live = video.srcObject;
+  if (live && !live.getAudioTracks().length && !micRefused) {
+    soundForRecording(true);
+    startCamera().catch(function (error) { console.error(error); });
+  }
+  // (A video still being finished is kept; Done saves all of them)
+  whenFileReady().then(function () { recordingStarted = beginRecording(); });
+});
+
+// A message on the screen (the same card as the Save video card)
+function showMessage(title, text, saveText, closeText, goesHome) {
+  clipTitle.textContent = title;
+  clipText.textContent = text;
+  clipSave.hidden = !saveText;
+  clipSave.textContent = saveText || "";
+  clipSave.disabled = false;
+  clipClose.hidden = !closeText;
+  clipClose.textContent = closeText || "";
+  closeGoesHome = goesHome;
+  if (goesHome) {
+    document.getElementById("result").hidden = true;   // only the message, not the score card behind it
+  }
+  clipSheet.hidden = false;
+}
+
+// Save the video now and say so. Must start inside a tap for iPhones.
+async function saveNow(thenGoHome) {
+  const result = await saveClip();
+  const where = savedWhere();
+  const saveWord = onApple ? "Save to Photos" : "Save video";
+  const home = thenGoHome ? "Go to home" : "OK";
+  if (result === "saved") {
+    showMessage("\u2705 Saved", "The recording has been saved to your " + where + ".", "", home, thenGoHome);
+    if (thenGoHome) {
+      setTimeout(goHome, 3500);
+    }
+  } else if (result === "downloaded") {
+    showMessage("\u2705 Saved", "The recording has been saved to your Files app (Downloads). Open it there and tap Save Video to put it in Photos.", "", home, thenGoHome);
+  } else if (result === "cancelled") {
+    showMessage("\ud83c\udfa5 Not saved yet", "The recording wasn't saved. Tap " + saveWord + " to save it.",
+                saveWord, thenGoHome ? "Don't save, go home" : "Close", thenGoHome);
+  } else if (result === "needs-tap") {
+    showMessage("\ud83c\udfa5 Your recording is ready", "Tap " + saveWord + " to put it in your " + where + ".",
+                saveWord, thenGoHome ? "Don't save, go home" : "Close", thenGoHome);
+  } else {
+    showMessage("\ud83c\udfa5 Recording", "Sorry, the recording couldn't be saved on this phone.", "", home, thenGoHome);
+  }
+}
+
+function goHome() {
+  location.href = "index.html";
+}
+
+clipSave.addEventListener("click", function () {
+  saveNow(closeGoesHome);
+});
+
+clipClose.addEventListener("click", function () {
+  if (closeGoesHome) {
+    goHome();
+  } else {
+    clipSheet.hidden = true;
+  }
+});
+
+// "Done" on the result screen: save the video (if there is one), say so, go home
+document.getElementById("result-done").addEventListener("click", async function (event) {
+  if (!hasVideoComing() && !hasUnsavedClip()) {
+    return;   // nothing recorded: go home as normal
+  }
+  event.preventDefault();
+  if (!hasVideoComing()) {
+    saveNow(true);   // straight away, inside the tap (iPhone share sheet)
+    return;
+  }
+  // Done was tapped very quickly: finish the video first
+  stopRecording();
+  showRecordButton();
+  showMessage("\ud83c\udfa5 Saving your recording\u2026", "Just a moment.", "", "", true);
+  if (await whenFileReady()) {
+    saveNow(true);
+  } else {
+    goHome();
+  }
+});
+
+document.getElementById("rec-light").addEventListener("click", function () {
+  stopRecording();
+  recordingWanted = false;
+  showRecordButton();
+});
+window.addEventListener("pagehide", stopRecording);
+showRecordButton();
 
 
 // ----- Showing it on a TV (cast.js) -----
@@ -979,6 +1198,9 @@ async function start() {
   } catch (error) {
     console.error(error);
     stopCoach();   // no countdown or talking over the problem
+    stopRecording();   // nothing to record without the camera or the tracker
+    recordingWanted = false;
+    showRecordButton();
     showProblem(friendlyMessage(stage, error));
   }
 }
@@ -1050,20 +1272,45 @@ document.addEventListener("visibilitychange", function () {
 // The Start button: hide the start screen and start the voice coach
 // straight away (talking inside the click is what lets the browser use
 // the voice). Its 5-second countdown runs while the camera starts.
-startButton.addEventListener("click", function () {
+// "🔴 Start recording" does the same, and starts the video in the same tap.
+function startPractice(withRecording) {
   document.body.classList.add("live");   // a phone held upright fills the screen (style.css)
   keepScreenOn();
   startPanel.hidden = true;
   restartButton.hidden = false;
+  if (withRecording && canRecord()) {
+    soundForRecording(true);   // iPhones: the microphone needs "play and record" sound
+  }
   unlockSound();
+  if (withRecording) {
+    if (canRecord()) {
+      recordingWanted = true;
+      recordingStarted = beginRecording();
+    } else {
+      showMessage("\ud83c\udfa5 Recording", whyNoRecording(), "", "OK", false);
+    }
+  }
   if (scoringOn) {
     startCoach(pose, takePhoto);
   }
   start();
+}
+
+startButton.addEventListener("click", function () {
+  startPractice(false);
+});
+startRecordButton.addEventListener("click", function () {
+  startPractice(true);
 });
 
 // The Restart button: forget the old angles and start the steps again
 restartButton.addEventListener("click", function () {
+  // Recording was on and the last video finished: record the new try too.
+  // (Done saves all the videos at the end. Still recording? It keeps going.)
+  if (recordingWanted && !isRecording()) {
+    whenFileReady().then(function () { recordingStarted = beginRecording(); });
+  }
+  doneSince = null;
   startFresh();
   unlockSound();
   if (scoringOn) {

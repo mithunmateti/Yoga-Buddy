@@ -5,7 +5,7 @@
 // to someone else.
 // =============================================================
 
-import { sayFresh, unlockSound, chooseVoice } from "./voice.js?v=20261121e";
+import { sayFresh, unlockSound, chooseVoice } from "./voice.js?v=20261122g";
 
 chooseVoice("");   // the same voice as the practice screen
 let settings = loadSettings();
@@ -92,49 +92,27 @@ function showStreakSummary() {
   const streak = currentStreak(progress);
   const minutes = Math.floor(((progress[dayKey()] || {}).seconds || 0) / 60);
   document.getElementById("streak-summary").textContent =
-    streak + " day" + (streak === 1 ? "" : "s") + " in a row · " + minutes + " min today";
+    streak + " day" + (streak === 1 ? "" : "s") + " in a row · " + minutes + " of " + dailyGoal() + " min today";
 }
 showStreakSummary();
 
-// Buttons that need two taps: the first explains, the second does it
-function twoTaps(button, warning, sureText, action) {
-  const firstText = button.textContent;
-  button.addEventListener("click", function () {
-    if (warning.hidden) {
-      warning.hidden = false;
-      button.textContent = sureText;
-      button.classList.add("danger");
-      return;
-    }
-    action();
-    warning.hidden = true;
-    button.textContent = firstText;
-    button.classList.remove("danger");
-  });
+// The daily goal: a slider from 5 minutes to 1.5 hours, ⭐ at the recommended one
+const goalSlider = document.getElementById("goal-slider");
+function showGoalChoices() {
+  const recommended = recommendedMinutes();
+  goalSlider.value = dailyGoal();
+  document.getElementById("goal-value").textContent = goalText(dailyGoal());
+  document.getElementById("goal-mark").style.left =
+    "calc(15px + (100% - 30px) * " + ((recommended - GOAL_MIN) / (GOAL_MAX - GOAL_MIN)) + ")";
+  document.getElementById("goal-hint").textContent =
+    "Practise this long each day to keep your streak. ⭐ We recommend " + goalText(recommended) + ". " + recommendedReason();
 }
-
-twoTaps(document.getElementById("reset-streak"), document.getElementById("streak-warning"),
-  "Yes, reset my streak", function () {
-    try {
-      localStorage.removeItem(PROGRESS_NAME);
-    } catch (error) {
-      // storage blocked: nothing was saved anyway
-    }
-    showStreakSummary();
-  });
-
-// ----- 4. Switch person: remove everything, then start again -----
-twoTaps(document.getElementById("switch-person"), document.getElementById("switch-warning"),
-  "Yes, remove and start again", function () {
-    try {
-      localStorage.removeItem(PROFILE_NAME);
-      localStorage.removeItem(PROGRESS_NAME);
-      localStorage.removeItem(SETTINGS_NAME);
-      localStorage.removeItem("yogaBuddyHoldTimes");
-      localStorage.removeItem("yogaBuddyRounds");
-      sessionStorage.removeItem("yogaBuddyStarted");
-    } catch (error) {
-      // storage blocked: nothing was saved anyway
-    }
-    location.href = "index.html";   // the start page and the questions come back
-  });
+showGoalChoices();
+goalSlider.addEventListener("input", function () {
+  document.getElementById("goal-value").textContent = goalText(Number(goalSlider.value));
+});
+goalSlider.addEventListener("change", function () {
+  setDailyGoal(Number(goalSlider.value));
+  showStreakSummary();
+});
+document.addEventListener("profilechange", showGoalChoices);   // the age decides the recommendation

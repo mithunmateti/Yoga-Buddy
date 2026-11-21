@@ -3248,3 +3248,393 @@ html[data-theme="dark"] .secondary-button::before {
   -webkit-backdrop-filter: none !important;
   backdrop-filter: none !important;
 }
+
+/* ----- 24. Record my practice (recorder.js) ----- */
+.record-choice {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: min(380px, 100%);
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: var(--radius-small);
+  text-align: left;
+  cursor: pointer;
+}
+
+.record-choice[hidden] {
+  display: none;
+}
+
+.record-choice-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.record-choice-text small {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.85rem;
+  line-height: 1.35;
+}
+
+.record-choice .switch {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.record-choice .switch:checked {
+  background: #E5484D;
+}
+
+/* "● REC 0:12 ■ Stop" at the top-left of the camera */
+.rec-light {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 6;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 0;
+  border-radius: 999px;
+  color: white;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.rec-light[hidden] {
+  display: none;
+}
+
+.rec-dot {
+  width: 10px;
+  height: 10px;
+  background: #E5484D;
+  border-radius: 50%;
+  animation: rec-blink 1s infinite;
+}
+
+.rec-stop {
+  margin-left: 4px;
+  padding-left: 8px;
+  border-left: 1px solid rgba(255, 255, 255, 0.35);
+  font-weight: 700;
+  opacity: 0.85;
+}
+
+@keyframes rec-blink {
+  50% { opacity: 0.25; }
+}
+
+/* On a phone in full screen, keep it below the top buttons */
+@media (max-width: 820px) and (orientation: portrait) {
+  body.live .rec-light {
+    position: fixed;
+    top: calc(env(safe-area-inset-top, 0px) + 64px);
+  }
+}
+
+/* ----- 25. Daily goal for the streak (home.js, settings) ----- */
+.goal-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 14px 0 0;
+  color: var(--text-soft);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.goal-line b {
+  color: var(--text);
+}
+
+.goal-change {
+  margin-left: auto;
+  padding: 4px 12px;
+  background: var(--primary-soft);
+  border: 0;
+  border-radius: 999px;
+  color: var(--primary);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.goal-picker {
+  margin-top: 16px;
+  padding: 14px;
+  background: var(--primary-soft);
+  border-radius: var(--radius-small);
+}
+
+.goal-title {
+  margin: 0;
+  font-weight: 800;
+}
+
+.goal-hint {
+  margin: 4px 0 12px;
+  color: var(--text-soft);
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+
+.goal-options {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+
+.goal-option {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 0 8px;
+  background: var(--card);
+  border: 2px solid transparent;
+  border-radius: var(--radius-small);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.goal-option b {
+  font-size: 1.3rem;
+  line-height: 1.1;
+}
+
+.goal-option small {
+  color: var(--text-soft);
+  font-size: 0.75rem;
+}
+
+.goal-option.recommended {
+  border-color: var(--primary);
+  padding-top: 18px;
+}
+
+.goal-option.chosen {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+}
+
+.goal-option.chosen small {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.goal-tag {
+  position: absolute;
+  top: -9px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 1px 6px;
+  background: var(--primary);
+  border-radius: 999px;
+  color: white;
+  font-size: 0.6rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+/* Settings: "⭐" next to the recommended goal */
+.segmented .goal-star {
+  font-size: 0.75em;
+}
+
+#goal-choices span {
+  white-space: nowrap;
+}
+
+#goal-choices .goal-star {
+  margin-right: -2px;
+}
+
+/* The daily goal slider (home and settings) */
+.goal-value {
+  margin: 4px 0 2px;
+  color: var(--primary);
+  font-size: 1.6rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+[data-theme="dark"] .goal-value {
+  color: #7FD3C8;
+}
+
+.goal-slider-wrap {
+  position: relative;
+  padding: 14px 0 6px;   /* room for the ⭐ above the bar */
+}
+
+.goal-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  width: 100%;
+  height: 10px;
+  margin: 0;
+  background: rgba(31, 111, 107, 0.22);
+  border-radius: 999px;
+  outline: none;
+  touch-action: pan-y;
+}
+
+.goal-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 30px;
+  height: 30px;
+  background: var(--primary);
+  border: 4px solid white;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+}
+
+.goal-slider::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  background: var(--primary);
+  border: 4px solid white;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.goal-slider:focus-visible::-webkit-slider-thumb {
+  outline: 3px solid var(--primary-soft);
+}
+
+/* The ⭐ above the recommended place on the bar (a 30px thumb travels
+   15px in from each end, so the star follows the same path) */
+.goal-mark {
+  position: absolute;
+  top: -6px;
+  font-size: 0.9rem;
+  line-height: 1;
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+
+.goal-scale {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 2px;
+  color: var(--text-soft);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.goal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+/* The ⏺ Record button in the top bar */
+.record-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 44px;
+  padding: 0 14px 0 12px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  color: white;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.record-icon {
+  width: 14px;
+  height: 14px;
+  border: 2px solid #E5484D;
+  border-radius: 50%;
+}
+
+/* On: a filled red dot and a red ring */
+.record-button.armed {
+  background: rgba(229, 72, 77, 0.22);
+  border-color: #E5484D;
+}
+
+.record-button.armed .record-icon {
+  background: #E5484D;
+}
+
+/* On a phone during practice there's little room: just the dot */
+@media (max-width: 820px) and (orientation: portrait) {
+  body.live .record-button {
+    width: 44px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  body.live .record-button .record-word {
+    display: none;
+  }
+}
+
+.record-switch-disabled,
+.record-choice .switch:disabled {
+  opacity: 0.4;
+}
+
+/* "Start" and "🔴 Start recording" side by side (one above the other on a narrow phone) */
+.start-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+}
+
+.record-start-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(229, 72, 77, 0.18);
+  border: 2px solid #E5484D;
+  box-shadow: none;
+  color: white;
+}
+
+.record-start-button:hover {
+  background: rgba(229, 72, 77, 0.3);
+}
+
+.record-start-button .record-icon {
+  width: 16px;
+  height: 16px;
+  background: #E5484D;
+  border: 0;
+}
+
+.start-panel .record-start-note {
+  max-width: 340px;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+/* The recording message card: solid, above everything */
+#clip-sheet {
+  z-index: 80;
+}
+
+#clip-sheet .cast-help-card {
+  background: #13201E;
+}

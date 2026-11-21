@@ -19,10 +19,36 @@ showHello();
 document.addEventListener("profilechange", showHello);
 
 // ----- Your week: the streak, today's minutes, and Monday to Sunday -----
-// A day counts when you practised for 10 minutes (progress.js). A ⭐ day is
-// one where you held all 5 poses.
+// A day counts when you practised for your daily goal (progress.js). A ⭐ day
+// is one where you held all 5 poses. Until a goal is chosen, the card asks
+// for one, with the recommended goal marked.
+let pickingGoal = false;   // the "Change" button opened the goal choices
+
+function goalPicker() {
+  const recommended = recommendedMinutes();
+  const value = chosenGoal() || recommended;
+  const markAt = (recommended - GOAL_MIN) / (GOAL_MAX - GOAL_MIN);   // 0 to 1 along the bar
+  return `
+    <div class="goal-picker">
+      <p class="goal-title">🎯 ${chosenGoal() ? "Change your daily goal" : "Choose your daily goal"}</p>
+      <p class="goal-hint">Practise this long each day to keep your streak. ⭐ We recommend <b>${goalText(recommended)}</b>. ${recommendedReason()}</p>
+      <p class="goal-value" id="goal-value">${goalText(value)}</p>
+      <div class="goal-slider-wrap">
+        <input id="goal-slider" class="goal-slider" type="range" min="${GOAL_MIN}" max="${GOAL_MAX}" step="${GOAL_STEP}" value="${value}" aria-label="Daily goal in minutes">
+        <span class="goal-mark" style="left: calc(15px + (100% - 30px) * ${markAt})" title="Recommended">⭐</span>
+      </div>
+      <div class="goal-scale"><span>${GOAL_MIN} min</span><span>45 min</span><span>1 h 30</span></div>
+      <div class="goal-actions">
+        <button type="button" class="button small-button secondary-button goal-use-best">⭐ Use ${goalText(recommended)}</button>
+        <button type="button" class="button small-button goal-save">Set goal</button>
+      </div>
+    </div>`;
+}
+
 function showStreak() {
   const progress = loadProgress();
+  const STREAK_MINUTES = dailyGoal();
+  const askGoal = !chosenGoal() || pickingGoal;
   const streak = currentStreak(progress);
   const minutesToday = Math.floor(((progress[dayKey()] || {}).seconds || 0) / 60);
   const week = thisWeek(progress);
@@ -53,10 +79,34 @@ function showStreak() {
         <div class="streak-bar"><span style="width: ${Math.min(100, minutesToday / STREAK_MINUTES * 100)}%"></span></div>
       </div>
     </div>
+    ${askGoal ? goalPicker() : `<p class="goal-line">🎯 Daily goal: <b>${goalText(STREAK_MINUTES)}</b> <button type="button" class="goal-change">Change</button></p>`}
     <ol class="week">${days}</ol>
     <p class="streak-note">⭐ ${allFiveDays} day${allFiveDays === 1 ? "" : "s"} with all 5 basic asanas this week</p>
   `;
 }
+
+// Tapping a goal saves it; "Change" opens the choices again
+document.getElementById("streak").addEventListener("click", function (event) {
+  if (event.target.closest(".goal-save")) {
+    setDailyGoal(Number(document.getElementById("goal-slider").value));
+    pickingGoal = false;
+    showStreak();
+  } else if (event.target.closest(".goal-use-best")) {
+    document.getElementById("goal-slider").value = recommendedMinutes();
+    document.getElementById("goal-value").textContent = goalText(recommendedMinutes());
+  } else if (event.target.closest(".goal-change")) {
+    pickingGoal = true;
+    showStreak();
+  }
+});
+// Moving the slider shows the time above it
+document.getElementById("streak").addEventListener("input", function (event) {
+  if (event.target.id === "goal-slider") {
+    document.getElementById("goal-value").textContent = goalText(Number(event.target.value));
+  }
+});
+// The recommendation depends on the age, which may be asked after the page opens
+document.addEventListener("profilechange", showStreak);
 showStreak();
 // Coming back to this page (e.g. with the Back button) shows the newest numbers
 window.addEventListener("pageshow", showStreak);
