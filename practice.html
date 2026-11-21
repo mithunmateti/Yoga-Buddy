@@ -22,7 +22,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="style.css?v=20261122d">
+  <link rel="stylesheet" href="style.css?v=20261122e">
 </head>
 <body class="practice-body">
   <!-- SCREEN 3: PRACTICE (dark) -->
@@ -35,7 +35,7 @@
       <!-- Restart only appears after Start is pressed -->
       <button id="restart-button" class="button small-button secondary-button" hidden>↻ Restart</button>
       <!-- Record my practice (recorder.js): before Start or during the pose -->
-      <button id="record-button" class="record-button" type="button" aria-pressed="false" title="Record my practice">
+      <button id="record-button" class="record-button" type="button" aria-pressed="false" title="Start or stop recording">
         <span class="record-icon" aria-hidden="true"></span><span class="record-word">Record</span>
       </button>
       <!-- Show it on a TV (cast.js) -->
@@ -86,15 +86,14 @@
         <div id="start-panel" class="start-panel">
           <h2>Ready?</h2>
           <p>Turn your sound on. Press Start, then you have 5 seconds to step back about 2 metres (a little less with a phone), so the camera can see you from head to feet.</p>
-          <!-- Record my practice (recorder.js). Hidden if this browser can't record. -->
-          <label id="record-choice" class="record-choice" hidden>
-            <span class="record-choice-text">
-              <b>🎥 Record my practice</b>
-              <small id="record-choice-note">Starts when you begin the pose and saves the video to your phone.</small>
-            </span>
-            <input id="record-switch" class="switch" type="checkbox" role="switch">
-          </label>
-          <button id="start-button" class="button big-button">Start</button>
+          <div class="start-buttons">
+            <button id="start-button" class="button big-button">Start</button>
+            <!-- Start and record a video of the practice (recorder.js) -->
+            <button id="start-record-button" class="button big-button record-start-button" type="button">
+              <span class="record-icon" aria-hidden="true"></span> Start recording
+            </button>
+          </div>
+          <p class="record-start-note">With recording, tap <b>Done</b> at the end and the video is saved to your phone.</p>
         </div>
 
         <!-- The red light while recording. Tap it to stop. -->
@@ -175,22 +174,22 @@
   <!-- poses.js must load first, because practice.js uses the POSES list from it.
        figure.js draws the stick figures of the Surya Namaskar poses. -->
   <!-- profile.js asks for the name, age and gender first -->
-  <script src="settings.js?v=20261122d"></script>
-  <script src="profile.js?v=20261122d"></script>
-  <script src="poses.js?v=20261122d"></script>
-  <script src="poses-standing.js?v=20261122d"></script>
-  <script src="poses-sitting.js?v=20261122d"></script>
-  <script src="poses-kneeling.js?v=20261122d"></script>
-  <script src="poses-supine.js?v=20261122d"></script>
-  <script src="poses-prone.js?v=20261122d"></script>
-  <script src="poses-arm-support.js?v=20261122d"></script>
-  <script src="flows.js?v=20261122d"></script>
-  <script src="hold-time.js?v=20261122d"></script>
-  <script src="figure.js?v=20261122d"></script>
+  <script src="settings.js?v=20261122e"></script>
+  <script src="profile.js?v=20261122e"></script>
+  <script src="poses.js?v=20261122e"></script>
+  <script src="poses-standing.js?v=20261122e"></script>
+  <script src="poses-sitting.js?v=20261122e"></script>
+  <script src="poses-kneeling.js?v=20261122e"></script>
+  <script src="poses-supine.js?v=20261122e"></script>
+  <script src="poses-prone.js?v=20261122e"></script>
+  <script src="poses-arm-support.js?v=20261122e"></script>
+  <script src="flows.js?v=20261122e"></script>
+  <script src="hold-time.js?v=20261122e"></script>
+  <script src="figure.js?v=20261122e"></script>
   <!-- progress.js remembers today's practice time and poses (weekly streak) -->
-  <script src="progress.js?v=20261122d"></script>
+  <script src="progress.js?v=20261122e"></script>
   <!-- type="module" lets practice.js load MediaPipe from the internet (a CDN).
        practice.js also loads pose-check.js (the maths) and coach.js (the voice coach). -->
-  <script type="module" src="practice.js?v=20261122d"></script>
+  <script type="module" src="practice.js?v=20261122e"></script>
 </body>
 </html>
