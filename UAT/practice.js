@@ -16,12 +16,12 @@ import { PoseLandmarker, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@m
 import {
   measureJoints, calculateScore, canSee, outsidePicture, bodyLooksReal,
   smoothJoints, addHiddenJoints, startFresh, isWrong, jointToFix, tipFor, facing
-} from "./pose-check.js?v=20261121b";
+} from "./pose-check.js?v=20261121c";
 
 // The voice coach (coach.js), its voice (voice.js) and its sentences (phrases.js)
-import { startCoach, restartCoach, stopCoach, updateCoach, checksNow, handTarget } from "./coach.js?v=20261121b";
-import { unlockSound, chooseVoice } from "./voice.js?v=20261121b";
-import { SAY } from "./phrases.js?v=20261121b";
+import { startCoach, restartCoach, stopCoach, updateCoach, checksNow, handTarget } from "./coach.js?v=20261121c";
+import { unlockSound, chooseVoice } from "./voice.js?v=20261121c";
+import { SAY } from "./phrases.js?v=20261121c";
 
 // Where MediaPipe's helper files and the trained pose models are.
 // "lite" is the fastest model: phones use it, so they don't get hot and
@@ -785,66 +785,15 @@ document.addEventListener("visibilitychange", function () {
   }
 });
 
-// ----- Lying-down poses on a phone: turn the screen sideways by itself -----
-// The body lies long, so the camera must see wide: the phone works best
-// on its side (liesLong in hold-time.js has the maths).
-//   • Android (Chrome): the app goes full screen and turns the screen to
-//     landscape itself, so you simply turn the phone with it.
-//   • iPhone: Safari doesn't let a website turn the screen, so a big
-//     "Turn your phone" card shows, and the app carries on by itself the
-//     moment the phone is on its side.
-const needsSideways = onPhone && !!pose && liesLong(pose);
-const turnPanel = document.getElementById("turn-panel");
-const turnSkip = document.getElementById("turn-skip");
-document.getElementById("sideways-note").hidden = !needsSideways;
-
-function phoneUpright() {
-  return window.innerHeight > window.innerWidth;
-}
-
-async function turnSideways() {
-  if (!needsSideways || !phoneUpright()) {
-    return;   // not needed, or already on its side
-  }
-  // Android: full screen, then lock the screen the wide way round
-  try {
-    const page = document.documentElement;
-    if (!document.fullscreenElement && page.requestFullscreen) {
-      await page.requestFullscreen({ navigationUI: "hide" });
-    }
-    await screen.orientation.lock("landscape");
-    return;
-  } catch (error) {
-    // Not allowed here (e.g. iPhone): ask the person to turn the phone
-  }
-  turnPanel.hidden = false;
-  await new Promise(function (resolve) {
-    function finish() {
-      window.removeEventListener("resize", check);
-      turnSkip.removeEventListener("click", finish);
-      turnPanel.hidden = true;
-      resolve();
-    }
-    function check() {
-      if (!phoneUpright()) {
-        setTimeout(finish, 300);   // let the screen finish turning
-      }
-    }
-    window.addEventListener("resize", check);
-    turnSkip.addEventListener("click", finish);
-  });
-}
-
-// The Start button: hide the start screen and start the voice coach.
-// The sound is unlocked inside the tap (browsers only allow the voice
-// after a tap). Its 5-second countdown runs while the camera starts.
-startButton.addEventListener("click", async function () {
-  unlockSound();
-  startPanel.hidden = true;
-  await turnSideways();   // lying-down poses on a phone: wide way round first
-  document.body.classList.add("live");   // a phone fills the screen (style.css)
+// The Start button: hide the start screen and start the voice coach
+// straight away (talking inside the click is what lets the browser use
+// the voice). Its 5-second countdown runs while the camera starts.
+startButton.addEventListener("click", function () {
+  document.body.classList.add("live");   // a phone held upright fills the screen (style.css)
   keepScreenOn();
+  startPanel.hidden = true;
   restartButton.hidden = false;
+  unlockSound();
   if (scoringOn) {
     startCoach(pose, takePhoto);
   }

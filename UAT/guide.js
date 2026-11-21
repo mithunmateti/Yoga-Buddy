@@ -8,11 +8,6 @@
 const params = new URLSearchParams(window.location.search);
 const poseId = params.get("pose");
 
-// Phones: lying-down poses get a tip to turn the phone on its side
-// (liesLong is in hold-time.js; practice.js turns the screen by itself)
-const onPhone = window.matchMedia("(pointer: coarse)").matches;
-const SIDEWAYS_TIP = "📱 On a phone, turn it on its side (landscape): it can then be about a quarter closer to you. The app switches round by itself.";
-
 // 2. Look through the POSES list (from poses.js) for the pose with that id
 const pose = POSES.find(function (p) {
   return p.id === poseId;
@@ -87,9 +82,6 @@ if (!pose) {
   }
   // Where to put the camera (a pose can have its own advice in poses.js)
   viewText.textContent += " " + (pose.camera || "Place it about 2 metres away so your whole body fits on screen.");
-  if (onPhone && liesLong(pose)) {
-    viewText.textContent += " " + SIDEWAYS_TIP;
-  }
 
   // "Start with camera" button opens the practice screen for this pose
   document.getElementById("start-button").href = "practice.html?pose=" + pose.id;
