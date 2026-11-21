@@ -16,14 +16,14 @@ import { PoseLandmarker, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@m
 import {
   measureJoints, calculateScore, canSee, outsidePicture, bodyLooksReal,
   smoothJoints, addHiddenJoints, startFresh, isWrong, jointToFix, tipFor, facing
-} from "./pose-check.js?v=20261122f";
+} from "./pose-check.js?v=20261122g";
 
 // The voice coach (coach.js), its voice (voice.js) and its sentences (phrases.js)
-import { startCoach, restartCoach, stopCoach, updateCoach, checksNow, handTarget, coachStage } from "./coach.js?v=20261122f";
-import { canRecord, whyNoRecording, isRecording, hasVideoComing, startRecording, stopRecording, whenFileReady, hasUnsavedClip, saveClip, savedWhere } from "./recorder.js?v=20261122f";
-import { unlockSound, chooseVoice, wakeVoice } from "./voice.js?v=20261122f";
-import { SAY } from "./phrases.js?v=20261122f";
-import { canCastPage, startCasting, stopCasting, isCasting, onCastChange, sendToTv } from "./cast.js?v=20261122f";
+import { startCoach, restartCoach, stopCoach, updateCoach, checksNow, handTarget, coachStage } from "./coach.js?v=20261122g";
+import { MIC_WISHES, useMicrophone, canRecord, whyNoRecording, isRecording, hasVideoComing, startRecording, stopRecording, whenFileReady, hasUnsavedClip, saveClip, savedWhere } from "./recorder.js?v=20261122g";
+import { unlockSound, chooseVoice, wakeVoice, soundForRecording } from "./voice.js?v=20261122g";
+import { SAY } from "./phrases.js?v=20261122g";
+import { canCastPage, startCasting, stopCasting, isCasting, onCastChange, sendToTv } from "./cast.js?v=20261122g";
 
 // Where MediaPipe's helper files and the trained pose models are.
 // "lite" is the fastest model: phones use it, so they don't get hot and
@@ -165,13 +165,13 @@ async function openCamera(myTurn) {
 
   let stream;
   try {
-    stream = await navigator.mediaDevices.getUserMedia({ video: wanted, audio: false });
+    stream = await getCamera(wanted);
   } catch (error) {
     if (error.name !== "OverconstrainedError" && error.name !== "TypeError") {
       throw error;   // e.g. permission refused: show that message
     }
     // A browser that doesn't like one of the wishes: just the front camera
-    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
+    stream = await getCamera({ facingMode: "user" });
   }
 
   // A newer restart started while we waited: this camera isn't needed
@@ -187,10 +187,29 @@ async function openCamera(myTurn) {
   await zoomAllTheWayOut(track);
   watchTrack(track);
   cameraUpright = upright;
-  video.srcObject = stream;   // show the camera in the <video> element
+  useMicrophone(stream);      // recording: the microphone goes into the video (recorder.js)
+  video.srcObject = stream;   // show the camera in the <video> element (muted: no echo)
   await video.play();         // wait until the video is playing
   lastVideoTime = -1;
   lastNewPicture = performance.now();
+}
+
+// The camera, plus the microphone while recording (so the video has the
+// voice coach's sound). If the microphone is refused, just the camera.
+let micRefused = false;
+async function getCamera(videoWishes) {
+  if (recordingWanted && !micRefused) {
+    try {
+      return await navigator.mediaDevices.getUserMedia({ video: videoWishes, audio: MIC_WISHES });
+    } catch (error) {
+      if (error.name === "OverconstrainedError" || error.name === "TypeError") {
+        throw error;   // a camera wish problem: handled by the caller
+      }
+      micRefused = true;   // e.g. "Don't allow" for the microphone: record without sound
+      console.warn("No microphone for the recording:", error);
+    }
+  }
+  return navigator.mediaDevices.getUserMedia({ video: videoWishes, audio: false });
 }
 
 function stopStream(stream) {
@@ -598,6 +617,13 @@ recordButton.addEventListener("click", function () {
   }
   recordingWanted = true;
   recordingFailed = false;
+  // The camera was started without the microphone: start it again with it,
+  // so the video has sound
+  const live = video.srcObject;
+  if (live && !live.getAudioTracks().length && !micRefused) {
+    soundForRecording(true);
+    startCamera().catch(function (error) { console.error(error); });
+  }
   // (A video still being finished is kept; Done saves all of them)
   whenFileReady().then(function () { recordingStarted = beginRecording(); });
 });
@@ -1252,6 +1278,9 @@ function startPractice(withRecording) {
   keepScreenOn();
   startPanel.hidden = true;
   restartButton.hidden = false;
+  if (withRecording && canRecord()) {
+    soundForRecording(true);   // iPhones: the microphone needs "play and record" sound
+  }
   unlockSound();
   if (withRecording) {
     if (canRecord()) {

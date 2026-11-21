@@ -5,7 +5,7 @@
 // to someone else.
 // =============================================================
 
-import { sayFresh, unlockSound, chooseVoice } from "./voice.js?v=20261122f";
+import { sayFresh, unlockSound, chooseVoice } from "./voice.js?v=20261122g";
 
 chooseVoice("");   // the same voice as the practice screen
 let settings = loadSettings();

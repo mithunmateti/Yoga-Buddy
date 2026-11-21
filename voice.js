@@ -16,8 +16,8 @@
 // Everything said is split into sentences and played one after another.
 // =============================================================
 
-import { GEMINI_KEY } from "./gemini-key.js?v=20261122f";
-import { sentences, sentenceKey, forSpeaking } from "./phrases.js?v=20261122f";
+import { GEMINI_KEY } from "./gemini-key.js?v=20261122g";
+import { sentences, sentenceKey, forSpeaking } from "./phrases.js?v=20261122g";
 
 const AI_VOICE = "Sulafat";                 // must match VOICE in voice/make-recordings.mjs
 const RECORDINGS = "voice/sulafat/";        // where the ready-made recordings are
@@ -150,15 +150,29 @@ function bestComputerVoice() {
 // Browsers only play sound after you tap something. Call this inside a
 // click (the Start and Try buttons): it plays a tiny silent sound, which
 // lets the page play the voice later.
-export function unlockSound() {
-  // iPhones and iPads (Safari 17+): play sound even when the silent switch is on
+// iPhones and iPads (Safari 17+): "playback" plays sound even when the
+// silent switch is on. While recording with the microphone it must be
+// "play-and-record" instead (the microphone doesn't work with "playback"),
+// which is also not muted by the silent switch.
+let soundType = "playback";
+
+export function soundForRecording(on) {
+  soundType = on ? "play-and-record" : "playback";
+  setSoundType();
+}
+
+function setSoundType() {
   if (navigator.audioSession) {
     try {
-      navigator.audioSession.type = "playback";
+      navigator.audioSession.type = soundType;
     } catch (error) {
       // not allowed here: the silent switch decides
     }
   }
+}
+
+export function unlockSound() {
+  setSoundType();
   player.src = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA=";
   player.play().catch(function () {});
   if (canSpeak) {
@@ -178,9 +192,7 @@ export function wakeVoice() {
   if (navigator.audioSession) {
     try {
       navigator.audioSession.type = "auto";
-      setTimeout(function () {
-        try { navigator.audioSession.type = "playback"; } catch (error) { /* not allowed */ }
-      }, 60);
+      setTimeout(setSoundType, 60);
     } catch (error) {
       // not allowed here
     }

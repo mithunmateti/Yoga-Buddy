@@ -18,6 +18,12 @@
 // How it works: a hidden canvas is redrawn about 30 times a second with
 // the newest camera picture, the skeleton and the words, and the
 // browser's MediaRecorder turns that canvas into an MP4 (or WebM) video.
+//
+// Sound: browsers don't let any website record their built-in voice
+// directly, so the video's sound comes from the phone's microphone, which
+// hears the voice coach through the loudspeaker (and you). Echo
+// cancelling is switched off, otherwise the phone would remove the
+// coach's voice on purpose.
 // =============================================================
 
 const FRAMES_PER_SECOND = 30;
@@ -29,7 +35,14 @@ const onAndroid = /Android/i.test(navigator.userAgent);
 
 // The video types to try, best first. MP4 works in Photos and every
 // gallery app; WebM is for older Chrome versions that can't make MP4.
-const TYPES = ["video/mp4;codecs=avc1", "video/mp4", "video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"];
+const TYPES = ["video/mp4;codecs=avc1,mp4a.40.2", "video/mp4", "video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm"];
+
+// The microphone settings for recording (practice.js asks for them with the camera)
+export const MIC_WISHES = { echoCancellation: false, noiseSuppression: false, autoGainControl: false };
+
+// The Yoga Buddy logo, drawn small in the corner of the video
+const logo = new Image();
+logo.src = "images/icon-192.png";
 
 const sheet = document.createElement("canvas");   // the hidden canvas the video is made from
 const pen = sheet.getContext("2d");
@@ -43,6 +56,10 @@ let getFrame = null;     // practice.js: gives { video, skeleton, words } for ea
 let drawing = true;      // recording our drawing (false: the plain camera)
 let clips = [];          // the videos made on this visit: { file, url, name, saved }
 let fileWaiters = [];    // waiting for the video file (see whenFileReady)
+let audioCtx = null;     // Web Audio: carries the microphone into the video
+let soundOut = null;     // …into this, whose sound track goes into every video
+let micNode = null;
+let micStream = null;    // the camera stream with the microphone in it
 let finishing = false;   // stopped, and the video file is still being made
 
 // Can this browser record? (Safari 14.5+ on iPhone, Chrome on Android and laptops)
@@ -99,11 +116,11 @@ export function startRecording(frameGiver, camera) {
   sheet.height = upright ? long : short;
   drawFrame();
 
-  let stream = null;
+  let pictures = null;
   drawing = canDraw();
   if (drawing) {
     try {
-      stream = sheet.captureStream(FRAMES_PER_SECOND);
+      pictures = sheet.captureStream(FRAMES_PER_SECOND);
     } catch (error) {
       drawing = false;
     }
@@ -112,27 +129,44 @@ export function startRecording(frameGiver, camera) {
     if (!camera) {
       return false;   // practice.js tries again once the camera is on
     }
-    stream = camera;
+    pictures = new MediaStream(camera.getVideoTracks());
   }
 
+  // The sound track: always there (silent until the microphone is connected)
+  const sound = soundTrack();
+  if (camera) {
+    useMicrophone(camera);
+  }
+  const withSound = sound ? new MediaStream(pictures.getVideoTracks().concat([sound])) : pictures;
+
+  const first = makeRecorder(withSound);
+  if (first && startWith(first)) {
+    return true;
+  }
+  // This browser can't record that sound: record the pictures only
+  const quiet = sound ? makeRecorder(pictures) : null;
+  return !!quiet && startWith(quiet);
+}
+
+function makeRecorder(stream) {
   const type = bestType();
   try {
-    recorder = type
+    return type
       ? new MediaRecorder(stream, { mimeType: type, videoBitsPerSecond: 2500000 })
       : new MediaRecorder(stream);
   } catch (error) {
     try {
-      recorder = new MediaRecorder(stream);   // this browser chooses
+      return new MediaRecorder(stream);   // this browser chooses
     } catch (error2) {
       console.warn("Recording isn't possible here", error2);
-      recorder = null;
-      return false;
+      return null;
     }
   }
+}
 
-  // Each recorder keeps its own pieces, so a new video can never mix with
-  // the end of the last one
-  const mine = recorder;
+// Collect the pieces of this recorder, start it, start drawing
+function startWith(mine) {
+  recorder = mine;
   const pieces = [];
   mine.addEventListener("dataavailable", function (event) {
     if (event.data && event.data.size > 0) {
@@ -142,7 +176,15 @@ export function startRecording(frameGiver, camera) {
   mine.addEventListener("stop", function () {
     makeFile(mine, pieces);
   });
-  recorder.start(1000);   // a piece every second, so a long video isn't one huge block
+  try {
+    if (mine.state === "inactive") {
+      mine.start(1000);   // a piece every second, so a long video isn't one huge block
+    }
+  } catch (error) {
+    console.warn("Recording isn't possible here", error);
+    recorder = null;
+    return false;
+  }
   startedAt = performance.now();
   stopTimer = setTimeout(stopRecording, LONGEST);
   if (drawing) {
@@ -150,6 +192,46 @@ export function startRecording(frameGiver, camera) {
   }
   showRecLight(true);
   return true;
+}
+
+// The video's sound track (made once). Must first happen inside a tap
+// (Start recording), or iPhones keep the sound switched off.
+function soundTrack() {
+  try {
+    if (!audioCtx) {
+      const Context = window.AudioContext || window.webkitAudioContext;
+      audioCtx = new Context();
+      soundOut = audioCtx.createMediaStreamDestination();
+    }
+    if (audioCtx.state === "suspended") {
+      audioCtx.resume();
+    }
+    return soundOut.stream.getAudioTracks()[0] || null;
+  } catch (error) {
+    return null;   // no Web Audio: videos without sound
+  }
+}
+
+// The camera stream came with the microphone: carry it into the video.
+// (Called again when the camera restarts, e.g. after turning the phone.)
+export function useMicrophone(stream) {
+  micStream = stream;
+  if (!audioCtx || !soundOut || !stream) {
+    return;
+  }
+  const tracks = stream.getAudioTracks();
+  if (!tracks.length) {
+    return;
+  }
+  try {
+    if (micNode) {
+      micNode.disconnect();
+    }
+    micNode = audioCtx.createMediaStreamSource(new MediaStream([tracks[0]]));
+    micNode.connect(soundOut);   // NOT to the loudspeaker (that would howl)
+  } catch (error) {
+    console.warn("Couldn't use the microphone for the video", error);
+  }
 }
 
 // Stop recording. The video file is ready a moment later (whenFileReady).
@@ -229,9 +311,32 @@ function drawWords(words, w, h) {
     text("score", w - pad, pad + unit * 2.2, unit * 0.7, "#ffffff", "right");
   }
   if (words.tip) {
-    wrapText(words.tip, w / 2, h - pad - unit * 3.4, w - pad * 2, unit, words.tipGood ? "#7CF29A" : "#ffffff", text);
+    wrapText(words.tip, w / 2, h - pad - unit * 5, w - pad * 2, unit, words.tipGood ? "#7CF29A" : "#ffffff", text);
   }
-  text("Yoga Buddy", w - pad, h - pad - unit * 0.8, unit * 0.65, "rgba(255,255,255,0.85)", "right");
+  drawLogo(w, h, unit);
+}
+
+// The Yoga Buddy logo as a small watermark in the bottom-right corner
+function drawLogo(w, h, unit) {
+  if (!logo.complete || !logo.naturalWidth) {
+    return;
+  }
+  const size = Math.round(unit * 1.7);
+  const x = w - size - unit * 0.6;
+  const y = h - size - unit * 0.6;
+  const r = size * 0.22;   // rounded corners, like the app icon
+  pen.save();
+  pen.globalAlpha = 0.85;
+  pen.beginPath();
+  pen.moveTo(x + r, y);
+  pen.arcTo(x + size, y, x + size, y + size, r);
+  pen.arcTo(x + size, y + size, x, y + size, r);
+  pen.arcTo(x, y + size, x, y, r);
+  pen.arcTo(x, y, x + size, y, r);
+  pen.closePath();
+  pen.clip();
+  pen.drawImage(logo, x, y, size, size);
+  pen.restore();
 }
 
 // Long tips go over two lines
