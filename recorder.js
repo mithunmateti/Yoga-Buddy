@@ -44,8 +44,21 @@ let onFinished = null;
 
 // Can this browser record? (Safari 14.5+ on iPhone, Chrome on Android and laptops)
 export function canRecord() {
-  return typeof MediaRecorder !== "undefined" && typeof sheet.captureStream === "function" &&
-         !!bestType();
+  return typeof MediaRecorder !== "undefined";
+}
+
+// Can we make the video from our drawing (camera + skeleton + score)?
+// If not, we record the plain camera picture instead.
+function canDraw() {
+  return typeof sheet.captureStream === "function";
+}
+
+// Why recording isn't possible here (shown to the person)
+export function whyNoRecording() {
+  if (onApple) {
+    return "This iPhone's browser can't record videos yet. Update the iPhone (Settings → General → Software Update), then try again.";
+  }
+  return "This browser can't record videos. Try Chrome or Safari.";
 }
 
 function bestType() {
@@ -76,9 +89,12 @@ export function isRecording() {
   return !!recorder && recorder.state === "recording";
 }
 
-// Start recording. width/height: the camera picture's size.
+// Start recording. width/height: the camera picture's size. camera: the
+// camera's own stream, used if this browser can't record our drawing.
 // finished(clip) is called when the video file is ready.
-export function startRecording(width, height, finished) {
+let drawing = true;   // recording our drawing (false: the plain camera)
+
+export function startRecording(width, height, finished, camera) {
   if (isRecording() || !canRecord() || !width || !height) {
     return false;
   }
@@ -88,9 +104,25 @@ export function startRecording(width, height, finished) {
   pen.fillRect(0, 0, width, height);
 
   const type = bestType();
-  const stream = sheet.captureStream(FRAMES_PER_SECOND);
+  let stream = null;
+  drawing = canDraw();
+  if (drawing) {
+    try {
+      stream = sheet.captureStream(FRAMES_PER_SECOND);
+    } catch (error) {
+      drawing = false;
+    }
+  }
+  if (!drawing) {
+    if (!camera) {
+      return false;
+    }
+    stream = camera;
+  }
   try {
-    recorder = new MediaRecorder(stream, { mimeType: type, videoBitsPerSecond: 2500000 });
+    recorder = type
+      ? new MediaRecorder(stream, { mimeType: type, videoBitsPerSecond: 2500000 })
+      : new MediaRecorder(stream);
   } catch (error) {
     try {
       recorder = new MediaRecorder(stream);   // this browser chooses
@@ -126,7 +158,7 @@ export function stopRecording() {
 // Put the newest camera picture, the skeleton and the words on the video.
 // practice.js calls this for every new camera picture while recording.
 export function addFrame(video, skeleton, words) {
-  if (!isRecording()) {
+  if (!isRecording() || !drawing) {
     return;
   }
   const w = sheet.width;
