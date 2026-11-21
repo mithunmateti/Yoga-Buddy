@@ -13,7 +13,7 @@
 // The API key is built in (gemini-key.js), so nobody has to type it.
 // =============================================================
 
-import { GEMINI_KEY } from "./gemini-key.js?v=20261121d";
+import { GEMINI_KEY } from "./gemini-key.js?v=20261121e";
 
 // Which Gemini model to use. "flash-lite" is Google's fastest model.
 // If Google renames it, the backup "latest" name is tried instead.
@@ -80,8 +80,8 @@ const ANSWER_SHAPE = {
 // (no internet, too many requests…). The coach then carries on
 // without the AI.
 export async function askBuddy(photo, message) {
-  if (!buddyOn() || Date.now() < restUntil) {
-    return null;
+  if (!buddyOn() || Date.now() < restUntil || !photo) {
+    return null;   // (no photo: the camera is restarting)
   }
 
   const request = {

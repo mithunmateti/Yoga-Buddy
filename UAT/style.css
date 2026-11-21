@@ -3237,3 +3237,14 @@ html[data-theme="dark"] .secondary-button::before {
 .cast-way > b {
   color: var(--success-bright);
 }
+
+/* ----- 23. iPhones and iPads during practice -----
+   Blurring the camera picture behind the buttons ("frosted glass") makes
+   an iPhone redraw the blur for every camera picture, on top of the body
+   tracker. Plain see-through buttons instead (practice.js adds .apple). */
+.apple body.live *,
+.apple body.live *::before,
+.apple body.live *::after {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
