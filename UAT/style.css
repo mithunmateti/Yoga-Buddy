@@ -3594,3 +3594,47 @@ html[data-theme="dark"] .secondary-button::before {
 .record-choice .switch:disabled {
   opacity: 0.4;
 }
+
+/* "Start" and "🔴 Start recording" side by side (one above the other on a narrow phone) */
+.start-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+}
+
+.record-start-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(229, 72, 77, 0.18);
+  border: 2px solid #E5484D;
+  box-shadow: none;
+  color: white;
+}
+
+.record-start-button:hover {
+  background: rgba(229, 72, 77, 0.3);
+}
+
+.record-start-button .record-icon {
+  width: 16px;
+  height: 16px;
+  background: #E5484D;
+  border: 0;
+}
+
+.start-panel .record-start-note {
+  max-width: 340px;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+/* The recording message card: solid, above everything */
+#clip-sheet {
+  z-index: 80;
+}
+
+#clip-sheet .cast-help-card {
+  background: #13201E;
+}
