@@ -16,14 +16,14 @@ import { PoseLandmarker, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@m
 import {
   measureJoints, calculateScore, canSee, outsidePicture, bodyLooksReal,
   smoothJoints, addHiddenJoints, startFresh, isWrong, jointToFix, tipFor, facing
-} from "./pose-check.js?v=20261122e";
+} from "./pose-check.js?v=20261122f";
 
 // The voice coach (coach.js), its voice (voice.js) and its sentences (phrases.js)
-import { startCoach, restartCoach, stopCoach, updateCoach, checksNow, handTarget, coachStage } from "./coach.js?v=20261122e";
-import { canRecord, whyNoRecording, isRecording, hasVideoComing, startRecording, stopRecording, whenFileReady, hasUnsavedClip, saveClip, savedWhere } from "./recorder.js?v=20261122e";
-import { unlockSound, chooseVoice, wakeVoice } from "./voice.js?v=20261122e";
-import { SAY } from "./phrases.js?v=20261122e";
-import { canCastPage, startCasting, stopCasting, isCasting, onCastChange, sendToTv } from "./cast.js?v=20261122e";
+import { startCoach, restartCoach, stopCoach, updateCoach, checksNow, handTarget, coachStage } from "./coach.js?v=20261122f";
+import { canRecord, whyNoRecording, isRecording, hasVideoComing, startRecording, stopRecording, whenFileReady, hasUnsavedClip, saveClip, savedWhere } from "./recorder.js?v=20261122f";
+import { unlockSound, chooseVoice, wakeVoice } from "./voice.js?v=20261122f";
+import { SAY } from "./phrases.js?v=20261122f";
+import { canCastPage, startCasting, stopCasting, isCasting, onCastChange, sendToTv } from "./cast.js?v=20261122f";
 
 // Where MediaPipe's helper files and the trained pose models are.
 // "lite" is the fastest model: phones use it, so they don't get hot and
@@ -511,6 +511,7 @@ const clipSave = document.getElementById("clip-save");
 const clipClose = document.getElementById("clip-close");
 let recordingWanted = false;   // the person chose to record this practice
 let recordingStarted = false;  // a recorder was started for it
+let recordingFailed = false;   // it couldn't start: don't keep trying
 let doneSince = null;          // when the coach said the pose was finished
 let closeGoesHome = false;     // the message's other button goes to the home screen
 
@@ -532,6 +533,9 @@ function frameNow() {
 }
 
 function beginRecording() {
+  if (recordingFailed) {
+    return false;
+  }
   const ok = startRecording(frameNow, video.srcObject);
   if (ok && onApple) {
     setTimeout(wakeVoice, 600);   // starting a recorder can silence the voice on iPhones
@@ -547,8 +551,12 @@ function recordThePractice() {
   }
   if (!isRecording()) {
     // This browser can only record the plain camera: start once it is on
-    if (!recordingStarted && video.srcObject) {
+    if (!recordingStarted && !recordingFailed && video.srcObject && !hasVideoComing()) {
       recordingStarted = beginRecording();
+      if (!recordingStarted) {
+        recordingFailed = true;
+        showMessage("\ud83c\udfa5 Recording", "Sorry, this phone couldn't start the recording. The practice carries on without it.", "", "OK", false);
+      }
     }
     return;
   }
@@ -556,7 +564,7 @@ function recordThePractice() {
   // ready by the time Done is tapped
   if (coachStage() === "done") {
     doneSince = doneSince || performance.now();
-    if (performance.now() - doneSince > 1500) {
+    if (performance.now() - doneSince > 700) {   // before the result card appears (1.2 s)
       stopRecording();
       showRecordButton();
     }
@@ -589,12 +597,9 @@ recordButton.addEventListener("click", function () {
     return;
   }
   recordingWanted = true;
-  if (hasUnsavedClip()) {
-    // Save the last video first (this tap lets an iPhone open the share sheet)
-    saveNow(false).then(function () { recordingStarted = beginRecording(); });
-  } else {
-    recordingStarted = beginRecording();
-  }
+  recordingFailed = false;
+  // (A video still being finished is kept; Done saves all of them)
+  whenFileReady().then(function () { recordingStarted = beginRecording(); });
 });
 
 // A message on the screen (the same card as the Save video card)
@@ -624,6 +629,8 @@ async function saveNow(thenGoHome) {
     if (thenGoHome) {
       setTimeout(goHome, 3500);
     }
+  } else if (result === "downloaded") {
+    showMessage("\u2705 Saved", "The recording has been saved to your Files app (Downloads). Open it there and tap Save Video to put it in Photos.", "", home, thenGoHome);
   } else if (result === "cancelled") {
     showMessage("\ud83c\udfa5 Not saved yet", "The recording wasn't saved. Tap " + saveWord + " to save it.",
                 saveWord, thenGoHome ? "Don't save, go home" : "Close", thenGoHome);
@@ -1165,6 +1172,9 @@ async function start() {
   } catch (error) {
     console.error(error);
     stopCoach();   // no countdown or talking over the problem
+    stopRecording();   // nothing to record without the camera or the tracker
+    recordingWanted = false;
+    showRecordButton();
     showProblem(friendlyMessage(stage, error));
   }
 }
@@ -1266,13 +1276,10 @@ startRecordButton.addEventListener("click", function () {
 
 // The Restart button: forget the old angles and start the steps again
 restartButton.addEventListener("click", function () {
-  // Recording was on and the last video finished: save it now (this tap
-  // lets an iPhone open the share sheet), then record the new try too.
-  // (Still recording? Then it just keeps going.)
+  // Recording was on and the last video finished: record the new try too.
+  // (Done saves all the videos at the end. Still recording? It keeps going.)
   if (recordingWanted && !isRecording()) {
-    whenFileReady().then(function (unsaved) {
-      return unsaved ? saveNow(false) : null;
-    }).then(function () { recordingStarted = beginRecording(); });
+    whenFileReady().then(function () { recordingStarted = beginRecording(); });
   }
   doneSince = null;
   startFresh();

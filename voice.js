@@ -16,8 +16,8 @@
 // Everything said is split into sentences and played one after another.
 // =============================================================
 
-import { GEMINI_KEY } from "./gemini-key.js?v=20261122e";
-import { sentences, sentenceKey, forSpeaking } from "./phrases.js?v=20261122e";
+import { GEMINI_KEY } from "./gemini-key.js?v=20261122f";
+import { sentences, sentenceKey, forSpeaking } from "./phrases.js?v=20261122f";
 
 const AI_VOICE = "Sulafat";                 // must match VOICE in voice/make-recordings.mjs
 const RECORDINGS = "voice/sulafat/";        // where the ready-made recordings are
@@ -189,6 +189,10 @@ export function wakeVoice() {
     if (canSpeak) {
       speechSynthesis.resume();   // in case Safari left it "paused"
     }
+    return;
+  }
+  // Still talking normally? Then nothing was cut off: leave it alone
+  if (canSpeak && speechSynthesis.speaking && !speechSynthesis.paused) {
     return;
   }
   // Say what was cut off (and what was waiting) again, from the start

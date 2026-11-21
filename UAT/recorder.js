@@ -35,14 +35,13 @@ const sheet = document.createElement("canvas");   // the hidden canvas the video
 const pen = sheet.getContext("2d");
 
 let recorder = null;
-let pieces = [];
 let startedAt = 0;
 let stopTimer = null;
 let clockTimer = null;
 let drawTimer = null;
 let getFrame = null;     // practice.js: gives { video, skeleton, words } for each picture
 let drawing = true;      // recording our drawing (false: the plain camera)
-let lastClip = null;     // { file, url, name, saved } of the newest video
+let clips = [];          // the videos made on this visit: { file, url, name, saved }
 let fileWaiters = [];    // waiting for the video file (see whenFileReady)
 let finishing = false;   // stopped, and the video file is still being made
 
@@ -86,7 +85,7 @@ export function hasVideoComing() {
 // record our drawing; then the plain camera is recorded).
 // Gives back true if it started.
 export function startRecording(frameGiver, camera) {
-  if (isRecording() || !canRecord()) {
+  if (hasVideoComing() || !canRecord()) {
     return false;
   }
   getFrame = frameGiver;
@@ -131,13 +130,18 @@ export function startRecording(frameGiver, camera) {
     }
   }
 
-  pieces = [];
-  recorder.addEventListener("dataavailable", function (event) {
+  // Each recorder keeps its own pieces, so a new video can never mix with
+  // the end of the last one
+  const mine = recorder;
+  const pieces = [];
+  mine.addEventListener("dataavailable", function (event) {
     if (event.data && event.data.size > 0) {
       pieces.push(event.data);
     }
   });
-  recorder.addEventListener("stop", makeFile);
+  mine.addEventListener("stop", function () {
+    makeFile(mine, pieces);
+  });
   recorder.start(1000);   // a piece every second, so a long video isn't one huge block
   startedAt = performance.now();
   stopTimer = setTimeout(stopRecording, LONGEST);
@@ -248,30 +252,27 @@ function wrapText(str, x, y, maxWidth, unit, colour, text) {
 }
 
 // The recording has stopped: join the pieces into one video file
-function makeFile() {
-  const type = (recorder && recorder.mimeType) || bestType() || "video/mp4";
-  recorder = null;
-  finishing = false;
-  if (!pieces.length) {
-    finishWaiting();
-    return;
+function makeFile(mine, pieces) {
+  const type = mine.mimeType || bestType() || "video/mp4";
+  if (recorder === mine) {
+    recorder = null;
+    finishing = false;
   }
-  const blob = new Blob(pieces, { type: type.split(";")[0] });
-  pieces = [];
-  const ending = type.includes("mp4") ? "mp4" : "webm";
-  const stamp = new Date();
-  const name = "Yoga-Buddy-" + stamp.getFullYear() + "-" + pad2(stamp.getMonth() + 1) + "-" + pad2(stamp.getDate()) +
-               "-" + pad2(stamp.getHours()) + pad2(stamp.getMinutes()) + pad2(stamp.getSeconds()) + "." + ending;
-  if (lastClip) {
-    URL.revokeObjectURL(lastClip.url);
+  if (pieces.length) {
+    const blob = new Blob(pieces, { type: type.split(";")[0] });
+    const ending = type.includes("mp4") ? "mp4" : "webm";
+    const stamp = new Date();
+    const name = "Yoga-Buddy-" + stamp.getFullYear() + "-" + pad2(stamp.getMonth() + 1) + "-" + pad2(stamp.getDate()) +
+                 "-" + pad2(stamp.getHours()) + pad2(stamp.getMinutes()) + pad2(stamp.getSeconds()) +
+                 (clips.length ? "-" + (clips.length + 1) : "") + "." + ending;
+    let file;
+    try {
+      file = new File([blob], name, { type: blob.type });
+    } catch (error) {
+      file = blob;   // very old browsers: no File; a Blob still downloads
+    }
+    clips.push({ file: file, url: URL.createObjectURL(blob), name: name, saved: false });
   }
-  let file;
-  try {
-    file = new File([blob], name, { type: blob.type });
-  } catch (error) {
-    file = blob;   // very old browsers: no File; a Blob still downloads
-  }
-  lastClip = { file: file, url: URL.createObjectURL(blob), name: name, saved: false };
   finishWaiting();
 }
 
@@ -294,8 +295,12 @@ export function whenFileReady() {
   });
 }
 
+function unsavedClips() {
+  return clips.filter(function (clip) { return !clip.saved; });
+}
+
 export function hasUnsavedClip() {
-  return !!lastClip && !lastClip.saved;
+  return unsavedClips().length > 0;
 }
 
 function pad2(n) {
@@ -316,40 +321,56 @@ function download(clip) {
   }
 }
 
-// Save the newest video. On an iPhone this must happen inside a tap (Done):
-// the share sheet opens, and "Save Video" puts it in Photos.
-// Gives back "saved", "cancelled" (share sheet closed), "needs-tap"
-// (iPhone: not inside a tap any more) or "failed".
+// Save every video that hasn't been saved yet (usually one; more if
+// "Practice again" was used). On an iPhone this must happen inside a tap
+// (Done): the share sheet opens, and "Save Video" puts them in Photos.
+// Gives back "saved", "downloaded" (iPhone: went to the Files app instead),
+// "cancelled" (share sheet closed), "needs-tap" (iPhone: not inside a tap
+// any more) or "failed".
 export async function saveClip() {
-  if (!lastClip) {
+  const todo = unsavedClips();
+  if (!todo.length) {
     return "failed";
   }
-  // Android and laptops: download it (Android shows downloaded videos in
+  // Android and laptops: download them (Android shows downloaded videos in
   // the Gallery and Google Photos)
-  if (!onApple && download(lastClip)) {
-    lastClip.saved = true;
-    return "saved";
+  if (!onApple) {
+    let all = true;
+    for (const clip of todo) {
+      if (download(clip)) {
+        clip.saved = true;
+      } else {
+        all = false;
+      }
+    }
+    if (all) {
+      return "saved";
+    }
   }
-  const files = [lastClip.file];
+  const left = unsavedClips();
+  const files = left.map(function (clip) { return clip.file; });
   if (navigator.canShare && navigator.share && navigator.canShare({ files: files })) {
     try {
       await navigator.share({ files: files });
-      lastClip.saved = true;
+      left.forEach(function (clip) { clip.saved = true; });
       return "saved";
     } catch (error) {
       if (error.name === "AbortError") {
         return "cancelled";    // the person closed the share sheet
       }
-      if (error.name === "NotAllowedError") {
-        return "needs-tap";    // not inside a tap any more
+      if (onApple) {
+        return "needs-tap";    // not inside a tap any more (or another hiccup): ask for a tap
       }
     }
   }
-  if (download(lastClip)) {
-    lastClip.saved = true;
-    return "saved";
+  let any = false;
+  for (const clip of left) {
+    if (download(clip)) {
+      clip.saved = true;
+      any = true;
+    }
   }
-  return "failed";
+  return any ? (onApple ? "downloaded" : "saved") : "failed";
 }
 
 // Where the saved video went, for the message on the screen
