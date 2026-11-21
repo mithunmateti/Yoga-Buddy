@@ -22,7 +22,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="style.css?v=20261111b">
+  <link rel="stylesheet" href="style.css?v=20261121d">
 </head>
 <body class="practice-body">
   <!-- SCREEN 3: PRACTICE (dark) -->
@@ -34,6 +34,29 @@
       <h1 id="pose-name" class="practice-title"></h1>
       <!-- Restart only appears after Start is pressed -->
       <button id="restart-button" class="button small-button secondary-button" hidden>↻ Restart</button>
+      <!-- Show it on a TV (cast.js) -->
+      <button id="cast-button" class="icon-button cast-button" type="button" aria-label="Show on a TV" title="Show on a TV">📺</button>
+    </div>
+
+    <!-- How to show the app on a TV, when the browser can't cast by itself -->
+    <div id="cast-help" class="cast-help" role="dialog" aria-modal="true" aria-labelledby="cast-help-title" hidden>
+      <div class="cast-help-card">
+        <h2 id="cast-help-title">📺 Show Yoga Buddy on a TV</h2>
+        <p>Use your phone's own screen mirroring. The TV and the phone must be on the same Wi-Fi.</p>
+        <div class="cast-way">
+          <b>iPhone or iPad</b>
+          <span>Swipe down from the top-right corner → <b>Screen Mirroring</b> → choose your Apple TV or AirPlay TV.</span>
+        </div>
+        <div class="cast-way">
+          <b>Android</b>
+          <span>Swipe down from the top twice → <b>Cast</b>, <b>Smart View</b> or <b>Screen Cast</b> → choose your TV.</span>
+        </div>
+        <div class="cast-way">
+          <b>Laptop (Chrome)</b>
+          <span>Click <b>⋮</b> at the top-right → <b>Cast, save and share</b> → <b>Cast…</b> → choose your TV.</span>
+        </div>
+        <button id="cast-help-close" class="button wide" type="button">Got it</button>
+      </div>
     </div>
 
     <div class="practice-main">
@@ -48,7 +71,7 @@
              (browsers only let a page talk after you tap something) -->
         <div id="start-panel" class="start-panel">
           <h2>Ready?</h2>
-          <p>Turn your sound on. Press Start, then you have 5 seconds to step back 2–3 metres, so the camera can see you from head to feet.</p>
+          <p>Turn your sound on. Press Start, then you have 5 seconds to step back about 2 metres (a little less with a phone), so the camera can see you from head to feet.</p>
           <button id="start-button" class="button big-button">Start</button>
         </div>
 
@@ -125,22 +148,22 @@
   <!-- poses.js must load first, because practice.js uses the POSES list from it.
        figure.js draws the stick figures of the Surya Namaskar poses. -->
   <!-- profile.js asks for the name, age and gender first -->
-  <script src="settings.js?v=20261111b"></script>
-  <script src="profile.js?v=20261111b"></script>
-  <script src="poses.js?v=20261111b"></script>
-  <script src="poses-standing.js?v=20261111b"></script>
-  <script src="poses-sitting.js?v=20261111b"></script>
-  <script src="poses-kneeling.js?v=20261111b"></script>
-  <script src="poses-supine.js?v=20261111b"></script>
-  <script src="poses-prone.js?v=20261111b"></script>
-  <script src="poses-arm-support.js?v=20261111b"></script>
-  <script src="flows.js?v=20261111b"></script>
-  <script src="hold-time.js?v=20261111b"></script>
-  <script src="figure.js?v=20261111b"></script>
+  <script src="settings.js?v=20261121d"></script>
+  <script src="profile.js?v=20261121d"></script>
+  <script src="poses.js?v=20261121d"></script>
+  <script src="poses-standing.js?v=20261121d"></script>
+  <script src="poses-sitting.js?v=20261121d"></script>
+  <script src="poses-kneeling.js?v=20261121d"></script>
+  <script src="poses-supine.js?v=20261121d"></script>
+  <script src="poses-prone.js?v=20261121d"></script>
+  <script src="poses-arm-support.js?v=20261121d"></script>
+  <script src="flows.js?v=20261121d"></script>
+  <script src="hold-time.js?v=20261121d"></script>
+  <script src="figure.js?v=20261121d"></script>
   <!-- progress.js remembers today's practice time and poses (weekly streak) -->
-  <script src="progress.js?v=20261111b"></script>
+  <script src="progress.js?v=20261121d"></script>
   <!-- type="module" lets practice.js load MediaPipe from the internet (a CDN).
        practice.js also loads pose-check.js (the maths) and coach.js (the voice coach). -->
-  <script type="module" src="practice.js?v=20261111b"></script>
+  <script type="module" src="practice.js?v=20261121d"></script>
 </body>
 </html>

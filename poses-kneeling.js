@@ -29,7 +29,7 @@ POSES.push(
     group: "kneeling",
     holdKind: "steady",
     tint: "#F6EADF",
-    image: "images/vajrasana.svg",
+    image: "images/vajrasana.webp",
     view: "side",
     camera: "Put the camera low, about chest height when you sit, and 2 metres away.",
     safety: "Put a folded blanket under your knees or between your heels and hips if it feels uncomfortable. Skip it if you have knee or ankle pain.",

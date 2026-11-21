@@ -20,7 +20,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="style.css?v=20261111b">
+  <link rel="stylesheet" href="style.css?v=20261121d">
+  <!-- Light or dark mode, set before anything is drawn (theme.js) -->
+  <script src="theme.js?v=20261121d"></script>
 </head>
 <body class="settings-body">
   <!-- SCREEN 4: SETTINGS -->
@@ -87,6 +89,22 @@
       <button id="test-voice" class="button wide secondary-button" type="button">▶ Test the voice</button>
     </div>
 
+    <!-- Light or dark mode (theme.js saves the choice) -->
+    <h2 class="section-title">Appearance</h2>
+    <div class="info-card settings-card">
+      <div class="setting-row stacked">
+        <span class="setting-text">
+          <b>🎨 Colours</b>
+          <small>Auto follows your phone or laptop's own light or dark setting.</small>
+        </span>
+        <div class="segmented" role="radiogroup" aria-label="Light or dark mode">
+          <label><input type="radio" name="theme" value="auto"><span>✨ Auto</span></label>
+          <label><input type="radio" name="theme" value="light"><span>☀️ Light</span></label>
+          <label><input type="radio" name="theme" value="dark"><span>🌙 Dark</span></label>
+        </div>
+      </div>
+    </div>
+
     <!-- 3. Progress -->
     <h2 class="section-title">Your progress</h2>
     <div class="info-card settings-card">
@@ -113,17 +131,17 @@
     <p class="settings-about">Yoga Buddy · made for the science fair 🧘</p>
   </main>
 
-  <script src="settings.js?v=20261111b"></script>
-  <script src="profile.js?v=20261111b"></script>
-  <script src="poses.js?v=20261111b"></script>
-  <script src="poses-standing.js?v=20261111b"></script>
-  <script src="poses-sitting.js?v=20261111b"></script>
-  <script src="poses-kneeling.js?v=20261111b"></script>
-  <script src="poses-supine.js?v=20261111b"></script>
-  <script src="poses-prone.js?v=20261111b"></script>
-  <script src="poses-arm-support.js?v=20261111b"></script>
-  <script src="flows.js?v=20261111b"></script>
-  <script src="progress.js?v=20261111b"></script>
-  <script type="module" src="settings-page.js?v=20261111b"></script>
+  <script src="settings.js?v=20261121d"></script>
+  <script src="profile.js?v=20261121d"></script>
+  <script src="poses.js?v=20261121d"></script>
+  <script src="poses-standing.js?v=20261121d"></script>
+  <script src="poses-sitting.js?v=20261121d"></script>
+  <script src="poses-kneeling.js?v=20261121d"></script>
+  <script src="poses-supine.js?v=20261121d"></script>
+  <script src="poses-prone.js?v=20261121d"></script>
+  <script src="poses-arm-support.js?v=20261121d"></script>
+  <script src="flows.js?v=20261121d"></script>
+  <script src="progress.js?v=20261121d"></script>
+  <script type="module" src="settings-page.js?v=20261121d"></script>
 </body>
 </html>

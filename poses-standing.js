@@ -43,7 +43,7 @@ POSES.push(
     group: "standing",
     holdKind: "steady",             // like Warrior II in hold-time.js
     tint: "#F6E3D6",
-    image: "images/virabhadrasana1.svg",
+    image: "images/virabhadrasana1.webp",
     view: "side",
     safety: "Go gently if your knees, hips or back hurt. Keep the front knee over the ankle, not past the toes. If your shoulders are stiff, or you have high blood pressure or a heart problem, keep your hands on your hips. Keep your back heel down. Go gently if the bottom of your back (where it meets the hips) hurts.",
     steps: [
@@ -90,7 +90,7 @@ POSES.push(
     group: "standing",
     holdKind: "steady",
     tint: "#E3EEF8",
-    image: "images/trikonasana.svg",
+    image: "images/trikonasana.webp",
     view: "front",
     safety: "Only lean as far as feels comfortable; a hand on the shin is fine. Go gently if your back, hips or neck hurt, and look forward instead of up if your neck is sore. Keep your front knee soft, not pushed back, and stop if you feel anything inside the knee.",
     steps: [
@@ -138,7 +138,7 @@ POSES.push(
     group: "standing",
     holdKind: "steady",
     tint: "#E8F2E1",
-    image: "images/uttanasana.svg",
+    image: "images/uttanasana.webp",
     view: "side",
     safety: "Bend your knees as much as you need. Skip it or go gently if you have back pain, feel dizzy, are pregnant or have high blood pressure. Come up slowly. If you have a back injury or weak bones (osteoporosis), fold only a little at first. With high blood pressure, stay only while your breathing is easy. With low blood pressure, come up very slowly.",
     steps: [
@@ -184,7 +184,7 @@ POSES.push(
     group: "standing",
     holdKind: "steady",
     tint: "#F3E6F2",
-    image: "images/parsvottanasana.svg",
+    image: "images/parsvottanasana.webp",
     view: "side",
     safety: "Keep a small bend in the front knee if the back of the leg pulls. Skip it or go gently if you have back pain, feel dizzy, are pregnant or have high blood pressure.",
     steps: [
@@ -229,7 +229,7 @@ POSES.push(
     group: "standing",
     holdKind: "balance",
     tint: "#FBF0D4",
-    image: "images/ardhachandrasana.svg",
+    image: "images/ardhachandrasana.webp",
     view: "front",
     camera: "Leave plenty of room on both sides of you; this pose is wide.",
     safety: "Use a block, a thick book or a chair under your hand, and stand near a wall. Skip it or go gently if your balance is unsteady, or your hips, knees or back hurt. Look down or forward if your neck is sore.",
@@ -273,7 +273,7 @@ POSES.push(
     group: "standing",
     holdKind: "balance",
     tint: "#E0F1EF",
-    image: "images/garudasana.svg",
+    image: "images/garudasana.webp",
     view: "front",
     safety: "Stand near a wall or chair. If wrapping is hard, just cross your thigh and rest the toes on the floor. Go gently if your knees or shoulders hurt. Never force the wrap: if your hips are tight, the knees get twisted instead.",
     steps: [
@@ -324,7 +324,7 @@ POSES.push(
     group: "standing",
     holdKind: "legs",
     tint: "#F8E3EC",
-    image: "images/utkatakonasana.svg",
+    image: "images/utkatakonasana.webp",
     view: "front",
     safety: "Only bend as deep as feels comfortable for your knees. Skip it or go gently if your knees or hips hurt.",
     steps: [
@@ -364,7 +364,7 @@ POSES.push(
     group: "standing",
     holdKind: "balance",
     tint: "#E8F0E0",
-    image: "images/utthitahastapadangusthasana.svg",
+    image: "images/utthitahastapadangusthasana.webp",
     view: "side",
     safety: "Bend the lifted knee if the back of your leg is tight, so your back can stay tall. You can hold your knee or use a strap instead of your toe. Stand near a wall if your balance is unsteady.",
     steps: [
@@ -408,7 +408,7 @@ POSES.push(
     group: "standing",
     holdKind: "balance",
     tint: "#F6E3EC",
-    image: "images/natarajasana.svg",
+    image: "images/natarajasana.webp",
     view: "side",
     safety: "This is a hard balance: hold it for a few quiet breaths only. Don't pull hard on your foot, which can strain your knee and lower back; a strap around the foot helps. Stand near a wall or chair, and skip it if your back or knees hurt.",
     steps: [
@@ -454,7 +454,7 @@ POSES.push(
     group: "standing",
     holdKind: "balance",
     tint: "#F7EBD9",
-    image: "images/virabhadrasana3.svg",
+    image: "images/virabhadrasana3.webp",
     view: "side",
     safety: "If the back of your standing leg is tight, bend that knee a little instead of twisting your hips. Keep both hips level, facing the floor. Your hands on a chair or a wall make it easier.",
     steps: [
@@ -495,7 +495,7 @@ POSES.push(
     group: "standing",
     holdKind: "legs",
     tint: "#E2ECF7",
-    image: "images/utthitaparsvakonasana.svg",
+    image: "images/utthitaparsvakonasana.webp",
     view: "front",
     safety: "Keep your front knee pointing over your toes, not falling inward. Rest your forearm on your thigh if your hand can't reach the floor. Go gently if your knees, hips or neck hurt, and look forward if your neck is sore.",
     steps: [
@@ -543,7 +543,7 @@ POSES.push(
     group: "standing",
     holdKind: "legs",
     tint: "#EFE4F6",
-    image: "images/parivrttaparsvakonasana.svg",
+    image: "images/parivrttaparsvakonasana.webp",
     view: "side",
     safety: "Twist gently and never use your arms to force the twist further: let it come from your middle back. Put your back knee down on a blanket to make it easier. Skip it if your back or neck hurts, or if you are pregnant.",
     steps: [
@@ -591,7 +591,7 @@ POSES.push(
     group: "standing",
     holdKind: "steady",
     tint: "#E1F2EE",
-    image: "images/parivrttatrikonasana.svg",
+    image: "images/parivrttatrikonasana.webp",
     view: "side",
     safety: "Put your lower hand on a block, a thick book or your shin if the floor is far away. Twist from your middle back and keep your hips level. Skip it if your back hurts or your balance is unsteady.",
     steps: [
@@ -635,7 +635,7 @@ POSES.push(
     group: "standing",
     holdKind: "steady",
     tint: "#F4EFE0",
-    image: "images/prasaritapadottanasana.svg",
+    image: "images/prasaritapadottanasana.webp",
     view: "front",
     safety: "Your head is lower than your heart here, so come up slowly. Skip it if you have high or low blood pressure or feel dizzy. Bend your knees a little if the backs of your legs pull.",
     steps: [
@@ -674,7 +674,7 @@ POSES.push(
     group: "standing",
     holdKind: "legs",
     tint: "#EDE6DC",
-    image: "images/upavesasana.svg",
+    image: "images/upavesasana.webp",
     view: "front",
     safety: "If your heels lift, put a folded blanket under them, but also practise without it so your feet get stronger. Go gently if your knees hurt; sitting on a low block makes it easier.",
     steps: [

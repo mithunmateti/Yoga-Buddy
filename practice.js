@@ -16,12 +16,13 @@ import { PoseLandmarker, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@m
 import {
   measureJoints, calculateScore, canSee, outsidePicture, bodyLooksReal,
   smoothJoints, addHiddenJoints, startFresh, isWrong, jointToFix, tipFor, facing
-} from "./pose-check.js?v=20261111b";
+} from "./pose-check.js?v=20261121d";
 
 // The voice coach (coach.js), its voice (voice.js) and its sentences (phrases.js)
-import { startCoach, restartCoach, stopCoach, updateCoach, checksNow, handTarget } from "./coach.js?v=20261111b";
-import { unlockSound, chooseVoice } from "./voice.js?v=20261111b";
-import { SAY } from "./phrases.js?v=20261111b";
+import { startCoach, restartCoach, stopCoach, updateCoach, checksNow, handTarget } from "./coach.js?v=20261121d";
+import { unlockSound, chooseVoice } from "./voice.js?v=20261121d";
+import { SAY } from "./phrases.js?v=20261121d";
+import { canCastPage, startCasting, stopCasting, isCasting, onCastChange, sendToTv } from "./cast.js?v=20261121d";
 
 // Where MediaPipe's helper files and the trained pose models are.
 // "lite" is the fastest model: phones use it, so they don't get hot and
@@ -93,23 +94,101 @@ const scoringOn = !!pose;
 
 
 // ----- 2. Turn on the camera -----
+// How far back you must stand depends on how WIDE the camera sees (its
+// field of view, FOV). To fit something of size S in a view of angle A:
+//
+//     distance = S ÷ (2 × tan(A ÷ 2))
+//
+// So the wider the picture, the closer you can stand. Phone selfie
+// cameras are 4:3: the sensor is 4 wide and 3 tall (on its side).
+// We used to ask for a 16:9 picture, which the phone makes by CUTTING the
+// 4:3 picture: held upright, a quarter of the width was thrown away. Then
+// the screen (taller than the picture) cut off even more of the sides.
+// Now we ask for the camera's own whole 4:3 picture, zoomed all the way
+// out, and show all of it.
+//
+// Example, a selfie camera that sees 66° × 51° (4:3), held upright:
+//   arms spread 1.6 m (+20% room = 1.9 m) across the picture:
+//     old: 16:9 cut (40°) and the screen's cut (33°) → 3.2 m away
+//     new: whole 4:3 width (51°)                      → 2.0 m away
+//   head to feet 1.6 m (+20% room) up the picture (66°) → 1.5 m away
+const CAMERA_LONG_SIDE = 1280;
+
+let cameraUpright = null;   // which way the phone was held when the camera started
+
 async function startCamera() {
   // Ask the browser for the front ("user") camera. The browser asks
   // the user for permission the first time.
-  // A phone or iPad held upright gets a tall picture, so the person
-  // fills the camera box; a laptop gets a wide one.
+  // A phone or iPad held upright gets a tall picture (3:4), a laptop or a
+  // phone on its side gets a wide one (4:3).
   const upright = window.innerHeight > window.innerWidth;
-  const stream = await navigator.mediaDevices.getUserMedia({
-    video: {
-      facingMode: "user",
-      width: { ideal: upright ? 720 : 1280 },
-      height: { ideal: upright ? 1280 : 720 }
-    },
-    audio: false
-  });
+  const longSide = CAMERA_LONG_SIDE;
+  const shortSide = Math.round(longSide * 3 / 4);
+  const wanted = {
+    facingMode: "user",
+    aspectRatio: { ideal: upright ? 3 / 4 : 4 / 3 },
+    width: { ideal: upright ? shortSide : longSide },
+    height: { ideal: upright ? longSide : shortSide },
+    resizeMode: { ideal: "none" }   // the camera's own picture, not a cut-out of it
+  };
+
+  let stream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: wanted, audio: false });
+  } catch (error) {
+    if (error.name !== "OverconstrainedError" && error.name !== "TypeError") {
+      throw error;   // e.g. permission refused: show that message
+    }
+    // A browser that doesn't like one of the wishes: just the front camera
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
+  }
+
+  // Stop the old camera picture (when restarting after turning the phone)
+  const old = video.srcObject;
+  if (old) {
+    for (const track of old.getTracks()) {
+      track.stop();
+    }
+  }
+
+  await zoomAllTheWayOut(stream.getVideoTracks()[0]);
+  cameraUpright = upright;
   video.srcObject = stream;   // show the camera in the <video> element
   await video.play();         // wait until the video is playing
 }
+
+// Some phones start the selfie camera a little zoomed in. If the browser
+// lets us (Chrome on Android, Safari 17+ on iPhone), zoom right out: a
+// smaller zoom number = a wider view = you can stand closer.
+async function zoomAllTheWayOut(track) {
+  try {
+    const can = track && track.getCapabilities ? track.getCapabilities() : {};
+    const now = track.getSettings ? track.getSettings().zoom : undefined;
+    if (can.zoom && typeof can.zoom.min === "number" && (now === undefined || now > can.zoom.min)) {
+      await track.applyConstraints({ advanced: [{ zoom: can.zoom.min }] });
+    }
+  } catch (error) {
+    // Not allowed on this browser: keep the normal view
+  }
+}
+
+// Turning the phone (upright ↔ on its side): ask for a picture the new
+// way round, so the camera's whole view is used again
+let turnTimer = null;
+window.addEventListener("resize", function () {
+  if (cameraUpright === null) {
+    return;   // the camera isn't on yet
+  }
+  clearTimeout(turnTimer);
+  turnTimer = setTimeout(function () {
+    const upright = window.innerHeight > window.innerWidth;
+    if (upright !== cameraUpright) {
+      startCamera().catch(function (error) {
+        console.error(error);
+      });
+    }
+  }, 400);
+});
 
 
 // ----- 3. Load MediaPipe's pose model -----
@@ -207,11 +286,63 @@ function loop() {
     drawSkeleton(points, check.joints);
     drawAngleLabels(check.joints);
     drawHandTarget(handTarget());
+    tellTheTv();
   }
 
   // Ask the browser to run loop() again before the next screen refresh
   requestAnimationFrame(loop);
 }
+
+
+// ----- Showing it on a TV (cast.js) -----
+// The skeleton lines and dots from drawSkeleton, as 0–1 positions
+const tvFrame = { bones: [], dots: [] };
+const castButton = document.getElementById("cast-button");
+const castHelp = document.getElementById("cast-help");
+
+function tellTheTv() {
+  if (!isCasting()) {
+    return;
+  }
+  const timerCard = document.getElementById("timer-card");
+  const timer = timerCard && !timerCard.hidden
+    ? document.getElementById("timer-seconds").textContent + " s held · " + document.getElementById("timer-note").textContent
+    : "";
+  sendToTv({
+    pose: document.getElementById("pose-name").textContent,
+    score: scoreText.textContent,
+    tip: tipText.textContent,
+    tipGood: tipText.classList.contains("good"),
+    coach: document.getElementById("coach-text").textContent,
+    timer: timer,
+    aspect: video.videoWidth && video.videoHeight ? video.videoWidth / video.videoHeight : 0.75,
+    bones: tvFrame.bones,
+    dots: tvFrame.dots
+  });
+}
+
+// 📺: cast to a TV if this browser can (Chrome + Chromecast), otherwise
+// show how to mirror the screen with the phone's own button
+castButton.addEventListener("click", async function () {
+  if (isCasting()) {
+    stopCasting();
+    return;
+  }
+  const started = canCastPage() && await startCasting();
+  if (!started) {
+    castHelp.hidden = false;
+  }
+});
+
+document.getElementById("cast-help-close").addEventListener("click", function () {
+  castHelp.hidden = true;
+});
+
+onCastChange(function (casting) {
+  castButton.classList.toggle("casting", casting);
+  castButton.setAttribute("aria-label", casting ? "Stop showing on the TV" : "Show on a TV");
+  castButton.title = castButton.getAttribute("aria-label");
+});
 
 
 // The hand check (coach.js) needs where the hands and shoulders are.
@@ -291,6 +422,8 @@ function drawSkeleton(points, joints) {
 
   // Wipe off the last drawing
   pen.clearRect(0, 0, canvas.width, canvas.height);
+  tvFrame.bones = [];
+  tvFrame.dots = [];
 
   // Nobody found in this picture: nothing to draw
   if (!points) {
@@ -311,6 +444,7 @@ function drawSkeleton(points, joints) {
       continue;
     }
     pen.strokeStyle = colours.bones[boneKey(bone[0], bone[1])] || WHITE;
+    tvFrame.bones.push([1 - start.x, start.y, 1 - end.x, end.y, pen.strokeStyle]);
     pen.beginPath();
     pen.moveTo(toX(start), toY(start));
     pen.lineTo(toX(end), toY(end));
@@ -324,6 +458,7 @@ function drawSkeleton(points, joints) {
       continue;
     }
     pen.fillStyle = colours.dots[number] || WHITE;
+    tvFrame.dots.push([1 - point.x, point.y, pen.fillStyle]);
     pen.beginPath();
     pen.arc(toX(point), toY(point), 10, 0, 2 * Math.PI);   // a circle with radius 10
     pen.fill();

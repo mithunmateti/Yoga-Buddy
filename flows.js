@@ -37,7 +37,7 @@ POSES.push({
   level: "Medium",
   focus: "Calm full-body flow",
   tint: "#E4E6F6",
-  image: "images/chandranamaskar.svg",
+  image: "images/chandranamaskar.webp",
   view: "side",
   roundsRecommended: 2,
   roundNote: "One round is the 14 positions, one after another. Round 1 steps back with your right leg, round 2 with your left, and so on. Move slowly and calmly. Yoga Buddy's voice will guide you. 🔊",
@@ -511,7 +511,7 @@ POSES.push(
     level: "Easy",
     focus: "Wake up and stretch",
     tint: "#FDEFD3",
-    image: "images/morningflow.svg",
+    image: "images/morningflow.webp",
     view: "front",
     rounds: 1,   // the number chosen on the guide screen replaces this
     roundsRecommended: 1,
@@ -850,7 +850,7 @@ POSES.push(
     level: "Easy",
     focus: "Relax before sleep",
     tint: "#E6E3F5",
-    image: "images/bedtimeflow.svg",
+    image: "images/bedtimeflow.webp",
     view: "side",
     rounds: 1,   // the number chosen on the guide screen replaces this
     roundsRecommended: 1,

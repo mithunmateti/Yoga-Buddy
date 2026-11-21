@@ -29,7 +29,7 @@ POSES.push(
     group: "supine",
     holdKind: "steady",
     tint: "#E9F1DD",
-    image: "images/setubandhasana.svg",
+    image: "images/setubandhasana.webp",
     view: "side",
     camera: "Put the camera low, near the floor, and lie sideways to it.",
     safety: "Keep your neck still and your head on the floor. Skip it or lift only a little if your neck or back hurts.",
