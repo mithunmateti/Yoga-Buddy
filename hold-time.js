@@ -178,3 +178,19 @@ function roundsForThisVisit() {
   const fromAddress = Number(address.get("rounds"));
   return validRounds(fromAddress) ? fromAddress : roundsFor(address.get("pose"));
 }
+
+
+// ----- Poses where the body lies LONG -----
+// Lying down, plank, legs out on the floor, and the flows that go down to
+// the floor. A phone held upright sees about 51° across but 66° up and
+// down; on its side the 66° runs along your body.
+// Distance = size ÷ (2 × tan(angle ÷ 2)), so for a body 1.7 m long
+// (+20% room): 2.1 m with the phone upright, but 1.6 m on its side.
+// practice.js turns the screen sideways by itself for these poses.
+const LONG_POSES = ["dandasana", "paschimottanasana", "janusirsasana", "navasana",
+                    "suryanamaskar", "chandranamaskar", "bedtimeflow"];
+
+function liesLong(pose) {
+  return pose.group === "prone" || pose.group === "supine" || pose.group === "armsupport" ||
+         LONG_POSES.includes(pose.id);
+}

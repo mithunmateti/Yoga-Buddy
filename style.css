@@ -2451,7 +2451,7 @@ a.avatar:active {
    After Start, a phone held upright shows only the camera and your body,
    edge to edge. The score floats in the top-right corner with no box behind
    it. The words have a shadow instead of a background. */
-@media (max-width: 820px) and (orientation: portrait) {
+@media (max-width: 820px) and (orientation: portrait), (max-height: 520px) and (orientation: landscape) {
   body.live {
     overflow: hidden;
     overscroll-behavior: none;           /* no pull-to-refresh bounce in Safari */
@@ -3026,7 +3026,7 @@ a.avatar:active {
   display: none;
 }
 
-@media (max-width: 820px) and (orientation: portrait) {
+@media (max-width: 820px) and (orientation: portrait), (max-height: 520px) and (orientation: landscape) {
   body.live .flow-progress {
     position: absolute;
     top: calc(62px + env(safe-area-inset-top));
@@ -3161,4 +3161,79 @@ html[data-theme="dark"] .side-tab[aria-selected="true"] {
 /* Outline buttons (Reset streak, Test the voice): a softer shine on the dark */
 html[data-theme="dark"] .secondary-button::before {
   opacity: 0.2;
+}
+
+
+/* ----- 21. Lying-down poses on a phone: "Turn your phone" -----
+   practice.js shows this card when a phone is held upright for a pose
+   done lying down, and hides it by itself once the phone is on its side. */
+.sideways-note {
+  font-weight: 700;
+  color: #CFF5DF !important;
+}
+
+.turn-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 24px;
+  background: var(--night);
+  color: white;
+  text-align: center;
+}
+
+.turn-panel[hidden] {
+  display: none;
+}
+
+.turn-panel h2 {
+  font-size: 1.7rem;
+  font-weight: 800;
+}
+
+.turn-panel p {
+  max-width: 340px;
+  margin: 0;
+  color: var(--night-text-soft);
+}
+
+/* The phone turns on its side, again and again */
+.turn-phone {
+  font-size: 4.5rem;
+  animation: turn-phone 2.4s ease-in-out infinite;
+}
+
+@keyframes turn-phone {
+  0%, 25% { transform: rotate(0deg); }
+  50%, 85% { transform: rotate(-90deg); }
+  100% { transform: rotate(0deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .turn-phone {
+    animation: none;
+    transform: rotate(-90deg);
+  }
+}
+
+/* A phone on its side: the screen is short, so the words are smaller and
+   the score sits closer to the corner */
+@media (max-height: 520px) and (orientation: landscape) {
+  body.live .tip-card {
+    font-size: 1.15rem;
+  }
+
+  body.live .score-number {
+    font-size: 2.2rem;
+  }
+
+  body.live .practice-panel {
+    width: auto;   /* the whole screen, not the side column of a laptop */
+    padding-bottom: calc(10px + env(safe-area-inset-bottom));
+  }
 }
