@@ -16,14 +16,14 @@ import { PoseLandmarker, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@m
 import {
   measureJoints, calculateScore, canSee, outsidePicture, bodyLooksReal,
   smoothJoints, addHiddenJoints, startFresh, isWrong, jointToFix, tipFor, facing
-} from "./pose-check.js?v=20261122b";
+} from "./pose-check.js?v=20261122c";
 
 // The voice coach (coach.js), its voice (voice.js) and its sentences (phrases.js)
-import { startCoach, restartCoach, stopCoach, updateCoach, checksNow, handTarget, coachStage } from "./coach.js?v=20261122b";
-import { canRecord, whyNoRecording, recordingWanted, setRecordingWanted, isRecording, startRecording, stopRecording, addFrame, saveClip } from "./recorder.js?v=20261122b";
-import { unlockSound, chooseVoice } from "./voice.js?v=20261122b";
-import { SAY } from "./phrases.js?v=20261122b";
-import { canCastPage, startCasting, stopCasting, isCasting, onCastChange, sendToTv } from "./cast.js?v=20261122b";
+import { startCoach, restartCoach, stopCoach, updateCoach, checksNow, handTarget, coachStage } from "./coach.js?v=20261122c";
+import { canRecord, whyNoRecording, recordingWanted, setRecordingWanted, isRecording, isPrepared, prepareRecording, startRecording, stopRecording, addFrame, saveClip } from "./recorder.js?v=20261122c";
+import { unlockSound, chooseVoice, wakeVoice } from "./voice.js?v=20261122c";
+import { SAY } from "./phrases.js?v=20261122c";
+import { canCastPage, startCasting, stopCasting, isCasting, onCastChange, sendToTv } from "./cast.js?v=20261122c";
 
 // Where MediaPipe's helper files and the trained pose models are.
 // "lite" is the fastest model: phones use it, so they don't get hot and
@@ -545,6 +545,9 @@ recordButton.addEventListener("click", function () {
   } else if (document.body.classList.contains("live")) {
     recordThisTime = !recordThisTime;
     recordedThisRound = false;   // a new video may start
+    if (!recordThisTime) {
+      stopRecording();           // turned off before the pose: drop the paused recorder
+    }
   } else {
     recordSwitch.checked = !recordSwitch.checked;
     setRecordingWanted(recordSwitch.checked);
@@ -565,10 +568,23 @@ function recordThePractice() {
   }
   const stage = coachStage();
   if (!isRecording()) {
-    if (!recordedThisRound && (stage === "steps" || stage === "hold")) {
+    if (recordedThisRound) {
+      return;
+    }
+    if (stage === "steps" || stage === "hold") {
+      // The pose has started: un-pause the recorder (or start one now)
+      const wasPrepared = isPrepared();
       recordedThisRound = startRecording(video.videoWidth, video.videoHeight, clipIsReady, video.srcObject);
       doneSince = null;
+      if (recordedThisRound && !wasPrepared && onApple) {
+        setTimeout(wakeVoice, 500);   // starting a recorder can silence the voice on iPhones
+      }
       showRecordButton();
+    } else if (!isPrepared() && (stage === "countdown" || stage === "findBody" || stage === "handCheck")) {
+      // Before the pose: get the recorder ready, paused (recorder.js)
+      if (prepareRecording(video.videoWidth, video.videoHeight, clipIsReady, video.srcObject) && onApple) {
+        setTimeout(wakeVoice, 500);
+      }
     }
     return;
   }
@@ -597,6 +613,9 @@ function recordThePractice() {
 // The video file is ready: say where it went, or offer the Save button
 function clipIsReady(clip) {
   showRecordButton();
+  if (onApple) {
+    setTimeout(wakeVoice, 300);   // the same after stopping
+  }
   clipSave.hidden = false;
   if (clip.onApple) {
     clipText.textContent = "Tap Save to Photos, then choose \u201cSave Video\u201d. It goes into your Photos app.";

@@ -89,13 +89,48 @@ export function isRecording() {
   return !!recorder && recorder.state === "recording";
 }
 
+// Started early and paused, waiting for the pose to begin (see prepareRecording)
+let prepared = false;
+let throwAway = false;   // stopped before it was ever un-paused: no video
+
+export function isPrepared() {
+  return prepared && !!recorder && recorder.state === "paused";
+}
+
+// Get the recorder going early (during the countdown), paused. On iPhones,
+// starting a recorder changes the phone's sound settings for a moment,
+// which can cut off the voice coach; doing it before the pose means the
+// pose's instructions aren't cut off. resumeRecording() starts the video.
+export function prepareRecording(width, height, finished, camera) {
+  if (recorder) {
+    return false;
+  }
+  return startRecording(width, height, finished, camera, true);
+}
+
+export function resumeRecording() {
+  if (!isPrepared()) {
+    return false;
+  }
+  recorder.resume();
+  prepared = false;
+  startedAt = performance.now();
+  clearTimeout(stopTimer);
+  stopTimer = setTimeout(stopRecording, LONGEST);
+  showRecLight(true);
+  return true;
+}
+
 // Start recording. width/height: the camera picture's size. camera: the
 // camera's own stream, used if this browser can't record our drawing.
 // finished(clip) is called when the video file is ready.
 let drawing = true;   // recording our drawing (false: the plain camera)
 
-export function startRecording(width, height, finished, camera) {
-  if (isRecording() || !canRecord() || !width || !height) {
+export function startRecording(width, height, finished, camera, paused) {
+  if (isPrepared() && !paused) {
+    return resumeRecording();
+  }
+  if (recorder || !canRecord() || !width || !height) {
     return false;
   }
   sheet.width = width;
@@ -141,6 +176,13 @@ export function startRecording(width, height, finished, camera) {
   });
   recorder.addEventListener("stop", makeFile);
   recorder.start(1000);   // a piece every second, so a long video isn't one huge block
+  throwAway = false;
+  if (paused) {
+    recorder.pause();
+    prepared = true;
+    return true;
+  }
+  prepared = false;
   startedAt = performance.now();
   stopTimer = setTimeout(stopRecording, LONGEST);
   showRecLight(true);
@@ -149,7 +191,9 @@ export function startRecording(width, height, finished, camera) {
 
 export function stopRecording() {
   clearTimeout(stopTimer);
-  if (isRecording()) {
+  if (recorder && recorder.state !== "inactive") {
+    throwAway = prepared;   // never un-paused: nothing worth keeping
+    prepared = false;
     recorder.stop();   // makeFile runs when the last piece has arrived
   }
   showRecLight(false);
@@ -233,7 +277,9 @@ function wrapText(str, x, y, maxWidth, unit, colour, text) {
 function makeFile() {
   const type = (recorder && recorder.mimeType) || bestType() || "video/mp4";
   recorder = null;
-  if (!pieces.length) {
+  if (!pieces.length || throwAway) {
+    pieces = [];
+    throwAway = false;
     return;
   }
   const blob = new Blob(pieces, { type: type.split(";")[0] });

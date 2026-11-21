@@ -16,8 +16,8 @@
 // Everything said is split into sentences and played one after another.
 // =============================================================
 
-import { GEMINI_KEY } from "./gemini-key.js?v=20261122b";
-import { sentences, sentenceKey, forSpeaking } from "./phrases.js?v=20261122b";
+import { GEMINI_KEY } from "./gemini-key.js?v=20261122c";
+import { sentences, sentenceKey, forSpeaking } from "./phrases.js?v=20261122c";
 
 const AI_VOICE = "Sulafat";                 // must match VOICE in voice/make-recordings.mjs
 const RECORDINGS = "voice/sulafat/";        // where the ready-made recordings are
@@ -48,6 +48,7 @@ let pieceStarted = 0;         // when the current sentence started (seconds)
 let quietSince = 0;           // when we last finished talking (seconds)
 let round = 0;                // goes up when we stop, so old sentences are dropped
 let currentWords = null;      // kept here so the browser doesn't throw the words away
+let currentText = "";         // the piece being said now
 const liveSounds = new Map(); // sentences Gemini made live this time: key → Promise of a sound
 const restUntil = {};         // model → time until which Google asked us to wait
 
@@ -169,6 +170,35 @@ export function unlockSound() {
   }
 }
 
+// iPhones: starting or stopping a video recording (recorder.js) changes the
+// phone's sound settings. That can cut off the sentence being said and
+// leave the voice stuck, or send it to the quiet ear speaker. This puts the
+// sound back on the loudspeaker and says the cut-off sentence again.
+export function wakeVoice() {
+  if (navigator.audioSession) {
+    try {
+      navigator.audioSession.type = "auto";
+      setTimeout(function () {
+        try { navigator.audioSession.type = "playback"; } catch (error) { /* not allowed */ }
+      }, 60);
+    } catch (error) {
+      // not allowed here
+    }
+  }
+  if (!busy && !freshPending) {
+    if (canSpeak) {
+      speechSynthesis.resume();   // in case Safari left it "paused"
+    }
+    return;
+  }
+  // Say what was cut off (and what was waiting) again, from the start
+  const again = [busy ? currentText : ""].concat(queue.map(function (piece) { return piece.text; }))
+    .filter(Boolean).join(" ");
+  if (again) {
+    sayFresh(again);
+  }
+}
+
 // Say something (after anything that is already being said)
 export function say(text) {
   for (const piece of splitForVoice(text)) {
@@ -263,6 +293,7 @@ async function playNext(myRound) {
   }
   busy = true;
   pieceStarted = now();
+  currentText = piece.text;
   // A recording or live sound, or null = computer voice. Only wait when we
   // have to: Safari only lets the first sentence play if it starts straight
   // away inside the tap, not after waiting.
