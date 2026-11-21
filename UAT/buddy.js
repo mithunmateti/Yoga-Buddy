@@ -13,7 +13,7 @@
 // The API key is built in (gemini-key.js), so nobody has to type it.
 // =============================================================
 
-import { GEMINI_KEY } from "./gemini-key.js?v=20261121e";
+import { GEMINI_KEY } from "./gemini-key.js?v=20261122a";
 
 // Which Gemini model to use. "flash-lite" is Google's fastest model.
 // If Google renames it, the backup "latest" name is tried instead.

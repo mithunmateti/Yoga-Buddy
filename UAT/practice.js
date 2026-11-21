@@ -16,13 +16,14 @@ import { PoseLandmarker, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@m
 import {
   measureJoints, calculateScore, canSee, outsidePicture, bodyLooksReal,
   smoothJoints, addHiddenJoints, startFresh, isWrong, jointToFix, tipFor, facing
-} from "./pose-check.js?v=20261121e";
+} from "./pose-check.js?v=20261122a";
 
 // The voice coach (coach.js), its voice (voice.js) and its sentences (phrases.js)
-import { startCoach, restartCoach, stopCoach, updateCoach, checksNow, handTarget } from "./coach.js?v=20261121e";
-import { unlockSound, chooseVoice } from "./voice.js?v=20261121e";
-import { SAY } from "./phrases.js?v=20261121e";
-import { canCastPage, startCasting, stopCasting, isCasting, onCastChange, sendToTv } from "./cast.js?v=20261121e";
+import { startCoach, restartCoach, stopCoach, updateCoach, checksNow, handTarget, coachStage } from "./coach.js?v=20261122a";
+import { canRecord, recordingWanted, setRecordingWanted, isRecording, startRecording, stopRecording, addFrame, saveClip } from "./recorder.js?v=20261122a";
+import { unlockSound, chooseVoice } from "./voice.js?v=20261122a";
+import { SAY } from "./phrases.js?v=20261122a";
+import { canCastPage, startCasting, stopCasting, isCasting, onCastChange, sendToTv } from "./cast.js?v=20261122a";
 
 // Where MediaPipe's helper files and the trained pose models are.
 // "lite" is the fastest model: phones use it, so they don't get hot and
@@ -472,6 +473,7 @@ function lookAtPicture() {
     drawAngleLabels(check.joints);
     drawHandTarget(handTarget());
     tellTheTv();
+    recordThePractice();
   }
 }
 
@@ -493,6 +495,97 @@ function timeTheTracker(ms) {
     slowFrames = 0;
   }
 }
+
+
+// ----- Record my practice (recorder.js) -----
+// The video starts when the person starts doing the pose (the coach's
+// first step), not during Start, the countdown and finding the body.
+// It stops a moment after the pose is finished, or when ■ Stop is tapped.
+const recordChoice = document.getElementById("record-choice");
+const recordSwitch = document.getElementById("record-switch");
+const clipSheet = document.getElementById("clip-sheet");
+const clipText = document.getElementById("clip-text");
+const clipSave = document.getElementById("clip-save");
+let recordThisTime = false;   // the switch was on when Start was pressed
+let recordedThisRound = false;
+let doneSince = null;          // when the coach said the pose was finished
+
+if (canRecord()) {
+  recordChoice.hidden = false;
+  recordSwitch.checked = recordingWanted();
+  document.getElementById("record-choice-note").textContent = onApple
+    ? "Starts when you begin the pose. At the end, one tap saves it to Photos."
+    : /Android/i.test(navigator.userAgent)
+      ? "Starts when you begin the pose. Saved to your Gallery at the end."
+      : "Starts when you begin the pose. Saved to your Downloads at the end.";
+  recordSwitch.addEventListener("change", function () {
+    setRecordingWanted(recordSwitch.checked);
+  });
+}
+
+function recordThePractice() {
+  if (!recordThisTime) {
+    return;
+  }
+  const stage = coachStage();
+  if (!isRecording()) {
+    if (!recordedThisRound && (stage === "steps" || stage === "hold")) {
+      recordedThisRound = startRecording(video.videoWidth, video.videoHeight, clipIsReady);
+      doneSince = null;
+    }
+    return;
+  }
+  if (stage === "done") {
+    // Keep going 2 more seconds to show the finish, then stop
+    doneSince = doneSince || performance.now();
+    if (performance.now() - doneSince > 2000) {
+      stopRecording();
+      return;
+    }
+  } else if (stage === "countdown" || stage === "off") {
+    stopRecording();   // Restart was pressed, or the coach stopped
+    return;
+  }
+  const timerCard = document.getElementById("timer-card");
+  addFrame(video, canvas, {
+    pose: pose ? pose.sanskrit : "",
+    timer: timerCard && !timerCard.hidden ? timerCard.querySelector(".timer-number").textContent : "",
+    score: scoreText.textContent !== "–" ? scoreText.textContent : "",
+    scoreColour: scoreCard.dataset.band === "great" ? "#7CF29A" : scoreCard.dataset.band === "ok" ? "#FFD166" : "#FF9F6B",
+    tip: tipText.textContent,
+    tipGood: tipText.classList.contains("good")
+  });
+}
+
+// The video file is ready: say where it went, or offer the Save button
+function clipIsReady(clip) {
+  if (clip.onApple) {
+    clipText.textContent = "Tap Save to Photos, then choose \u201cSave Video\u201d. It goes into your Photos app.";
+    clipSave.textContent = "Save to Photos";
+  } else if (clip.saved) {
+    clipText.textContent = clip.onAndroid
+      ? "\u2713 Saved to your Gallery (look in the Download album or Google Photos)."
+      : "\u2713 Saved to your Downloads folder.";
+    clipSave.textContent = "Share or save again";
+  } else {
+    clipText.textContent = "Your " + clip.seconds + "-second video is ready.";
+    clipSave.textContent = "Save video";
+  }
+  clipSheet.hidden = false;
+}
+
+clipSave.addEventListener("click", async function () {
+  const result = await saveClip();
+  if (result === "shared" || result === "downloaded") {
+    clipText.textContent = "\u2713 Done!";
+    clipSave.textContent = "Save again";
+  }
+});
+document.getElementById("clip-close").addEventListener("click", function () {
+  clipSheet.hidden = true;
+});
+document.getElementById("rec-light").addEventListener("click", stopRecording);
+window.addEventListener("pagehide", stopRecording);
 
 
 // ----- Showing it on a TV (cast.js) -----
@@ -1056,6 +1149,8 @@ startButton.addEventListener("click", function () {
   startPanel.hidden = true;
   restartButton.hidden = false;
   unlockSound();
+  recordThisTime = canRecord() && recordSwitch.checked;
+  recordChoice.hidden = true;
   if (scoringOn) {
     startCoach(pose, takePhoto);
   }
@@ -1064,6 +1159,8 @@ startButton.addEventListener("click", function () {
 
 // The Restart button: forget the old angles and start the steps again
 restartButton.addEventListener("click", function () {
+  stopRecording();            // a new video starts when the pose starts again
+  recordedThisRound = false;
   startFresh();
   unlockSound();
   if (scoringOn) {
