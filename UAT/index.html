@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <!-- viewport-fit=cover lets the app use the whole iPhone screen (around the notch) -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Yoga Buddy</title>
+
+  <!-- So it looks and opens like an app when added to a phone's home screen -->
+  <meta name="theme-color" content="#FAF7F2">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Yoga Buddy">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+  <link rel="icon" href="images/favicon.png">
+  <!-- Load the logo first, so it is ready for the opening animation -->
+  <link rel="preload" as="image" href="images/icon-512.png">
+
+  <!-- Plus Jakarta Sans font from Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css?v=20261121b">
+  <!-- Light or dark mode, set before anything is drawn (theme.js) -->
+  <script src="theme.js?v=20261121b"></script>
+
+  <!-- The opening animation only plays when the app is first opened, not
+       when coming back from Settings or a pose (decided here, before anything
+       is drawn). Any one of these means "already open", so skip it:
+         1. it already played in this tab (sessionStorage)
+         2. we came here from another Yoga Buddy page (the referrer)
+         3. the browser's Back, Forward or Refresh button brought us here -->
+  <script>
+    (function () {
+      var SPLASH_NAME = "yogaBuddySplashShown";
+      var skip = false;
+      try {
+        skip = sessionStorage.getItem(SPLASH_NAME) === "yes";
+        sessionStorage.setItem(SPLASH_NAME, "yes");
+      } catch (error) {
+        // storage blocked: the other two checks still work
+      }
+      try {
+        var from = document.referrer ? new URL(document.referrer) : null;
+        var folder = function (path) { return path.replace(/[^\/]*$/, ""); };
+        if (from && from.origin === location.origin && folder(from.pathname) === folder(location.pathname)) {
+          skip = true;
+        }
+      } catch (error) {
+        // old browser: ignore
+      }
+      try {
+        var visit = performance.getEntriesByType("navigation")[0];
+        if (visit && (visit.type === "back_forward" || visit.type === "reload")) {
+          skip = true;
+        }
+      } catch (error) {
+        // old browser: ignore
+      }
+      if (skip) {
+        document.documentElement.classList.add("opened-before");
+      }
+    })();
+    // The sidebar of tabs stays small if it was made small last time
+    // (decided here, before anything is drawn, so it doesn't jump)
+    try {
+      if (localStorage.getItem("yogaBuddySideBar") === "small") {
+        document.documentElement.classList.add("side-bar-small");
+      }
+    } catch (error) {
+      // storage blocked: the sidebar starts open
+    }
+  </script>
+</head>
+<body data-ask-later>
+  <!-- OPENING ANIMATION: the logo pops up, turns around and slides away,
+       then the app appears (style.css section 13, home.js removes it) -->
+  <div id="splash" class="splash" aria-hidden="true">
+    <div class="splash-stage">
+      <img class="splash-logo" src="images/icon-512.png" alt="">
+      <p class="splash-name">Yoga Buddy</p>
+    </div>
+  </div>
+
+  <!-- SCREEN 0: INTRO. Shown first each time the app is opened (home.js).
+       Get started → the questions (profile.js) → the home screen below. -->
+  <section id="start-page" class="intro" hidden>
+    <div class="intro-glow" aria-hidden="true"></div>
+
+    <!-- The pose photo inside an arch, like a yoga studio window -->
+    <div class="intro-arch" aria-hidden="true">
+      <img src="images/vrikshasana.png" alt="">
+    </div>
+
+    <div class="intro-text">
+      <p class="intro-kicker">Your AI yoga coach</p>
+      <h1>Yoga Buddy</h1>
+      <p class="intro-tagline">It watches your pose through the camera, tells you what to fix, and cheers you on.</p>
+    </div>
+
+    <ul class="intro-features">
+      <li><span>📷</span>Camera checks your pose</li>
+      <li><span>🔊</span>A voice coach guides you</li>
+      <li><span>⭐</span>Get a score out of 100</li>
+    </ul>
+
+    <button id="begin-button" class="button intro-button">Get started</button>
+  </section>
+
+  <!-- SCREEN 1: HOME -->
+  <!-- App bar: the Yoga Buddy name on the left, the person's initial on the right -->
+  <header class="app-bar">
+    <a class="brand" href="index.html">
+      <img class="brand-mark" src="images/favicon.png" alt="">
+      <span class="brand-name">Yoga Buddy</span>
+    </a>
+    <div class="app-bar-actions">
+      <!-- Light / dark mode (theme.js sets the icon: 🌙 or ☀️) -->
+      <button class="icon-button theme-button" type="button" data-theme-toggle aria-label="Switch to dark mode">🌙</button>
+      <a class="icon-button settings-button" href="settings.html" aria-label="Settings">⚙︎</a>
+      <a id="avatar" class="avatar" href="settings.html" aria-label="Your profile and settings"></a>
+    </div>
+  </header>
+
+  <main class="page home">
+    <!-- "Good evening" and "Welcome, Asha" (home.js) -->
+    <div class="home-hello">
+      <p id="greet-time" class="greet-time"></p>
+      <h1 id="hello" class="hello">Welcome</h1>
+    </div>
+
+    <!-- This week: the streak, today's minutes and Monday to Sunday (home.js, progress.js) -->
+    <div class="home-week">
+      <h2 class="section-title">Your week</h2>
+      <section id="streak" class="streak-card"></section>
+    </div>
+
+    <!-- The tabs: on the left of a laptop screen, a row you can swipe on a
+         phone (home.js). The chosen tab is kept in the web address (#basic,
+         #standing, #prone, #flows…), so refreshing the page
+         stays on the same tab. -->
+    <!-- On a laptop this is a sidebar on the left edge of the screen; the
+         button makes it small (just the icons) or big again (home.js) -->
+    <div id="side-bar" class="side-bar">
+    <button id="side-bar-toggle" class="side-bar-toggle" type="button" aria-controls="side-tabs" aria-expanded="true" aria-label="Make the menu small">
+      <span class="side-bar-arrow" aria-hidden="true">«</span><span class="side-bar-word">Hide menu</span>
+    </button>
+    <div id="side-tabs" class="side-tabs" role="tablist" aria-label="Kinds of yoga" aria-orientation="horizontal">
+      <button id="tab-basic" class="side-tab" type="button" role="tab" aria-selected="true" aria-controls="panel-basic" data-tab="basic">
+        <span class="tab-icon" aria-hidden="true">🧘</span>
+        <span class="tab-text"><span class="tab-long">Basic Asanas</span><span class="tab-short">Basic</span><small id="tab-basic-count"></small></span>
+      </button>
+      <button id="tab-standing" class="side-tab" type="button" role="tab" aria-selected="false" aria-controls="panel-standing" data-tab="standing" tabindex="-1">
+        <span class="tab-icon" aria-hidden="true">🌳</span>
+        <span class="tab-text"><span class="tab-long">Standing</span><span class="tab-short">Standing</span><small id="tab-standing-count"></small></span>
+      </button>
+      <button id="tab-sitting" class="side-tab" type="button" role="tab" aria-selected="false" aria-controls="panel-sitting" data-tab="sitting" tabindex="-1">
+        <span class="tab-icon" aria-hidden="true">🪷</span>
+        <span class="tab-text"><span class="tab-long">Sitting</span><span class="tab-short">Sitting</span><small id="tab-sitting-count"></small></span>
+      </button>
+      <button id="tab-kneeling" class="side-tab" type="button" role="tab" aria-selected="false" aria-controls="panel-kneeling" data-tab="kneeling" tabindex="-1">
+        <span class="tab-icon" aria-hidden="true">🙇</span>
+        <span class="tab-text"><span class="tab-long">Kneeling</span><span class="tab-short">Kneeling</span><small id="tab-kneeling-count"></small></span>
+      </button>
+      <button id="tab-supine" class="side-tab" type="button" role="tab" aria-selected="false" aria-controls="panel-supine" data-tab="supine" tabindex="-1">
+        <span class="tab-icon" aria-hidden="true">🛌</span>
+        <span class="tab-text"><span class="tab-long">Lying on your back</span><span class="tab-short">On your back</span><small id="tab-supine-count"></small></span>
+      </button>
+      <button id="tab-prone" class="side-tab" type="button" role="tab" aria-selected="false" aria-controls="panel-prone" data-tab="prone" tabindex="-1">
+        <span class="tab-icon" aria-hidden="true">🐍</span>
+        <span class="tab-text"><span class="tab-long">Lying on your tummy</span><span class="tab-short">On your tummy</span><small id="tab-prone-count"></small></span>
+      </button>
+      <button id="tab-armsupport" class="side-tab" type="button" role="tab" aria-selected="false" aria-controls="panel-armsupport" data-tab="armsupport" tabindex="-1">
+        <span class="tab-icon" aria-hidden="true">💪</span>
+        <span class="tab-text"><span class="tab-long">On your hands</span><span class="tab-short">On your hands</span><small id="tab-armsupport-count"></small></span>
+      </button>
+      <button id="tab-flows" class="side-tab" type="button" role="tab" aria-selected="false" aria-controls="panel-flows" data-tab="flows" tabindex="-1">
+        <span class="tab-icon" aria-hidden="true">☀️</span>
+        <span class="tab-text"><span class="tab-long">Surya Namaskar &amp; Flows</span><span class="tab-short">Flows</span><small id="tab-flows-count"></small></span>
+      </button>
+    </div>
+    </div>
+
+    <!-- TAB 1: Basic Asanas: today's pose and the five basic poses -->
+    <section id="panel-basic" class="tab-panel" role="tabpanel" aria-labelledby="tab-basic">
+      <!-- Today's pose: one big card (home.js picks a different pose each day) -->
+      <h2 class="section-title">Today's pose</h2>
+      <a id="hero" class="hero-card"></a>
+
+      <!-- The pose cards are added here by home.js -->
+      <h2 class="section-title">Basic Asanas</h2>
+      <div id="grid-basic" class="pose-grid"></div>
+    </section>
+
+    <!-- TABS 2–7: the poses sorted by the position of your body, like the
+         chapters of the book Yoga Anatomy (Kaminoff). home.js fills each grid
+         with the poses whose "group" matches, in the book's order. -->
+
+    <!-- TAB 2: Standing poses (poses-standing.js, and 4 Basic Asanas from poses.js) -->
+    <section id="panel-standing" class="tab-panel" role="tabpanel" aria-labelledby="tab-standing" hidden>
+      <h2 class="section-title">Standing poses</h2>
+      <p class="flow-intro">Poses on your feet, in the same order as the Standing Poses chapter of the book <i>Yoga Anatomy</i>. They build balance, strong legs and good posture, and what you learn here helps every other pose. Many are done on one side: do the other side afterwards too.</p>
+      <div id="grid-standing" class="pose-grid"></div>
+    </section>
+
+    <!-- TAB 3: Sitting poses (poses-sitting.js) -->
+    <section id="panel-sitting" class="tab-panel" role="tabpanel" aria-labelledby="tab-sitting" hidden>
+      <h2 class="section-title">Sitting poses</h2>
+      <p class="flow-intro">Calm poses on the floor, plus chair yoga for anyone who finds the floor hard. Put the camera low, at about the height of your chest when you sit.</p>
+      <div id="grid-sitting" class="pose-grid"></div>
+    </section>
+
+    <!-- TAB 4: Kneeling poses (poses-kneeling.js) -->
+    <section id="panel-kneeling" class="tab-panel" role="tabpanel" aria-labelledby="tab-kneeling" hidden>
+      <h2 class="section-title">Kneeling poses</h2>
+      <p class="flow-intro">Poses on your knees. Put a folded blanket under your knees if they feel the floor, and put the camera low.</p>
+      <div id="grid-kneeling" class="pose-grid"></div>
+    </section>
+
+    <!-- TAB 5: Supine poses: lying on your back (poses-supine.js) -->
+    <section id="panel-supine" class="tab-panel" role="tabpanel" aria-labelledby="tab-supine" hidden>
+      <h2 class="section-title">Lying on your back</h2>
+      <p class="flow-intro">Poses lying face up (yoga books call them <b>supine</b> poses). Put the camera low, near the floor, and lie sideways to it.</p>
+      <div id="grid-supine" class="pose-grid"></div>
+    </section>
+
+    <!-- TAB 6: Prone poses: lying on your tummy (poses-prone.js, and Cobra from poses.js) -->
+    <section id="panel-prone" class="tab-panel" role="tabpanel" aria-labelledby="tab-prone" hidden>
+      <h2 class="section-title">Lying on your tummy</h2>
+      <p class="flow-intro">Poses lying face down (yoga books call them <b>prone</b> poses). They make your back strong. Put the camera low, near the floor, and lie sideways to it.</p>
+      <div id="grid-prone" class="pose-grid"></div>
+    </section>
+
+    <!-- TAB 7: Arm support poses: on your hands (poses-arm-support.js) -->
+    <section id="panel-armsupport" class="tab-panel" role="tabpanel" aria-labelledby="tab-armsupport" hidden>
+      <h2 class="section-title">On your hands</h2>
+      <p class="flow-intro">Poses where your hands and arms hold you up (yoga books call them <b>arm support</b> poses). They make your arms and middle strong. Put the camera low and turn sideways to it.</p>
+      <div id="grid-armsupport" class="pose-grid"></div>
+    </section>
+
+    <!-- TAB 5: Flows: Surya Namaskar and the other flows (poses.js, flows.js) -->
+    <section id="panel-flows" class="tab-panel" role="tabpanel" aria-labelledby="tab-flows" hidden>
+      <h2 class="section-title">Surya Namaskar &amp; Flows</h2>
+      <p class="flow-intro">A flow is poses one after another, like a moving yoga lesson. Yoga Buddy's voice tells you what to do next and checks each pose with the camera.</p>
+      <div id="grid-flows" class="pose-grid flows"></div>
+    </section>
+  </main>
+
+  <!-- profile.js asks for the name, age and gender first.
+       poses.js must load before home.js, because home.js uses the POSES list from it. -->
+  <script src="settings.js?v=20261121b"></script>
+  <script src="profile.js?v=20261121b"></script>
+  <script src="poses.js?v=20261121b"></script>
+  <script src="poses-standing.js?v=20261121b"></script>
+  <script src="poses-sitting.js?v=20261121b"></script>
+  <script src="poses-kneeling.js?v=20261121b"></script>
+  <script src="poses-supine.js?v=20261121b"></script>
+  <script src="poses-prone.js?v=20261121b"></script>
+  <script src="poses-arm-support.js?v=20261121b"></script>
+  <script src="flows.js?v=20261121b"></script>
+  <script src="hold-time.js?v=20261121b"></script>
+  <script src="progress.js?v=20261121b"></script>
+  <script src="home.js?v=20261121b"></script>
+</body>
+</html>

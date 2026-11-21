@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <!-- viewport-fit=cover lets the app use the whole iPhone screen (around the notch) -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Practice – Yoga Buddy</title>
+
+  <!-- So it looks and opens like an app when added to a phone's home screen.
+       The practice screen is dark, so the camera picture stands out. -->
+  <meta name="theme-color" content="#0F1A1A">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Yoga Buddy">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+  <link rel="icon" href="images/favicon.png">
+
+  <!-- Plus Jakarta Sans font from Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css?v=20261121b">
+</head>
+<body class="practice-body">
+  <!-- SCREEN 3: PRACTICE (dark) -->
+  <main class="practice-page">
+
+    <!-- Top bar: Back and Restart buttons, and the pose name -->
+    <div class="practice-top">
+      <a id="back-button" class="icon-button" href="index.html" aria-label="Back">‹</a>
+      <h1 id="pose-name" class="practice-title"></h1>
+      <!-- Restart only appears after Start is pressed -->
+      <button id="restart-button" class="button small-button secondary-button" hidden>↻ Restart</button>
+    </div>
+
+    <div class="practice-main">
+
+      <!-- Camera view, with the skeleton drawn on a canvas on top of it -->
+      <div class="camera-box">
+        <!-- playsinline stops iPhones opening the video full screen -->
+        <video id="camera" autoplay playsinline muted></video>
+        <canvas id="skeleton"></canvas>
+
+        <!-- Start screen: the camera and the voice only start when Start is pressed
+             (browsers only let a page talk after you tap something) -->
+        <div id="start-panel" class="start-panel">
+          <h2>Ready?</h2>
+          <p>Turn your sound on. Press Start, then you have 5 seconds to step back about 2 metres (a little less with a phone), so the camera can see you from head to feet.</p>
+          <p id="sideways-note" class="sideways-note" hidden>📱 This pose is long and low: hold your phone on its side. The app turns round by itself.</p>
+          <button id="start-button" class="button big-button">Start</button>
+        </div>
+
+        <!-- Lying-down poses on a phone held upright: "turn your phone".
+             It goes away by itself as soon as the phone is on its side (practice.js). -->
+        <div id="turn-panel" class="turn-panel" hidden>
+          <div class="turn-phone" aria-hidden="true">📱</div>
+          <h2>Turn your phone on its side</h2>
+          <p>You lie down in this pose, so the camera needs to see wide. On its side, the phone can be about a quarter closer to you.</p>
+          <button id="turn-skip" class="button small-button secondary-button" type="button">Keep it upright</button>
+        </div>
+
+        <!-- The 5-second countdown after Start (coach.js). Hidden when empty. -->
+        <p id="countdown" class="countdown"></p>
+
+        <!-- "✓ Round complete" for a moment at the end of each round (coach.js) -->
+        <p id="round-banner" class="round-banner" hidden></p>
+
+        <!-- Simple status message, e.g. "Starting camera…". Hidden when empty.
+             Phase 8 will make it friendlier. -->
+        <p id="status" class="camera-status"></p>
+      </div>
+
+      <!-- Side panel (below the camera on a phone) -->
+      <aside class="practice-panel">
+        <!-- Surya Namaskar: "Round 1 of 2 · 3/12" (coach.js). Shown on a phone in full screen. -->
+        <p id="flow-progress" class="flow-progress" hidden></p>
+
+        <!-- Big tip text: what to fix, "Great!" or "Step back…".
+             It is hidden when empty. -->
+        <p id="tip" class="tip-card"></p>
+
+        <!-- The voice coach: which step we are on (the same words it says aloud) -->
+        <div class="coach-card">
+          <p id="coach-label" class="coach-label">Voice coach 🔊</p>
+          <p id="coach-text" class="coach-text">Press Start to begin.</p>
+          <!-- Surya Namaskar: a stick figure of the pose to do now (figure.js). Hidden when empty. -->
+          <div id="coach-figure" class="coach-figure"></div>
+        </div>
+
+        <!-- The hold timer (appears after the last step) -->
+        <!-- The ring fills up as the seconds count (coach.js sets --progress) -->
+        <div id="timer-card" class="timer-card" hidden>
+          <div class="timer-ring">
+            <p class="timer-number"><span id="timer-seconds">0</span><span class="timer-out-of">/30s</span></p>
+          </div>
+          <div class="timer-words">
+            <p class="timer-label">Hold</p>
+            <p id="timer-note" class="timer-note"></p>
+          </div>
+        </div>
+
+        <!-- The score card changes colour with the score (practice.js sets data-band) -->
+        <div id="score-card" class="score-card">
+          <p class="score-label">Score</p>
+          <p class="score-number"><span id="score">–</span><span class="score-out-of">/100</span></p>
+        </div>
+
+        <!-- DEBUG (Phase 3): the measured angles, to help us check the targets.
+             We will hide this before the fair. -->
+        <div class="debug-card">
+          <h2>Angles (debug)</h2>
+          <ul id="debug-angles"></ul>
+        </div>
+      </aside>
+
+    </div>
+  </main>
+
+  <!-- After the hold: the average score (coach.js fills it in) -->
+  <div id="result" class="result" hidden>
+    <div class="result-card" role="dialog" aria-labelledby="result-title">
+      <p id="result-pose" class="result-kicker"></p>
+      <h2 id="result-title">Well done!</h2>
+      <p id="result-score" class="result-score"><span id="result-number">–</span><span class="score-out-of">/100</span></p>
+      <p class="result-label">Average score</p>
+      <p id="result-message" class="result-message"></p>
+      <button id="result-again" class="button wide" type="button">Practice again</button>
+      <a class="button wide secondary-button" href="index.html">Done</a>
+    </div>
+  </div>
+
+  <!-- poses.js must load first, because practice.js uses the POSES list from it.
+       figure.js draws the stick figures of the Surya Namaskar poses. -->
+  <!-- profile.js asks for the name, age and gender first -->
+  <script src="settings.js?v=20261121b"></script>
+  <script src="profile.js?v=20261121b"></script>
+  <script src="poses.js?v=20261121b"></script>
+  <script src="poses-standing.js?v=20261121b"></script>
+  <script src="poses-sitting.js?v=20261121b"></script>
+  <script src="poses-kneeling.js?v=20261121b"></script>
+  <script src="poses-supine.js?v=20261121b"></script>
+  <script src="poses-prone.js?v=20261121b"></script>
+  <script src="poses-arm-support.js?v=20261121b"></script>
+  <script src="flows.js?v=20261121b"></script>
+  <script src="hold-time.js?v=20261121b"></script>
+  <script src="figure.js?v=20261121b"></script>
+  <!-- progress.js remembers today's practice time and poses (weekly streak) -->
+  <script src="progress.js?v=20261121b"></script>
+  <!-- type="module" lets practice.js load MediaPipe from the internet (a CDN).
+       practice.js also loads pose-check.js (the maths) and coach.js (the voice coach). -->
+  <script type="module" src="practice.js?v=20261121b"></script>
+</body>
+</html>
