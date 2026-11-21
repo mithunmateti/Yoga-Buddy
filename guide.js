@@ -8,6 +8,21 @@
 const params = new URLSearchParams(window.location.search);
 const poseId = params.get("pose");
 
+// Phones: for poses where the body lies LONG (lying down, plank, legs out
+// on the floor), turning the phone on its side helps. A phone held upright
+// sees about 51° across but 66° up and down; on its side the 66° runs
+// along your body. Distance = size ÷ (2 × tan(angle ÷ 2)), so for a body
+// 1.7 m long (+20% room): 2.1 m upright, but 1.6 m on its side.
+const onPhone = window.matchMedia("(pointer: coarse)").matches;
+const SIDEWAYS_TIP = "📱 On a phone, turn it on its side (landscape): then it can be about a quarter closer to you.";
+const LONG_POSES = ["dandasana", "paschimottanasana", "janusirsasana", "navasana",
+                    "suryanamaskar", "chandranamaskar", "bedtimeflow"];
+
+function liesLong(p) {
+  return p.group === "prone" || p.group === "supine" || p.group === "armsupport" ||
+         LONG_POSES.includes(p.id);
+}
+
 // 2. Look through the POSES list (from poses.js) for the pose with that id
 const pose = POSES.find(function (p) {
   return p.id === poseId;
@@ -82,6 +97,9 @@ if (!pose) {
   }
   // Where to put the camera (a pose can have its own advice in poses.js)
   viewText.textContent += " " + (pose.camera || "Place it about 2 metres away so your whole body fits on screen.");
+  if (onPhone && liesLong(pose)) {
+    viewText.textContent += " " + SIDEWAYS_TIP;
+  }
 
   // "Start with camera" button opens the practice screen for this pose
   document.getElementById("start-button").href = "practice.html?pose=" + pose.id;

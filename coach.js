@@ -24,10 +24,10 @@
 // The voice itself is in voice.js; the fixed sentences are in phrases.js.
 // =============================================================
 
-import { worstJoint, tipFor, isWrong } from "./pose-check.js?v=20261118a";
-import { buddyOn, askBuddy } from "./buddy.js?v=20261118a";
-import { say, sayFresh, isTalking, quietFor, stopTalking } from "./voice.js?v=20261118a";
-import { SAY, startIn, countFor, heldFor, roundStart, roundsDone, finishedFlow, stayFor } from "./phrases.js?v=20261118a";
+import { worstJoint, tipFor, isWrong } from "./pose-check.js?v=20261121a";
+import { buddyOn, askBuddy } from "./buddy.js?v=20261121a";
+import { say, sayFresh, isTalking, quietFor, stopTalking } from "./voice.js?v=20261121a";
+import { SAY, startIn, countFor, heldFor, roundStart, roundsDone, finishedFlow, stayFor } from "./phrases.js?v=20261121a";
 
 // ----- Settings you can change -----
 const GET_READY_SECONDS = 5;  // after Start: time to step back before the steps begin
@@ -167,7 +167,7 @@ function reset() {
   positionHeld = null;
   wrongFacingSince = null;
   showTimer(false);
-  showStep("Get ready", "Step back 2–3 metres, so the camera can see you from head to feet.");
+  showStep("Get ready", "Step back about 2 metres, so the camera can see you from head to feet.");
   countDown();
 }
 

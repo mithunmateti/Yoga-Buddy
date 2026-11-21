@@ -21,7 +21,7 @@ export const SAY = {
   handOk:      "Great! That means you're a real person, not a photo.",
 
   // When the camera can't see the person properly
-  nobody:      "I can't see you yet. Stand in front of the camera, about 2 to 3 metres away.",
+  nobody:      "I can't see you yet. Stand in front of the camera, about 2 metres away.",
   tooClose:    "You're too close to the camera. Step back until I can see you from head to feet.",
   feetOut:     "Step back a little, so your feet are in the picture.",
   handsOut:    "Step back a little, so your hands are in the picture.",

@@ -2488,11 +2488,15 @@ a.avatar:active {
     box-shadow: none;
   }
 
-  /* Fill the whole screen with the picture. The skeleton is drawn with the
-     same fit, so it stays exactly on the body. */
+  /* Show the WHOLE camera picture, not a zoomed-in cut-out of it. A phone
+     screen is taller than the camera picture, so "cover" used to cut off
+     the sides: you saw less than the camera did and stood further back
+     than needed. Now what you see is exactly what the tracker sees; the
+     space above and below is black. The skeleton uses the same fit, so it
+     stays exactly on the body. */
   body.live .camera-box video,
   body.live .camera-box canvas {
-    object-fit: cover;
+    object-fit: contain;
   }
 
   /* Back and Restart, top-left */
