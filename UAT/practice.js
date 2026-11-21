@@ -16,14 +16,14 @@ import { PoseLandmarker, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@m
 import {
   measureJoints, calculateScore, canSee, outsidePicture, bodyLooksReal,
   smoothJoints, addHiddenJoints, startFresh, isWrong, jointToFix, tipFor, facing
-} from "./pose-check.js?v=20261122c";
+} from "./pose-check.js?v=20261122d";
 
 // The voice coach (coach.js), its voice (voice.js) and its sentences (phrases.js)
-import { startCoach, restartCoach, stopCoach, updateCoach, checksNow, handTarget, coachStage } from "./coach.js?v=20261122c";
-import { canRecord, whyNoRecording, recordingWanted, setRecordingWanted, isRecording, isPrepared, prepareRecording, startRecording, stopRecording, addFrame, saveClip } from "./recorder.js?v=20261122c";
-import { unlockSound, chooseVoice, wakeVoice } from "./voice.js?v=20261122c";
-import { SAY } from "./phrases.js?v=20261122c";
-import { canCastPage, startCasting, stopCasting, isCasting, onCastChange, sendToTv } from "./cast.js?v=20261122c";
+import { startCoach, restartCoach, stopCoach, updateCoach, checksNow, handTarget, coachStage } from "./coach.js?v=20261122d";
+import { canRecord, whyNoRecording, recordingWanted, setRecordingWanted, isRecording, isPrepared, prepareRecording, startRecording, stopRecording, addFrame, saveClip, hasClip } from "./recorder.js?v=20261122d";
+import { unlockSound, chooseVoice, wakeVoice } from "./voice.js?v=20261122d";
+import { SAY } from "./phrases.js?v=20261122d";
+import { canCastPage, startCasting, stopCasting, isCasting, onCastChange, sendToTv } from "./cast.js?v=20261122d";
 
 // Where MediaPipe's helper files and the trained pose models are.
 // "lite" is the fastest model: phones use it, so they don't get hot and
@@ -576,6 +576,11 @@ function recordThePractice() {
       const wasPrepared = isPrepared();
       recordedThisRound = startRecording(video.videoWidth, video.videoHeight, clipIsReady, video.srcObject);
       doneSince = null;
+      if (recordedThisRound) {
+        clipReady = false;
+        clipSaved = false;
+        waitForDone = false;
+      }
       if (recordedThisRound && !wasPrepared && onApple) {
         setTimeout(wakeVoice, 500);   // starting a recorder can silence the voice on iPhones
       }
@@ -592,6 +597,7 @@ function recordThePractice() {
     // Keep going 2 more seconds to show the finish, then stop
     doneSince = doneSince || performance.now();
     if (performance.now() - doneSince > 2000) {
+      waitForDone = true;   // don't pop up now: Save is offered when Done is tapped
       stopRecording();
       return;
     }
@@ -610,38 +616,93 @@ function recordThePractice() {
   });
 }
 
-// The video file is ready: say where it went, or offer the Save button
+// ----- Saving the video -----
+// When the pose finishes, the recording stops by itself but nothing pops
+// up. When the person taps Done (only if they chose to record), the Save
+// button appears before going home, so the video is never lost.
+// (Stopping with ■ Stop, or Restart, shows the Save button straight away.)
+const clipTitle = document.getElementById("clip-title");
+const clipClose = document.getElementById("clip-close");
+const onAndroidPhone = /Android/i.test(navigator.userAgent);
+let clipReady = false;     // the newest video file is ready
+let clipSaved = false;     // …and has been saved
+let waitForDone = false;   // finished by itself: wait for Done before offering Save
+let leavingAfter = false;  // the sheet was opened by Done: its other button goes home
+
 function clipIsReady(clip) {
   showRecordButton();
   if (onApple) {
-    setTimeout(wakeVoice, 300);   // the same after stopping
+    setTimeout(wakeVoice, 300);   // stopping a recorder can silence the voice on iPhones
   }
-  clipSave.hidden = false;
-  if (clip.onApple) {
-    clipText.textContent = "Tap Save to Photos, then choose \u201cSave Video\u201d. It goes into your Photos app.";
-    clipSave.textContent = "Save to Photos";
-  } else if (clip.saved) {
-    clipText.textContent = clip.onAndroid
-      ? "\u2713 Saved to your Gallery (look in the Download album or Google Photos)."
+  clipReady = true;
+  clipSaved = false;
+  if (leavingAfter || !waitForDone) {
+    showClipSheet();
+  }
+}
+
+function showClipSheet() {
+  clipTitle.textContent = "\ud83c\udfa5 Save your practice video";
+  clipClose.textContent = leavingAfter ? (clipSaved ? "Go to home" : "Don't save, go home") : "Close";
+  clipSave.hidden = clipSaved;
+  if (!clipReady) {
+    clipText.textContent = "Getting your video ready\u2026";
+    clipSave.disabled = true;
+  } else if (clipSaved) {
+    clipText.textContent = onApple ? "\u2713 Saved! Look in your Photos app."
+      : onAndroidPhone ? "\u2713 Saved! Look in your Gallery or Google Photos (Download album)."
       : "\u2713 Saved to your Downloads folder.";
-    clipSave.textContent = "Share or save again";
   } else {
-    clipText.textContent = "Your " + clip.seconds + "-second video is ready.";
-    clipSave.textContent = "Save video";
+    clipSave.disabled = false;
+    clipText.textContent = onApple
+      ? "Tap Save to Photos, then choose \u201cSave Video\u201d."
+      : onAndroidPhone
+        ? "Tap Save to Gallery. It goes into your Gallery and Google Photos (Download album)."
+        : "Tap Save video. It goes into your Downloads folder.";
   }
+  clipSave.textContent = onApple ? "Save to Photos" : onAndroidPhone ? "Save to Gallery" : "Save video";
   clipSheet.hidden = false;
 }
 
 clipSave.addEventListener("click", async function () {
   const result = await saveClip();
   if (result === "shared" || result === "downloaded") {
-    clipText.textContent = "\u2713 Done!";
-    clipSave.textContent = "Save again";
+    clipSaved = true;
+    showClipSheet();
   }
 });
-document.getElementById("clip-close").addEventListener("click", function () {
-  clipSheet.hidden = true;
+
+clipClose.addEventListener("click", function () {
+  if (leavingAfter) {
+    location.href = "index.html";
+  } else {
+    clipSheet.hidden = true;
+  }
 });
+
+// "Done" on the result screen: if there is a video, offer Save first
+document.getElementById("result-done").addEventListener("click", function (event) {
+  const video = isRecording() || (clipReady && !clipSaved) || (waitForDone && !clipReady && hasClipComing());
+  if (isPrepared()) {
+    stopRecording();   // the pose never started recording: nothing to save
+  }
+  if (!video) {
+    return;   // nothing recorded: go home as normal
+  }
+  event.preventDefault();
+  if (isRecording()) {
+    waitForDone = true;
+    stopRecording();   // the file is made, then clipIsReady updates the sheet
+  }
+  leavingAfter = true;
+  showClipSheet();
+});
+
+// The recording finished by itself and the file is still being made
+function hasClipComing() {
+  return recordedThisRound && recordThisTime;
+}
+
 document.getElementById("rec-light").addEventListener("click", function () {
   stopRecording();
   showRecordButton();
@@ -1221,6 +1282,12 @@ startButton.addEventListener("click", function () {
 
 // The Restart button: forget the old angles and start the steps again
 restartButton.addEventListener("click", function () {
+  // A finished video that wasn't saved yet: offer Save now, before a new one replaces it
+  waitForDone = false;
+  leavingAfter = false;
+  if (clipReady && !clipSaved && !isRecording()) {
+    showClipSheet();
+  }
   stopRecording();            // a new video starts when the pose starts again
   recordedThisRound = false;
   startFresh();
