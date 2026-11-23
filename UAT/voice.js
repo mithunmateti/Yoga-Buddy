@@ -16,8 +16,8 @@
 // Everything said is split into sentences and played one after another.
 // =============================================================
 
-import { GEMINI_KEY } from "./gemini-key.js?v=20261123a";
-import { sentences, sentenceKey, forSpeaking } from "./phrases.js?v=20261123a";
+import { GEMINI_KEY } from "./gemini-key.js?v=20261123b";
+import { sentences, sentenceKey, forSpeaking } from "./phrases.js?v=20261123b";
 
 const AI_VOICE = "Sulafat";                 // must match VOICE in voice/make-recordings.mjs
 const RECORDINGS = "voice/sulafat/";        // where the ready-made recordings are
@@ -249,6 +249,10 @@ export function stopTalking() {
   player.onended = null;
   player.onerror = null;
   player.pause();
+  if (clipSource) {
+    try { clipSource.onended = null; clipSource.stop(); } catch (error) { /* already stopped */ }
+    clipSource = null;
+  }
   if (canSpeak) {
     speechSynthesis.cancel();
   }
@@ -328,7 +332,9 @@ async function playNext(myRound) {
     }
   }
 
-  if (sound) {
+  if (sound && sound.buffer) {
+    playBuffer(sound.buffer, piece.text, next);
+  } else if (sound) {
     playSound(sound, piece.text, next);
   } else {
     speakWithComputer(piece.text, next);
@@ -380,10 +386,99 @@ function speakWithComputer(text, next) {
 // Gives back a sound address, or null to use the computer voice.
 
 function findSound(text) {
+  if (clipOut) {
+    return findClip(text);   // recording: the ready-made coach voice, so it goes into the video
+  }
   if (choice !== "ai") {
     return null;   // straight away, not a promise (see playNext)
   }
   return findAISound(text);
+}
+
+// ----- The coach's voice for the video recording -----
+// A website can't record the phone's built-in voice, so while recording the
+// coach plays ready-made recordings (voice/samantha/, made by
+// voice/make-mac-recordings.mjs) through Web Audio. Web Audio can send the
+// sound to the loudspeaker AND into the video at once.
+const CLIPS = "voice/samantha/";
+let clipCtx = null;           // the AudioContext (from recorder.js)
+let clipOut = null;           // where the video's sound track comes from
+let clipList = null;          // sentence key → file name
+let clipListReady = null;
+const clipBuffers = new Map();   // sentence key → Promise of the decoded sound
+let clipSource = null;        // the sound playing now
+
+// Called when a recording starts (audio = { ctx, dest }) and when it ends (null)
+export function voiceToRecording(audio) {
+  clipCtx = audio ? audio.ctx : null;
+  clipOut = audio ? audio.dest : null;
+  window.yogaClipVoice = !!audio;   // coach.js: no names in recorded sentences
+  if (audio && !clipListReady) {
+    clipListReady = fetch(CLIPS + "recorded.json")
+      .then(function (response) { return response.ok ? response.json() : { files: {} }; })
+      .then(function (list) { clipList = list.files || {}; })
+      .catch(function () { clipList = {}; });
+  }
+}
+
+// The decoded sound for one sentence, or null if there is none
+async function findClip(text) {
+  await clipListReady;
+  const key = sentenceKey(text);
+  const file = clipList && clipList[key];
+  if (!file || !clipCtx) {
+    return null;
+  }
+  if (!clipBuffers.has(key)) {
+    clipBuffers.set(key, fetch(CLIPS + file)
+      .then(function (response) { return response.arrayBuffer(); })
+      .then(function (bytes) {
+        return new Promise(function (resolve, reject) {
+          clipCtx.decodeAudioData(bytes, resolve, reject);   // the callback form works on every Safari
+        });
+      })
+      .catch(function () { clipBuffers.delete(key); return null; }));
+  }
+  const buffer = await clipBuffers.get(key);
+  return buffer ? { buffer: buffer } : null;
+}
+
+// Play a decoded sound to the loudspeaker and into the video
+function playBuffer(buffer, text, next) {
+  const myRound = round;
+  function useComputerVoice() {
+    if (myRound === round) {
+      speakWithComputer(text, next);
+    }
+  }
+  try {
+    if (clipCtx.state === "suspended") {
+      clipCtx.resume();
+    }
+    const source = clipCtx.createBufferSource();
+    source.buffer = buffer;
+    source.connect(clipCtx.destination);   // you hear it
+    source.connect(clipOut);               // the video hears it
+    source.onended = function () {
+      if (clipSource === source) {
+        clipSource = null;
+      }
+      next();
+    };
+    clipSource = source;
+    source.start();
+    setTimeout(next, buffer.duration * 1000 + 1500);   // safety net
+    // If the sound system is stuck (it happens on iPhones), use the phone's voice
+    setTimeout(function () {
+      if (clipSource === source && clipCtx.state !== "running" && myRound === round) {
+        try { source.onended = null; source.stop(); } catch (error) { /* already stopped */ }
+        clipSource = null;
+        useComputerVoice();
+      }
+    }, 400);
+  } catch (error) {
+    useComputerVoice();
+  }
 }
 
 async function findAISound(text) {

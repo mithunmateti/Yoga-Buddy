@@ -24,10 +24,10 @@
 // The voice itself is in voice.js; the fixed sentences are in phrases.js.
 // =============================================================
 
-import { worstJoint, tipFor, isWrong } from "./pose-check.js?v=20261123a";
-import { buddyOn, askBuddy } from "./buddy.js?v=20261123a";
-import { say, sayFresh, isTalking, quietFor, stopTalking } from "./voice.js?v=20261123a";
-import { SAY, startIn, countFor, heldFor, roundStart, roundsDone, finishedFlow, stayFor } from "./phrases.js?v=20261123a";
+import { worstJoint, tipFor, isWrong } from "./pose-check.js?v=20261123b";
+import { buddyOn, askBuddy } from "./buddy.js?v=20261123b";
+import { say, sayFresh, isTalking, quietFor, stopTalking } from "./voice.js?v=20261123b";
+import { SAY, startIn, countFor, heldFor, roundStart, roundsDone, finishedFlow, stayFor } from "./phrases.js?v=20261123b";
 
 // ----- Settings you can change -----
 const GET_READY_SECONDS = 5;  // after Start: time to step back before the steps begin
@@ -112,11 +112,11 @@ export function startCoach(thePose, takePhoto) {
 
 // The person's name (from profile.js), to use when talking to them
 function hello() {
-  return window.yogaProfile ? "Hi " + window.yogaProfile.name + ". " : "";
+  return window.yogaProfile && !window.yogaClipVoice ? "Hi " + window.yogaProfile.name + ". " : "";
 }
 
 function wellDoneName() {
-  return window.yogaProfile ? "Well done, " + window.yogaProfile.name + "!" : SAY.wellDone;
+  return window.yogaProfile && !window.yogaClipVoice ? "Well done, " + window.yogaProfile.name + "!" : SAY.wellDone;
 }
 
 // Where the coach is now: "countdown", "findBody", "handCheck", "steps",

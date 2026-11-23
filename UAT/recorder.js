@@ -19,11 +19,12 @@
 // the newest camera picture, the skeleton and the words, and the
 // browser's MediaRecorder turns that canvas into an MP4 (or WebM) video.
 //
-// Sound: browsers don't let any website record their built-in voice
-// directly, so the video's sound comes from the phone's microphone, which
-// hears the voice coach through the loudspeaker (and you). Echo
-// cancelling is switched off, otherwise the phone would remove the
-// coach's voice on purpose.
+// Sound: browsers don't let any website record their built-in voice, so
+// while recording the coach plays ready-made recordings of her sentences
+// (voice.js, voice/samantha/) through Web Audio, which sends them to the
+// loudspeaker AND into the video's sound track. The microphone is only
+// added if the person ticks "Record sound too" (it picks up the room, but
+// it can make an iPhone play the coach quietly).
 // =============================================================
 
 // iPhones are already busy finding your body, so their video is lighter:
@@ -136,9 +137,11 @@ export function startRecording(frameGiver, camera, withSound) {
   }
 
   // The sound track: always there (silent until the microphone is connected)
-  // Only when the person chose sound: the microphone changes how an
-  // iPhone plays the coach's voice, so by default there is no microphone
-  const sound = withSound ? soundTrack() : null;
+  // The video's sound track is always there: the coach's ready-made voice
+  // is played into it (voice.js). The MICROPHONE is only added when the
+  // person chose "Record sound too": it changes how an iPhone plays the
+  // coach's voice, so by default there is none.
+  const sound = soundTrack();
   if (camera && withSound) {
     useMicrophone(camera);
   }
@@ -196,7 +199,22 @@ function startWith(mine) {
     drawTimer = setInterval(drawFrame, 1000 / FRAMES_PER_SECOND);
   }
   showRecLight(true);
+  if (changeCallback) {
+    changeCallback(recordingAudio());   // voice.js starts sending the coach's voice into the video
+  }
   return true;
+}
+
+// Where the coach's voice goes to be heard in the video: { ctx, dest }
+export function recordingAudio() {
+  return audioCtx && soundOut ? { ctx: audioCtx, dest: soundOut } : null;
+}
+
+// practice.js gives a function that is called with the audio when recording
+// starts, and with null when it stops
+let changeCallback = null;
+export function onRecordingChange(callback) {
+  changeCallback = callback;
 }
 
 // The video's sound track (made once). Must first happen inside a tap
@@ -246,6 +264,9 @@ export function stopRecording() {
   if (recorder && recorder.state !== "inactive") {
     finishing = true;
     recorder.stop();   // makeFile runs when the last piece has arrived
+    if (changeCallback) {
+      changeCallback(null);   // the coach goes back to the phone's own voice
+    }
   }
   showRecLight(false);
 }
