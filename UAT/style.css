@@ -3638,3 +3638,25 @@ html[data-theme="dark"] .secondary-button::before {
 #clip-sheet .cast-help-card {
   background: #13201E;
 }
+
+.record-sound-choice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  max-width: 340px;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.9rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.record-sound-choice input {
+  margin-top: 3px;
+  accent-color: #E5484D;
+}
+
+.record-sound-choice small {
+  display: block;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.78rem;
+}
