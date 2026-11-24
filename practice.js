@@ -16,14 +16,14 @@ import { PoseLandmarker, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@m
 import {
   measureJoints, calculateScore, canSee, outsidePicture, bodyLooksReal,
   smoothJoints, addHiddenJoints, startFresh, isWrong, jointToFix, tipFor, facing
-} from "./pose-check.js?v=20261122g";
+} from "./pose-check.js?v=20261123b";
 
 // The voice coach (coach.js), its voice (voice.js) and its sentences (phrases.js)
-import { startCoach, restartCoach, stopCoach, updateCoach, checksNow, handTarget, coachStage } from "./coach.js?v=20261122g";
-import { MIC_WISHES, useMicrophone, canRecord, whyNoRecording, isRecording, hasVideoComing, startRecording, stopRecording, whenFileReady, hasUnsavedClip, saveClip, savedWhere } from "./recorder.js?v=20261122g";
-import { unlockSound, chooseVoice, wakeVoice, soundForRecording } from "./voice.js?v=20261122g";
-import { SAY } from "./phrases.js?v=20261122g";
-import { canCastPage, startCasting, stopCasting, isCasting, onCastChange, sendToTv } from "./cast.js?v=20261122g";
+import { startCoach, restartCoach, stopCoach, updateCoach, checksNow, handTarget, coachStage } from "./coach.js?v=20261123b";
+import { MIC_WISHES, useMicrophone, onRecordingChange, canRecord, whyNoRecording, isRecording, hasVideoComing, startRecording, stopRecording, whenFileReady, hasUnsavedClip, saveClip, savedWhere } from "./recorder.js?v=20261123b";
+import { unlockSound, chooseVoice, wakeVoice, soundForRecording, voiceToRecording } from "./voice.js?v=20261123b";
+import { SAY } from "./phrases.js?v=20261123b";
+import { canCastPage, startCasting, stopCasting, isCasting, onCastChange, sendToTv } from "./cast.js?v=20261123b";
 
 // Where MediaPipe's helper files and the trained pose models are.
 // "lite" is the fastest model: phones use it, so they don't get hot and
@@ -197,8 +197,20 @@ async function openCamera(myTurn) {
 // The camera, plus the microphone while recording (so the video has the
 // voice coach's sound). If the microphone is refused, just the camera.
 let micRefused = false;
+
+// "Also record my microphone": the coach's voice is already in the video
+// (ready-made recordings, voice.js). The microphone adds the room and your
+// own voice, but the coach would then be heard twice, and on iPhones it
+// makes iOS play the coach quietly or not at all. So it is OFF unless chosen.
+const SOUND_NAME = "yogaBuddyRecordSound";
+function soundWanted() {
+  let saved = null;
+  try { saved = localStorage.getItem(SOUND_NAME); } catch (error) { /* blocked */ }
+  return saved === "on";
+}
+
 async function getCamera(videoWishes) {
-  if (recordingWanted && !micRefused) {
+  if (recordingWanted && soundWanted() && !micRefused) {
     try {
       return await navigator.mediaDevices.getUserMedia({ video: videoWishes, audio: MIC_WISHES });
     } catch (error) {
@@ -522,6 +534,8 @@ function timeTheTracker(ms) {
 // after the pose and its hold are done. Tapping Done then saves it to
 // Photos (iPhone) / the Gallery (Android) / Downloads (laptop) and says so.
 const startRecordButton = document.getElementById("start-record-button");
+// While recording, the coach plays ready-made recordings so they go into the video
+onRecordingChange(voiceToRecording);
 const recordButton = document.getElementById("record-button");
 const clipSheet = document.getElementById("clip-sheet");
 const clipTitle = document.getElementById("clip-title");
@@ -555,7 +569,7 @@ function beginRecording() {
   if (recordingFailed) {
     return false;
   }
-  const ok = startRecording(frameNow, video.srcObject);
+  const ok = startRecording(frameNow, video.srcObject, soundWanted());
   if (ok && onApple) {
     setTimeout(wakeVoice, 600);   // starting a recorder can silence the voice on iPhones
   }
@@ -620,7 +634,7 @@ recordButton.addEventListener("click", function () {
   // The camera was started without the microphone: start it again with it,
   // so the video has sound
   const live = video.srcObject;
-  if (live && !live.getAudioTracks().length && !micRefused) {
+  if (live && !live.getAudioTracks().length && !micRefused && soundWanted()) {
     soundForRecording(true);
     startCamera().catch(function (error) { console.error(error); });
   }
@@ -1278,8 +1292,12 @@ function startPractice(withRecording) {
   keepScreenOn();
   startPanel.hidden = true;
   restartButton.hidden = false;
-  if (withRecording && canRecord()) {
-    soundForRecording(true);   // iPhones: the microphone needs "play and record" sound
+  const soundChoice = document.getElementById("record-sound");
+  if (soundChoice) {
+    try { localStorage.setItem(SOUND_NAME, soundChoice.checked ? "on" : "off"); } catch (error) { /* blocked */ }
+  }
+  if (withRecording && canRecord() && soundWanted()) {
+    soundForRecording(true);   // the microphone needs "play and record" sound on iPhones
   }
   unlockSound();
   if (withRecording) {
@@ -1299,6 +1317,10 @@ function startPractice(withRecording) {
 startButton.addEventListener("click", function () {
   startPractice(false);
 });
+const recordSound = document.getElementById("record-sound");
+if (recordSound) {
+  recordSound.checked = soundWanted();
+}
 startRecordButton.addEventListener("click", function () {
   startPractice(true);
 });
